@@ -1,7 +1,8 @@
-#include <stdio.h>
+#include <iostream>
 
 //EY
 // TEST sync
 int main() {
 
-}
+
+};
