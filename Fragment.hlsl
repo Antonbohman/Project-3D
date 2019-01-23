@@ -20,6 +20,13 @@ cbuffer VS_CONSTANT_BUFFER : register(b0)
     float4 LightColour;
 };
 
+cbuffer VS_CONSTANT_BUFFER : register(b1)
+{
+    float4x4 World;
+    float4x4 View;
+    float4x4 Projection;
+};
+
 float4 PS_main(VS_OUT input) : SV_Target
 {
     //get texture colour for the given uv coordinate with selected sampling format
@@ -31,11 +38,16 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 ambientColour = Ambient * texColour;
     
     //calculate angle between light source direction and triangle normal 
-    float factor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz)), 0, 1);
+    float factor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz - input.Pos_W.xyz)), 0, 1);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * factor * LightColour.a,1);
+
+    //specular 
+    float3 r = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
+    float value = dot(normalize(float3(View[0].zyx) - input.Pos_W.xyz), r);
+    float4 Specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 1000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + diffuseColour, 0.0f, 1.0f);
-};
+        return clamp(ambientColour + diffuseColour + Specular, 0.0f, 1.0f);
+    };
