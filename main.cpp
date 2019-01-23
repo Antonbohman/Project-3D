@@ -551,7 +551,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		gGeometryShader->Release();
 		gPixelShader->Release();
 
-		gResource->Release();
+		//gResource->Release();
 		gDepth->Release();
 
 		gBackbufferRTV->Release();
