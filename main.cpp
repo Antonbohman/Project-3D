@@ -25,6 +25,13 @@ using namespace std::chrono;
 extern const unsigned int BTH_IMAGE_HEIGHT;
 extern unsigned char BTH_IMAGE_DATA[];*/
 
+struct Heightmap //Heightmap
+{
+	int imageWidth; //Width of image file
+	int imageHeight; //Height of image file
+	XMFLOAT3 *verticesPos; //Array of vertex positions
+};
+
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -389,6 +396,71 @@ void SetViewport() {
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	gDeviceContext->RSSetViewports(1, &vp);
+}
+
+bool loadHeightMap(char* filename, Heightmap &heightmap)
+{
+	FILE *fileptr; //filepointer
+	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
+	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
+	int imageSize, index;
+	unsigned char height;
+
+	//Open the file
+	fileptr = fopen(filename, "rb");
+	if (fileptr == 0)
+	{
+		return false;
+	}
+	
+	//Read headers
+	fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, fileptr);
+	fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, fileptr);
+
+	//retrieve width and height of object
+	heightmap.imageWidth = bitmapInfoHeader.biWidth;
+	heightmap.imageHeight = bitmapInfoHeader.biHeight;
+
+	//get size of image in bytes
+	imageSize = heightmap.imageHeight * heightmap.imageWidth * 3; //3 is for the three values RGB
+
+	//array of image data
+	unsigned char* bitmapImage = new unsigned char[imageSize];
+
+	//Find start of iamge data
+	fseek(fileptr, bitmapFileHeader.bfOffBits, SEEK_SET);
+
+	//read data into bitmapimage
+	fread(bitmapImage, 1, imageSize, fileptr);
+	
+	//close file
+	fclose(fileptr);
+
+	//array of vertice positions
+	heightmap.verticesPos = new XMFLOAT3[heightmap.imageHeight * heightmap.imageWidth];
+
+	int counter; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
+
+	//float heightFactor = 10.0f; //mountain smoothing
+
+	//read and put vertex position
+	for (int i = 0; i < heightmap.imageHeight; i++)
+	{
+		for(int j = 0; j < heightmap.imageWidth; j++)
+		{
+			height = bitmapImage[counter];
+			index = (heightmap.imageHeight * i) + j;
+
+			heightmap.verticesPos[index].x = (float)j;
+			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
+			heightmap.verticesPos[index].z = (float)i;
+
+			counter += 3;
+		}
+	}
+
+	delete[] bitmapImage;
+	return true;
 }
 
 void Render() {
