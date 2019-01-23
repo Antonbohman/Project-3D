@@ -259,3 +259,11 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Custom GitIgnore
+Project-3D.sln
+Project-3D.vcxproj
+Project-3D.v12.suo
+Demo.vcxproj
+Demo.vcxproj.filters
+Demo.vcxproj.user
