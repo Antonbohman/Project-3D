@@ -65,6 +65,7 @@ ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
+
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
@@ -448,7 +449,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 	{
 		return false;
 	}
-	
+
 	//Read headers
 	fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, fileptr);
 	fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, fileptr);
@@ -468,25 +469,25 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 
 	//read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
-	
+
 	//close file
 	fclose(fileptr);
 
 	//array of vertice positions
 	heightmap.verticesPos = new XMFLOAT3[heightmap.imageHeight * heightmap.imageWidth];
 
-	int counter; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
+	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
 	//float heightFactor = 10.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
 	{
-		for(int j = 0; j < heightmap.imageWidth; j++)
+		for (int j = 0; j < heightmap.imageWidth; j++)
 		{
 			height = bitmapImage[counter];
 			index = (heightmap.imageHeight * i) + j;
-			
+
 			heightmap.verticesPos[index].x = (float)j;
 			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
 			heightmap.verticesPos[index].z = (float)i;
@@ -565,13 +566,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//CreateTextureResource(); //9. Create and store texture image
 
+		Heightmap _heightmap;
+
+		if (!loadHeightMap("terrain.bmp", _heightmap)) return 404;
+
 		ShowWindow(wndHandle, nCmdShow);
 
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
-			} else {
+			}
+			else {
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;

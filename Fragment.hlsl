@@ -1,14 +1,15 @@
 struct VS_OUT
 {
     float4 Pos_W : POSITION;
-	float4 Pos_H : SV_POSITION;
+    float4 Pos_H : SV_POSITION;
     float3 Color : COLOR;
     float2 UV : TEXCOORD;
-	float3 Norm : NORMAL;
+    float3 Norm : NORMAL;
 };
 
 Texture2D tex : register(t0);
-SamplerState Sampling{
+SamplerState Sampling
+{
     Filter = ANISTROPIC;
     MaxAnistropic = 4;
 };
@@ -45,10 +46,15 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * lightFactor * LightColour.a * (1.0 / lightDistance), 1.0f);
 
     //specular 
-    float3 r = 2 * lightFactor * input.Norm.xyz - normalize(LightPos.xyz - input.Pos_W.xyz);
-    float value = clamp(dot(normalize(r),normalize((-View[0].xyz) - input.Pos_W.xyz)),0.0f, 1.0f);
-   // value = clamp(value,0,1000);
-    float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(value, 1000), 1);
+    //float3 hValue = normalize((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz) / abs((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz)));
+
+    //float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * pow(dot(input.Norm.xyz, hValue),100),1);
+
+    float3 lightReflectionVector = normalize((((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz)) / abs((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz))));
+    float3 r = 2 * lightFactor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
+   // float value = dot(lightReflectionVector, normalize(float3(View[0].zyx) - input.Pos_W.xyz));
+    float value = dot(input.Norm.xyz, normalize(r));
+    float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(value, 10000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + diffuseColour + specular , 0.0f, 1.0f);
