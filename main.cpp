@@ -304,7 +304,7 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(-0.0f, 0.0f, -4.0f, 1.0f);
+	gLightData->light = XMVectorSet(0.0f, 0.0f, -4.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//create a description objekt defining how the buffer should be handled

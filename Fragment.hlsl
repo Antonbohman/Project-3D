@@ -45,11 +45,16 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * factor * LightColour.a,1);
 
     //specular 
+    //float3 hValue = normalize((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz) / abs((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz)));
+
+    //float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * pow(dot(input.Norm.xyz, hValue),100),1);
+
+    float3 lightReflectionVector = normalize((((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz)) / abs((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz))));
     float3 r = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
-    float value = dot((r), normalize(float3(View[0].zyx) - input.Pos_W.xyz));
-   // value = clamp(value,0,1000);
-    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 1000), 1);
+   // float value = dot(lightReflectionVector, normalize(float3(View[0].zyx) - input.Pos_W.xyz));
+    float value = dot(input.Norm.xyz, normalize(r));
+    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 10000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + diffuseColour+ specular , 0.0f, 1.0f);
+    return clamp(ambientColour + diffuseColour+specular , 0.0f, 1.0f);
     };
