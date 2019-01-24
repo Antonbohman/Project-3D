@@ -531,7 +531,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("terrain.bmp", _heightmap)) return 0;
+		if (!loadHeightMap("terrain.bmp", _heightmap)) return 404;
 
 		ShowWindow(wndHandle, nCmdShow);
 
