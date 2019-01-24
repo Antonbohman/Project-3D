@@ -64,6 +64,7 @@ ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
+
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
@@ -439,7 +440,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 	//array of vertice positions
 	heightmap.verticesPos = new XMFLOAT3[heightmap.imageHeight * heightmap.imageWidth];
 
-	int counter; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
+	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
 	//float heightFactor = 10.0f; //mountain smoothing
 
@@ -527,6 +528,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		CreateConstantBuffer(); //8. Create constant buffers
 
 		//CreateTextureResource(); //9. Create and store texture image
+
+		Heightmap _heightmap;
+
+		if (!loadHeightMap("terrain.bmp", _heightmap)) return 0;
 
 		ShowWindow(wndHandle, nCmdShow);
 
