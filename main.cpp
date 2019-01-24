@@ -68,7 +68,7 @@ ID3D11PixelShader* gPixelShader = nullptr;
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
-	XMVECTOR light;
+	XMVECTOR light;//POSITION
 	XMVECTOR colour;
 };
 LightData* gLightData = nullptr;
@@ -340,7 +340,7 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 0.0f, -1.0f, 1.0f);
+	gLightData->light = XMVectorSet(-0.0f, 0.0f, -4.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//create a description objekt defining how the buffer should be handled
@@ -486,7 +486,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 		{
 			height = bitmapImage[counter];
 			index = (heightmap.imageHeight * i) + j;
-
+			
 			heightmap.verticesPos[index].x = (float)j;
 			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
 			heightmap.verticesPos[index].z = (float)i;
@@ -512,9 +512,11 @@ void Render() {
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gLightDataBuffer);
+	gDeviceContext->PSSetConstantBuffers(1, 1, &gWorldMatrixBuffer);
 
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
+
 
 	// specifying NULL or nullptr we are disabling that stage
 	// in the pipeline
@@ -545,7 +547,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
-	duration<double, std::ratio<1, 10>> delta;
+	duration<double, std::ratio<1, 8>> delta;
 
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
