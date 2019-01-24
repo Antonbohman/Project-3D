@@ -45,15 +45,12 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * factor * LightColour.a,1);
 
     //specular 
-    //float3 hValue = normalize((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz) / abs((LightPos.xyz - input.Pos_W.xyz + View[0].xyz - input.Pos_W.xyz)));
+    //vektor that reflekts the light
+    float3 lightReflectionVector = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz); //from slide
 
-    //float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * pow(dot(input.Norm.xyz, hValue),100),1);
-
-    float3 lightReflectionVector = normalize((((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz)) / abs((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz))));
-    float3 r = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
-   // float value = dot(lightReflectionVector, normalize(float3(View[0].zyx) - input.Pos_W.xyz));
-    float value = dot(input.Norm.xyz, normalize(r));
-    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 10000), 1);
+    //clamp so only positive dotproduct is acceptable.
+    float dotProduct = clamp(dot(View[0].xyz, normalize(lightReflectionVector)),0.0f,1.0f);
+    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(dotProduct, 999), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + diffuseColour+specular , 0.0f, 1.0f);
