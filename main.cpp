@@ -65,12 +65,15 @@ ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
+//CAMERAVIEW
+XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
 
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
 	XMVECTOR light;//POSITION
 	XMVECTOR colour;
+	XMVECTOR cameraView;
 };
 LightData* gLightData = nullptr;
 ID3D11Buffer* gLightDataBuffer = nullptr;
@@ -83,6 +86,7 @@ struct WorldMatrix {
 };
 WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
+
 
 //keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -341,8 +345,9 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f);
-	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 3.0f);
+	gLightData->light = XMVectorSet(0.0f, 0.0f, -7.0f, 1.0f);
+	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 10.0f);
+	gLightData->cameraView = CameraView;
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -513,7 +518,6 @@ void Render() {
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gLightDataBuffer);
-	gDeviceContext->PSSetConstantBuffers(1, 1, &gWorldMatrixBuffer);
 
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
@@ -593,6 +597,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				XMMATRIX World;
 
+
 				//alternativly use XMMatrixRotationX(rotation);
 				XMMATRIX WorldX = XMMatrixSet(
 					1.0, 0.0, 0.0, 0.0,
@@ -619,9 +624,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				World = WorldY;
 				//World = XMMatrixMultiply(WorldX, World);
 				//World = XMMatrixMultiply(World, WorldZ);
-
+				
 				XMMATRIX View = XMMatrixLookAtLH(
-					{ 0.0f, 0.0f, -2.0f, 0.0f },
+					 CameraView,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);
