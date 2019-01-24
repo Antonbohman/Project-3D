@@ -1,6 +1,5 @@
 struct VS_OUT
 {
-
     float4 Pos_W : POSITION;
 	float4 Pos_H : SV_POSITION;
     float3 Color : COLOR;
@@ -39,17 +38,18 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 ambientColour = Ambient * texColour;
     
     //calculate angle between light source direction and triangle normal 
-    float factor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz - input.Pos_W.xyz)), 0, 1);
+    float lightFactor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz - input.Pos_W.xyz)), 0.0f, 1.0f);
+    float3 lightDistance = length(LightPos.xyz - input.Pos_W.xyz);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
-    float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * factor * LightColour.a,1);
+    float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * lightFactor * LightColour.a * (1.0 / lightDistance), 1.0f);
 
     //specular 
-    float3 r = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
-    float value = dot((r), normalize(float3(View[0].zyx) - input.Pos_W.xyz));
+    float3 r = 2 * lightFactor * input.Norm.xyz - normalize(LightPos.xyz - input.Pos_W.xyz);
+    float value = clamp(dot(normalize(r),normalize((-View[0].xyz) - input.Pos_W.xyz)),0.0f, 1.0f);
    // value = clamp(value,0,1000);
-    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 1000), 1);
+    float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(value, 1000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + diffuseColour+ specular , 0.0f, 1.0f);
+    return clamp(ambientColour + diffuseColour + specular , 0.0f, 1.0f);
     };
