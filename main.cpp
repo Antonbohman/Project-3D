@@ -450,7 +450,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 		{
 			height = bitmapImage[counter];
 			index = (heightmap.imageHeight * i) + j;
-
+			
 			heightmap.verticesPos[index].x = (float)j;
 			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
 			heightmap.verticesPos[index].z = (float)i;
