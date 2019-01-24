@@ -31,7 +31,7 @@ void main(
 	
     //rotate each vertex position accordingly
     for (uint i = 0; i < 3; i++) {
-        input[i].Pos = mul(input[i].Pos, World);
+        input[i].Pos = mul(World,input[i].Pos);
     }
 
     //calculate a normal based on the new rotated direction
