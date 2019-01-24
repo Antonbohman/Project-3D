@@ -1,5 +1,6 @@
 struct VS_OUT
 {
+
     float4 Pos_W : POSITION;
 	float4 Pos_H : SV_POSITION;
     float3 Color : COLOR;
@@ -45,9 +46,10 @@ float4 PS_main(VS_OUT input) : SV_Target
 
     //specular 
     float3 r = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
-    float value = dot(normalize(float3(View[0].zyx) - input.Pos_W.xyz), r);
-    float4 Specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 1000), 1);
+    float value = dot( (r) ,normalize(float3(View[0].zyx) - input.Pos_W.xyz));
+   // value = clamp(value,0,1000);
+    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(value, 1000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-        return clamp(ambientColour + diffuseColour + Specular, 0.0f, 1.0f);
+        return clamp(ambientColour + diffuseColour+ specular , 0.0f, 1.0f);
     };
