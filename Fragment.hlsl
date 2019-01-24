@@ -53,8 +53,8 @@ float4 PS_main(VS_OUT input) : SV_Target
     float3 lightReflectionVector = normalize((((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz)) / abs((LightPos.xyz - input.Pos_W.xyz) + (View[0].xyz - input.Pos_W.xyz))));
     float3 r = 2 * lightFactor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz);
    // float value = dot(lightReflectionVector, normalize(float3(View[0].zyx) - input.Pos_W.xyz));
-    float value = dot(input.Norm.xyz, normalize(r));
-    float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(value, 10000), 1);
+    float dotProduct = clamp(dot(input.Norm, normalize(r)),0,1);
+    float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(dotProduct, 20000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + diffuseColour + specular , 0.0f, 1.0f);
