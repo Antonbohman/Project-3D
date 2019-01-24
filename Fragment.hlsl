@@ -1,15 +1,15 @@
 struct VS_OUT
 {
-
     float4 Pos_W : POSITION;
-	float4 Pos_H : SV_POSITION;
+    float4 Pos_H : SV_POSITION;
     float3 Color : COLOR;
     float2 UV : TEXCOORD;
-	float3 Norm : NORMAL;
+    float3 Norm : NORMAL;
 };
 
 Texture2D tex : register(t0);
-SamplerState Sampling{
+SamplerState Sampling
+{
     Filter = ANISTROPIC;
     MaxAnistropic = 4;
 };
@@ -39,19 +39,21 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 ambientColour = Ambient * texColour;
     
     //calculate angle between light source direction and triangle normal 
-    float factor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz - input.Pos_W.xyz)), 0, 1);
+    float lightFactor = clamp(dot(input.Norm.xyz, normalize(LightPos.xyz - input.Pos_W.xyz)), 0.0f, 1.0f);
+    float3 lightDistance = length(LightPos.xyz - input.Pos_W.xyz);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
-    float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * factor * LightColour.a,1);
+    float4 diffuseColour = float4(texColour.rgb * LightColour.rgb * lightFactor * LightColour.a * (1.0 / lightDistance), 1.0f);
 
     //specular 
     //vektor that reflekts the light
-    float3 lightReflectionVector = 2 * factor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz); //from slide
+    float3 lightReflectionVector = 2 * lightFactor * input.Norm - normalize(LightPos.xyz - input.Pos_W.xyz); //from slide
 
     //clamp so only positive dotproduct is acceptable.
     float dotProduct = clamp(dot(View[0].xyz, normalize(lightReflectionVector)),0.0f,1.0f);
-    float4 specular = float4((texColour.rgb * LightColour.rgb*LightColour.a) * pow(dotProduct, 999), 1);
+    float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * (1.0/lightDistance) * pow(dotProduct, 999), 
+    1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + diffuseColour+specular , 0.0f, 1.0f);
+    return clamp(ambientColour + diffuseColour + specular , 0.0f, 1.0f);
     };

@@ -60,9 +60,11 @@ ID3D11ShaderResourceView* gResource = nullptr;
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
+ID3D11ComputeShader* gComputeShader = nullptr;
 ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
+
 
 // resource storing lightning source
 struct LightData {
@@ -83,12 +85,47 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 //keeping track of current rotation
-float rotation = 0.0f;
+float rotation = 1.5f*XM_PI;
 
 HRESULT CreateShaders() {
 	// Binary Large OBject (BLOB), for compiled shader, and errors.
-	ID3DBlob* pVS = nullptr;
+	ID3DBlob* pCS = nullptr;
 	ID3DBlob* errorBlob = nullptr;
+
+	/*HRESULT result = D3DCompileFromFile(
+		L"Compute.hlsl",   // filename
+		nullptr,		  // optional macros
+		nullptr,		  // optional include files
+		"VS_main",		  // entry point
+		"vs_5_0",		  // shader model (target)
+		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
+		0,				  // IGNORE...DEPRECATED.
+		&pCS,			  // double pointer to ID3DBlob		
+		&errorBlob		  // pointer for Error Blob messages.
+	);
+
+	// compilation failed?
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			// release "reference" to errorBlob interface object
+			errorBlob->Release();
+		}
+		if (pCS)
+			pCS->Release();
+		return result;
+	}
+
+	gDevice->CreateComputeShader(
+		pCS->GetBufferPointer(),
+		pCS->GetBufferSize(),
+		nullptr,
+		&gComputeShader
+	);
+
+	pCS->Release();*/
+
+	ID3DBlob* pVS = nullptr;
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/hh968107(v=vs.85).aspx
 	HRESULT result = D3DCompileFromFile(
@@ -304,8 +341,8 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 0.1f, -2.0f, 1.0f);
-	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
+	gLightData->light = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f);
+	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 3.0f);
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -412,7 +449,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 	{
 		return false;
 	}
-	
+
 	//Read headers
 	fread(&bitmapFileHeader, sizeof(BITMAPFILEHEADER), 1, fileptr);
 	fread(&bitmapInfoHeader, sizeof(BITMAPINFOHEADER), 1, fileptr);
@@ -432,25 +469,25 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 
 	//read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
-	
+
 	//close file
 	fclose(fileptr);
 
 	//array of vertice positions
 	heightmap.verticesPos = new XMFLOAT3[heightmap.imageHeight * heightmap.imageWidth];
 
-	int counter; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
+	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
 	//float heightFactor = 10.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
 	{
-		for(int j = 0; j < heightmap.imageWidth; j++)
+		for (int j = 0; j < heightmap.imageWidth; j++)
 		{
 			height = bitmapImage[counter];
 			index = (heightmap.imageHeight * i) + j;
-			
+
 			heightmap.verticesPos[index].x = (float)j;
 			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
 			heightmap.verticesPos[index].z = (float)i;
@@ -484,6 +521,7 @@ void Render() {
 
 	// specifying NULL or nullptr we are disabling that stage
 	// in the pipeline
+	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
@@ -528,13 +566,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//CreateTextureResource(); //9. Create and store texture image
 
+		Heightmap _heightmap;
+
+		if (!loadHeightMap("terrain.bmp", _heightmap)) return 404;
+
 		ShowWindow(wndHandle, nCmdShow);
 
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
-			} else {
+			}
+			else {
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;

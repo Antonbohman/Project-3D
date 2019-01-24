@@ -5,10 +5,11 @@ struct GS_IN
     float2 UV : TEXCOORD;
 };
 
-struct PS_INOUT {
+struct PS_INOUT
+{
     float4 Pos_W : POSITION;
     float4 Pos_H : SV_POSITION;
-	float3 Color : COLOR;
+    float3 Color : COLOR;
     float2 UV : TEXCOORD;
     float3 Norm : NORMAL;
 };
@@ -27,11 +28,12 @@ void main(
 {
     PS_INOUT output;
 
-    float4x4 ViewProjection = mul(View,Projection);
+    float4x4 ViewProjection = mul(View, Projection);
 	
     //rotate each vertex position accordingly
-    for (uint i = 0; i < 3; i++) {
-        input[i].Pos = mul(World,input[i].Pos);
+    for (uint i = 0; i < 3; i++)
+    {
+        input[i].Pos = mul(World, input[i].Pos);
     }
 
     //calculate a normal based on the new rotated direction
@@ -40,7 +42,8 @@ void main(
     float3 norm = normalize(cross(v0, v1));
     
     //output our original vertices
-	for (uint j = 0; j < 3; j++) {
+    for (uint j = 0; j < 3; j++)
+    {
         //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
         output.Pos_W = input[j].Pos;
         output.Pos_H = mul(input[j].Pos, ViewProjection);
@@ -49,15 +52,16 @@ void main(
         output.Norm = norm;
 		
         //add vertex to be computed in next pipeline stage
-		OutputStream.Append(output);
-	}
+        OutputStream.Append(output);
+    }
 
     //update our triangle to be rendered seperatly
-	OutputStream.RestartStrip();
+    OutputStream.RestartStrip();
 
     //add the normal to our rotated vertex position to create a copy of each vertex but closer to the camera
     //can be added with negative normal to get a copy further away instead
-	for (uint k = 0; k < 3; k++) {
+    for (uint k = 0; k < 3; k++)
+    {
         //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
         output.Pos_W = float4(input[k].Pos.xyz + norm, 1);
         output.Pos_H = mul(float4(input[k].Pos.xyz + norm, 1), ViewProjection);
