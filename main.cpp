@@ -60,6 +60,7 @@ ID3D11ShaderResourceView* gResource = nullptr;
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
+ID3D11ComputeShader* gComputeShader = nullptr;
 ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
@@ -87,8 +88,43 @@ float rotation = 0.0f;
 
 HRESULT CreateShaders() {
 	// Binary Large OBject (BLOB), for compiled shader, and errors.
-	ID3DBlob* pVS = nullptr;
+	ID3DBlob* pCS = nullptr;
 	ID3DBlob* errorBlob = nullptr;
+
+	/*HRESULT result = D3DCompileFromFile(
+		L"Compute.hlsl",   // filename
+		nullptr,		  // optional macros
+		nullptr,		  // optional include files
+		"VS_main",		  // entry point
+		"vs_5_0",		  // shader model (target)
+		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
+		0,				  // IGNORE...DEPRECATED.
+		&pCS,			  // double pointer to ID3DBlob		
+		&errorBlob		  // pointer for Error Blob messages.
+	);
+
+	// compilation failed?
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			// release "reference" to errorBlob interface object
+			errorBlob->Release();
+		}
+		if (pCS)
+			pCS->Release();
+		return result;
+	}
+
+	gDevice->CreateComputeShader(
+		pCS->GetBufferPointer(),
+		pCS->GetBufferSize(),
+		nullptr,
+		&gComputeShader
+	);
+
+	pCS->Release();*/
+
+	ID3DBlob* pVS = nullptr;
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/hh968107(v=vs.85).aspx
 	HRESULT result = D3DCompileFromFile(
@@ -482,6 +518,7 @@ void Render() {
 
 	// specifying NULL or nullptr we are disabling that stage
 	// in the pipeline
+	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
