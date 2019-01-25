@@ -67,6 +67,8 @@ ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
 int nrOfVertices;
+//CAMERAVIEW
+XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
 
 
 // resource storing lightning source
@@ -74,6 +76,7 @@ struct LightData {
 	XMVECTOR ambient;
 	XMVECTOR light;//POSITION
 	XMVECTOR colour;
+	XMVECTOR cameraView;
 };
 LightData* gLightData = nullptr;
 ID3D11Buffer* gLightDataBuffer = nullptr;
@@ -86,6 +89,7 @@ struct WorldMatrix {
 };
 WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
+
 
 //keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -493,6 +497,7 @@ void CreateConstantBuffer() {
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
 	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
+	gLightData->cameraView = CameraView;
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -664,7 +669,6 @@ void Render() {
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gLightDataBuffer);
-	gDeviceContext->PSSetConstantBuffers(1, 1, &gWorldMatrixBuffer);
 
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
@@ -700,7 +704,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
-	duration<double, std::ratio<1, 8>> delta;
+	duration<double, std::ratio<1, 15>> delta;
 
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
@@ -748,6 +752,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				XMMATRIX World;
 
+
 				//alternativly use XMMatrixRotationX(rotation);
 				XMMATRIX WorldX = XMMatrixSet(
 					1.0, 0.0, 0.0, 0.0,
@@ -774,9 +779,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				World = WorldY;
 				//World = XMMatrixMultiply(WorldX, World);
 				//World = XMMatrixMultiply(World, WorldZ);
-
+				
 				XMMATRIX View = XMMatrixLookAtLH(
 					{ 0.0f, 10.0f, -20.0f, 0.0f },
+					 CameraView,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);
