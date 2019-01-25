@@ -87,7 +87,7 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
+XMVECTOR CameraView = { 0.0f, 10.0f, -20.0f, 0.0f };
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
