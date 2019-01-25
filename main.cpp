@@ -345,7 +345,7 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 0.0f, -7.0f, 1.0f);
+	gLightData->light = XMVectorSet(3.0f, 0.5f, -8.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 10.0f);
 	gLightData->cameraView = CameraView;
 
@@ -552,7 +552,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
-	duration<double, std::ratio<1, 8>> delta;
+	duration<double, std::ratio<1, 15>> delta;
 
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
