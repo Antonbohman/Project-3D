@@ -70,10 +70,10 @@ void main(
     //    output.Norm = norm;
 		
         //add vertex to be computed in next pipeline stage
-        OutputStream.Append(output);
-    }
-    OutputStream.RestartStrip();
-
+ /*       OutputStream.Append(output);
+    }*/
+    /*OutputStream.RestartStrip();
+*/
  
 
     //add the normal to our rotated vertex position to create a copy of each vertex but closer to the camera

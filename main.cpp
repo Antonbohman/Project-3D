@@ -781,7 +781,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//World = XMMatrixMultiply(World, WorldZ);
 				
 				XMMATRIX View = XMMatrixLookAtLH(
-					{ 0.0f, 10.0f, -20.0f, 0.0f },
+					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
 					 CameraView,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
