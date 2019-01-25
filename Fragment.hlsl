@@ -57,5 +57,6 @@ float4 PS_main(VS_OUT input) : SV_Target
     float4 specular = float4(texColour.rgb * LightColour.rgb * LightColour.a * (1.0 / lightDistance) * pow(value, 10000), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + diffuseColour + specular , 0.0f, 1.0f);
-    };
+    return clamp(ambientColour + diffuseColour + specular, 0.0f, 1.0f);
+    //return texColour;
+};
