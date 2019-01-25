@@ -55,21 +55,27 @@ void main(
         OutputStream.Append(output);
     }
 
-    //update our triangle to be rendered seperatly
-    OutputStream.RestartStrip();
+    ////update our triangle to be rendered seperatly
+    //OutputStream.RestartStrip();
+
+    ////add the normal to our rotated vertex position to create a copy of each vertex but closer to the camera
+    ////can be added with negative normal to get a copy further away instead
+    //for (uint k = 0; k < 3; k++)
+    //{
+    //    //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
+    //    output.Pos_W = float4(input[k].Pos.xyz + norm, 1);
+    //    output.Pos_H = mul(float4(input[k].Pos.xyz + norm, 1), ViewProjection);
+    //    output.Color = input[k].Color;
+    //    output.UV = input[k].UV;
+    //    output.Norm = norm;
+		
+        //add vertex to be computed in next pipeline stage
+ /*       OutputStream.Append(output);
+    }*/
+    /*OutputStream.RestartStrip();
+*/
+ 
 
     //add the normal to our rotated vertex position to create a copy of each vertex but closer to the camera
     //can be added with negative normal to get a copy further away instead
-    for (uint k = 0; k < 3; k++)
-    {
-        //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
-        output.Pos_W = float4(input[k].Pos.xyz + norm, 1);
-        output.Pos_H = mul(float4(input[k].Pos.xyz + norm, 1), ViewProjection);
-        output.Color = input[k].Color;
-        output.UV = input[k].UV;
-        output.Norm = norm;
-		
-        //add vertex to be computed in next pipeline stage
-        OutputStream.Append(output);
-    }
 }

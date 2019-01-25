@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <chrono>
+#include <algorithm>
 
 //#include "bth_image.h"
 
@@ -65,6 +66,7 @@ ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
+int nrOfVertices;
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
@@ -103,7 +105,7 @@ HRESULT CreateShaders() {
 		"vs_5_0",		  // shader model (target)
 		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
 		0,				  // IGNORE...DEPRECATED.
-		&pCS,			  // double pointer to ID3DBlob		
+		&pCS,			  // double pointer to ID3DBlob
 		&errorBlob		  // pointer for Error Blob messages.
 	);
 
@@ -287,9 +289,153 @@ struct TriangleVertex {
 	float u, v;
 };
 
+int gnrOfVertices = 0;
+
+void CreateHeightmapData(Heightmap heightmap) {
+	// Array of Structs (AoS)
+	//63 900 vertices 300x213
+	//384404
+
+	gnrOfVertices = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
+
+	//TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
+	TriangleVertex triangleVertices[3820];
+
+	int vertNr = 0;
+
+	for (int i = 0; i < heightmap.imageHeight - 1; i++)
+	{
+		int X = (i * heightmap.imageWidth);
+		int Y = ((i + 1) * heightmap.imageWidth);
+
+		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth-1; k++)
+		{
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 0.0f;
+			triangleVertices[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*..............................*/
+
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[X + 1].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[X + 1].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[X + 1].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[X + 1].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 1.0f;
+			triangleVertices[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*-------------------------------*/
+
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[X].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 0.0f;
+			triangleVertices[vertNr].v = 0.0f;
+
+
+			vertNr++;
+			X++;
+
+			/*-------------------------------*/
+			/*Next triangle*/
+
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 1.0f;
+			triangleVertices[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*..............................*/
+
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 1.0f;
+			triangleVertices[vertNr].v = 0.0f;
+
+			vertNr++;
+
+			/*-------------------------------*/
+
+			/*Position*/
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x;
+			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z;
+			/*Colour*/
+			triangleVertices[vertNr].r = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].g = heightmap.verticesPos[X].y;
+			triangleVertices[vertNr].b = heightmap.verticesPos[X].y;
+			/*UV*/
+			triangleVertices[vertNr].u = 0.0f;
+			triangleVertices[vertNr].v = 0.0f;
+
+			vertNr++;
+			Y++;
+		}
+	}
+
+	// Describe the Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	// what type of buffer will this be?
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// what type of usage (press F1, read the docs)
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// how big in bytes each element in the buffer is.
+	bufferDesc.ByteWidth = sizeof(triangleVertices);
+
+	int size = sizeof(triangleVertices);
+
+	// this struct is created just to set a pointer to the
+	// data containing the vertices.
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = triangleVertices;
+
+	// create a Vertex Buffer
+	HRESULT error;
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
+	//delete triangleVertices;
+}
+
 void CreateTriangleData() {
 	// Array of Structs (AoS)
-	TriangleVertex triangleVertices[VERTICES] =
+	TriangleVertex triangleVertices[VERTICES]
 	{
 		-0.5f, -0.5f, 0.0f,	//v0 pos
 		1.0f, 0.0f, 0.0f,	//v0 color
@@ -324,9 +470,11 @@ void CreateTriangleData() {
 	// what type of buffer will this be?
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	// what type of usage (press F1, read the docs)
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	// how big in bytes each element in the buffer is.
 	bufferDesc.ByteWidth = sizeof(triangleVertices);
+
+	int size = sizeof(triangleVertices);
 
 	// this struct is created just to set a pointer to the
 	// data containing the vertices.
@@ -335,6 +483,7 @@ void CreateTriangleData() {
 
 	// create a Vertex Buffer
 	gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
+	delete triangleVertices;
 }
 
 void CreateConstantBuffer() {
@@ -344,8 +493,8 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(-7.0f, 0.0f, -7.0f, 1.0f);
-	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 10.0f);
+	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
+	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
 	gLightData->cameraView = CameraView;
 
 	//create a description objekt defining how the buffer should be handled
@@ -482,7 +631,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	//float heightFactor = 10.0f; //mountain smoothing
+	float heightFactor = 255.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -493,7 +642,8 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 			index = (heightmap.imageHeight * i) + j;
 
 			heightmap.verticesPos[index].x = (float)j;
-			heightmap.verticesPos[index].y = (float)height/*/heightFactor*/;
+			if (height < 0) height = 0;
+			heightmap.verticesPos[index].y = (float)height/heightFactor;
 			heightmap.verticesPos[index].z = (float)i;
 
 			counter += 3;
@@ -544,14 +694,14 @@ void Render() {
 	gDeviceContext->IASetInputLayout(gVertexLayout);
 
 	// issue a draw call of 3 vertices (similar to OpenGL)
-	gDeviceContext->Draw(VERTICES, 0);
+	gDeviceContext->Draw(gnrOfVertices, 0);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
-	duration<double, std::ratio<1, 8>> delta;
+	duration<double, std::ratio<1, 15>> delta;
 
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
@@ -563,15 +713,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
 
-		CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+		Heightmap _heightmap;
+
+		if (!loadHeightMap("slope2.bmp", _heightmap)) return 404;
+
+		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
 		//CreateTextureResource(); //9. Create and store texture image
 
-		Heightmap _heightmap;
 
-		if (!loadHeightMap("terrain.bmp", _heightmap)) return 404;
 
 		ShowWindow(wndHandle, nCmdShow);
 
@@ -625,6 +778,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//World = XMMatrixMultiply(World, WorldZ);
 				
 				XMMATRIX View = XMMatrixLookAtLH(
+					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
 					 CameraView,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
@@ -635,7 +789,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					(float)XM_PI*0.45,
 					(float)W_WIDTH / (float)W_HEIGHT,
 					0.1f,
-					20.0f
+					200.0f
 				);
 				Projection = XMMatrixTranspose(Projection);
 
