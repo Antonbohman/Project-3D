@@ -10,11 +10,11 @@
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
-//window size
+// window size
 #define W_WIDTH 640.0f
 #define W_HEIGHT 480.0f
 
-//define number of vertices used in rendering
+// define number of vertices used in rendering
 #define VERTICES 6
 
 using namespace DirectX;
@@ -65,14 +65,11 @@ ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
-//CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
-
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
-	XMVECTOR light;//POSITION
-	XMVECTOR colour;
+	XMVECTOR light; //POSITION
+	XMVECTOR colour; 
 	XMVECTOR cameraView;
 };
 LightData* gLightData = nullptr;
@@ -87,8 +84,10 @@ struct WorldMatrix {
 WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
+// CAMERAVIEW
+XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
 
-//keeping track of current rotation
+// keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
 HRESULT CreateShaders() {
@@ -345,7 +344,7 @@ void CreateConstantBuffer() {
 	//set our faked light source values, 
 	//since we won't be updating these values while program is running
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 0.0f, -7.0f, 1.0f);
+	gLightData->light = XMVectorSet(-7.0f, 0.0f, -7.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 10.0f);
 	gLightData->cameraView = CameraView;
 
@@ -588,7 +587,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				start = high_resolution_clock::now();
 
 				//upate rotation depending on time since last update
-				rotation += delta.count()*0.05f;
+				rotation += delta.count()*0.01f;
 
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
