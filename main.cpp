@@ -67,6 +67,7 @@ ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
 
 int nrOfVertices;
+float gHeightfactor;
 // resource storing lightning source
 struct LightData {
 	XMVECTOR ambient;
@@ -296,6 +297,36 @@ void CreateHeightmapData(Heightmap heightmap) {
 	//63 900 vertices 300x213
 	//384404
 
+	//gHeightfactor = 25.5 * 6;
+
+	XMFLOAT4 bedrock =
+	{
+		35.0f / 255,
+		98.0f / 255,
+		175.0f / 255,
+		0.0f
+	};
+	XMFLOAT4 grass =
+	{
+		53.0f / 255,
+		178.0f / 255,
+		0.0f / 255,
+		(2.55f / gHeightfactor)
+	};
+	XMFLOAT4 mountain =
+	{
+		128.0f / 255,
+		128.0f / 255,
+		128.0f / 255,
+		(30.0f / gHeightfactor)
+	};
+	XMFLOAT4 snow =
+	{
+		180.0f / 255,
+		180.0f / 255,
+		180.0f / 255,
+		(200.0f / gHeightfactor)
+	};
 	gnrOfVertices = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
 
 	//TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
@@ -311,13 +342,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth - 1; k++)
 		{
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
 			triangleVertices[vertNr].v = 1.0f;
@@ -327,13 +389,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*..............................*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[X + 1].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[X + 1].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[X + 1].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[X + 1].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
 			triangleVertices[vertNr].v = 1.0f;
@@ -343,13 +436,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*-------------------------------*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[X].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
 			triangleVertices[vertNr].v = 0.0f;
@@ -362,13 +486,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*Next triangle*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
 			triangleVertices[vertNr].v = 1.0f;
@@ -378,13 +533,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*..............................*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[X + heightmap.imageWidth].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[X + heightmap.imageWidth].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[X + heightmap.imageWidth].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
 			triangleVertices[vertNr].v = 0.0f;
@@ -394,13 +580,44 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*-------------------------------*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x;
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
 			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z;
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
 			/*Colour*/
-			triangleVertices[vertNr].r = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].g = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].b = heightmap.verticesPos[X].y;
+			if (triangleVertices[vertNr].y > grass.w)
+			{
+				if (triangleVertices[vertNr].y > mountain.w)
+				{
+					if (triangleVertices[vertNr].y > snow.w)
+					{
+						triangleVertices[vertNr].r = snow.x;
+						triangleVertices[vertNr].g = snow.y;
+						triangleVertices[vertNr].b = snow.z;
+					}
+					else
+					{
+						triangleVertices[vertNr].r = mountain.x;
+						triangleVertices[vertNr].g = mountain.y;
+						triangleVertices[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					triangleVertices[vertNr].r = grass.x;
+					triangleVertices[vertNr].g = grass.y;
+					triangleVertices[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				triangleVertices[vertNr].r = bedrock.x;
+				triangleVertices[vertNr].g = bedrock.y;
+				triangleVertices[vertNr].b = bedrock.z;
+			}
+			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
+			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
+
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
 			triangleVertices[vertNr].v = 0.0f;
@@ -645,7 +862,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	float heightFactor = 25.50f * 6; //mountain smoothing
+	gHeightfactor = 25.50f * 5; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -657,7 +874,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 			heightmap.verticesPos[index].x = (float)j;
 			if (height < 0) height = 0;
-			heightmap.verticesPos[index].y = (float)height / heightFactor;
+			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
 			heightmap.verticesPos[index].z = (float)i;
 			//test = heightmap.verticesPos[index];
 			counter += 3;
@@ -730,7 +947,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("terrain.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("mountain25.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
