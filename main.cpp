@@ -645,7 +645,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	float heightFactor = 255.0f; //mountain smoothing
+	float heightFactor = 25.50f * 6; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
