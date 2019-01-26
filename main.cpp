@@ -71,7 +71,7 @@ int nrOfVertices;
 struct LightData {
 	XMVECTOR ambient;
 	XMVECTOR light; //POSITION
-	XMVECTOR colour; 
+	XMVECTOR colour;
 	XMVECTOR cameraView;
 };
 LightData* gLightData = nullptr;
@@ -308,7 +308,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 		int X = (i * heightmap.imageWidth);
 		int Y = ((i + 1) * heightmap.imageWidth);
 
-		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth-1; k++)
+		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth - 1; k++)
 		{
 			/*Position*/
 			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x;
@@ -617,11 +617,23 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
 
-	//Find start of iamge data
+	//Find start of image data
 	fseek(fileptr, bitmapFileHeader.bfOffBits, SEEK_SET);
 
 	//read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
+
+	//int vertNr = 0;
+	//XMFLOAT3 test = 
+	//{ 
+	//	0, 0, 0
+	//};
+	//for (int i = 600; i < imageSize; i++)
+	//{
+	//	vertNr = bitmapImage[i];
+
+	//	test.x = vertNr+1-1;
+	//}
 
 	//close file
 	fclose(fileptr);
@@ -643,11 +655,12 @@ bool loadHeightMap(char* filename, Heightmap &heightmap)
 
 			heightmap.verticesPos[index].x = (float)j;
 			if (height < 0) height = 0;
-			heightmap.verticesPos[index].y = (float)height/heightFactor;
+			heightmap.verticesPos[index].y = (float)height / heightFactor;
 			heightmap.verticesPos[index].z = (float)i;
-
+			//test = heightmap.verticesPos[index];
 			counter += 3;
 		}
+		counter += 1;
 	}
 
 	delete[] bitmapImage;
@@ -715,7 +728,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("slope2.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("Grid2.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -776,10 +789,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				World = WorldY;
 				//World = XMMatrixMultiply(WorldX, World);
 				//World = XMMatrixMultiply(World, WorldZ);
-				
+
 				XMMATRIX View = XMMatrixLookAtLH(
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
-					 CameraView,
+					CameraView,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);
