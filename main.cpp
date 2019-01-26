@@ -588,8 +588,10 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, &vp);
 }
 
-bool loadHeightMap(char* filename, Heightmap &heightmap)
+bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24-depth, 25x25 .bmp images*/
 {
+
+
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -728,7 +730,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("Grid2.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("slope2.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
