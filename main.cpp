@@ -329,8 +329,8 @@ void CreateHeightmapData(Heightmap heightmap) {
 	};
 	gnrOfVertices = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
 
-	//TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
-	TriangleVertex triangleVertices[3820];
+	TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
+	//TriangleVertex triangleVertices[3820];
 
 	int vertNr = 0;
 
@@ -635,19 +635,19 @@ void CreateHeightmapData(Heightmap heightmap) {
 	// what type of usage (press F1, read the docs)
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	// how big in bytes each element in the buffer is.
-	bufferDesc.ByteWidth = sizeof(triangleVertices);
+	bufferDesc.ByteWidth = sizeof(TriangleVertex) * gnrOfVertices;
 
-	int size = sizeof(triangleVertices);
+	//int size = sizeof(triangleVertices);
 
 	// this struct is created just to set a pointer to the
 	// data containing the vertices.
 	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = triangleVertices;
+	data.pSysMem = (void*)triangleVertices;
 
 	// create a Vertex Buffer
 	HRESULT error;
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
-	//delete triangleVertices;
+	delete triangleVertices;
 }
 
 void CreateTriangleData() {
@@ -808,7 +808,6 @@ void SetViewport() {
 bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24-depth, 25x25 .bmp images*/
 {
 
-
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -831,7 +830,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	imageSize = heightmap.imageHeight * heightmap.imageWidth * 3; //3 is for the three values RGB
+	imageSize = heightmap.imageHeight * heightmap.imageWidth * 3 + heightmap.imageHeight; //3 is for the three values RGB
 
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
@@ -947,10 +946,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("mountain25.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("banankontakt3.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+
+		delete[] _heightmap.verticesPos;
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
