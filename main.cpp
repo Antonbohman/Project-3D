@@ -830,7 +830,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	imageSize = heightmap.imageHeight * heightmap.imageWidth * 3 + heightmap.imageHeight; //3 is for the three values RGB
+	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * 2); //3 is for the three values RGB
 
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
@@ -861,7 +861,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 5; //mountain smoothing
+	gHeightfactor = 25.50f * 0.5f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -946,7 +946,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("spiral_50x50.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
