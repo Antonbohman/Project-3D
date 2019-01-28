@@ -946,7 +946,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("flag.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("spiral_50x50.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout

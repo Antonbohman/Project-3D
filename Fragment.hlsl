@@ -46,8 +46,7 @@ float4 PS_main(VS_OUT input) : SV_Target
     
     //clamp so only positive dotproduct is acceptable.
     float dotProduct = clamp(dot(normalize(CameraView.xyz- input.Pos_W.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
-    float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * (1.0 / lightDistance) * pow(dotProduct, 100),
-    1);
+    float4 specular = float4((texColour.rgb * LightColour.rgb * LightColour.a) * (1.0 / lightDistance) * pow(dotProduct, 100), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + diffuseColour + specular, 0.0f, 1.0f);
