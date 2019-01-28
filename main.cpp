@@ -88,7 +88,7 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 10.0f, -20.0f, 0.0f };
+XMVECTOR CameraView = { 0.0f, 30.0f, -20.0f, 0.0f };
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -878,7 +878,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 			//test = heightmap.verticesPos[index];
 			counter += 3;
 		}
-		counter += 1;
+		counter += 2;
 	}
 
 	delete[] bitmapImage;
@@ -946,7 +946,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("banankontakt3.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("flag.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
