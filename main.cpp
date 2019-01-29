@@ -830,7 +830,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * 2); //3 is for the three values RGB
+	int padding = heightmap.imageWidth % 4; //Ta det sen
+	if (padding > 0)
+	{
+		padding = 4 - padding;
+	}
+
+	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * padding); //3 is for the three values RGB, added 2 byte per row for bumper data.
 
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
@@ -872,13 +878,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 			index = (heightmap.imageHeight * i) + j;
 
 			heightmap.verticesPos[index].x = (float)j;
-			if (height < 0) height = 0;
+			//if (height < 0) height = 0;
 			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
 			heightmap.verticesPos[index].z = (float)i;
 			//test = heightmap.verticesPos[index];
 			counter += 3;
 		}
-		counter += 2;
+		counter += padding; //Skip bumper info at the end of each row.
 	}
 
 	delete[] bitmapImage;
@@ -946,7 +952,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("banankontakt2.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
