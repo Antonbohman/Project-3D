@@ -1,4 +1,4 @@
-#include <windows.h>
+//#include <windows.h>
 #include <chrono>
 
 //#include "bth_image.h"
@@ -7,12 +7,50 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+#include "KeyInput.h" //STANDARD Input with no need of DirectXTK
+
+//KEYBOARD KEYS
+#include<dinput.h>
+class InputClass
+{
+public:
+	InputClass();
+	InputClass(const InputClass&);
+	~InputClass();
+
+	bool initialize(HINSTANCE, HWND, int, int);
+	void Shutdown();
+	bool Frame();
+	
+	bool IsEscapePressed();
+	void GetMouseLocation(int&, int&);
+
+private:
+	bool ReadKeyboard();
+	bool ReadMouse();
+	void ProcessInput();
+
+	//MOUSE
+	IDirectInput8* m_directInput;
+	IDirectInputDevice8* m_keyboard;
+	IDirectInputDevice8* m_mouse;
+	
+
+	unsigned char m_keyboardState[256];
+	DIMOUSESTATE m_mouseState;
+
+	int m_screenWidth, m_screenHeight;
+	int m_mouseX, m_mouseY;
+
+};
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
 //window size
 #define W_WIDTH 640.0f
 #define W_HEIGHT 480.0f
+
+
 
 //define number of vertices used in rendering
 #define VERTICES 6
@@ -67,6 +105,7 @@ ID3D11PixelShader* gPixelShader = nullptr;
 
 //CAMERAVIEW
 XMVECTOR CameraView = { 0.0f, 0.0f, -2.0f, 0.0f };
+XMVECTOR originalCameraPosition = { 0.0f, 0.0f, -2.0f, 0.0f };
 
 // resource storing lightning source
 struct LightData {
@@ -582,18 +621,67 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				DispatchMessage(&msg);
 			}
 			else {
+
+
+				//input CHECK
+				
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				//upate rotation depending on time since last update
-				rotation += delta.count()*0.05f;
+				//CHANGE NAME TO CAMERA POSITION
 
-				//make sure it never goes past 2PI, 
-				//sin and cos gets less precise when calculated with higher values
-				if (rotation > 2 * XM_PI)
-					rotation -= 2 * XM_PI;
+				//Z-CORD // W+ S-
+				if (KeyNewInput(Wkey) == true)
+				{
+					CameraView += { 0.0f, 0.0f, 0.001f, 0.0f };
+				}
+				if (KeyNewInput(Skey) == true)
+				{
+					CameraView -= { 0.0f, 0.0f, 0.001f, 0.0f };
+				}
+				//X-CORD  //A-  D+
+				if (KeyNewInput(Akey) == true)
+				{
+					CameraView -= {0.001f, 0.0f, 0.0f};
+				}
+				if (KeyNewInput(Dkey) == true)
+				{
+					CameraView += {0.001f, 0.0f, 0.0f};
+				}
+				//Y-CORD  //Q+  E-
+				if (KeyNewInput(Qkey) == true)
+				{
+					CameraView += {0.0f, 0.001f, 0.0f};
+				}
+				if (KeyNewInput(Ekey) == true)
+				{
+					CameraView -= {0.0f, 0.001f, 0.0f};
+				}
+				if (KeyNewInput(Homekey) == true)
+				{
+					CameraView = originalCameraPosition;
+				}
+
+				//KeyEvents();
+				bool point = KeyNewInput(Enterkey);//
+				//short check = GetAsyncKeyState(0x0D);
+				if (point ==true)
+				{
+					
+				}
+				else
+				{
+					//upate rotation depending on time since last update
+					rotation += delta.count()*0.05f;
+					//make sure it never goes past 2PI, 
+					//sin and cos gets less precise when calculated with higher values
+					if (rotation > 2 * XM_PI)
+						rotation -= 2 * XM_PI;
+				}
+				
+				
 
 				XMMATRIX World;
 
@@ -805,3 +893,5 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 
 	return hr;
 }
+
+
