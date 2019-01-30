@@ -177,6 +177,10 @@ bool KeyInput(KEY akey) {
 		break;
 	case Ekey: keyToCheck = 0x45;
 		break;
+	case Okey:keyToCheck = 0x4f;
+		break;
+	case Fkey:keyToCheck = 0x46;
+		break;
 	case Homekey: keyToCheck = 0x24;
 		break;
 	case Enterkey:keyToCheck = 0x0D;

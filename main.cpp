@@ -92,6 +92,7 @@ ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
 XMVECTOR cameraFocus = { 0.0f,0.0f,0.0f,0.0f };
+XMVECTOR cameraOriginalFocus = cameraFocus;
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -948,6 +949,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	//Control values
 	float rotationValue=0.01f;
+	bool orbital = true;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -982,38 +984,87 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				
 				//CHANGE CAMERA POSITION without delta
-				//movement in Z-axis W+ S-
-				if (KeyInput(Wkey))
+				
+				if (KeyInput(Okey)) //camera postion locking at focus
 				{
-					cameraPosition += {0.0f, 0.0f, 0.001f,0.0f};
+					orbital = true;
 				}
-				if (KeyInput(Skey))
+				if (KeyInput(Fkey)) //Focus change
 				{
-					cameraPosition -= {0.0f, 0.0f, 0.001f, 0.0f};
+					orbital = false;
 				}
-				//movement in X-axis D+ A-
-				if (KeyInput(Akey))
+
+				if (orbital == true)
 				{
-					cameraPosition -= {0.0f, 0.001f, 0.0f, 0.0f};
+					//movement in Z-axis W+ S-
+					if (KeyInput(Wkey))
+					{
+						cameraPosition += {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					if (KeyInput(Skey))
+					{
+						cameraPosition -= {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					//movement in X-axis D+ A-
+					if (KeyInput(Akey))
+					{
+						cameraPosition -= {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Dkey))
+					{
+						cameraPosition += {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					//movement in Y-axis Q+ E-
+					if (KeyInput(Qkey))
+					{
+						cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Ekey))
+					{
+						cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					//rest position with HOME
+					if (KeyInput(Homekey))
+					{
+						cameraPosition = cameraOriginalPostion;
+					}
 				}
-				if (KeyInput(Dkey))
+				else
 				{
-					cameraPosition += {0.0f, 0.001f, 0.0f, 0.0f};
+					//movement in Z-axis W+ S-
+					if (KeyInput(Wkey))
+					{
+						cameraFocus += {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					if (KeyInput(Skey))
+					{
+						cameraFocus -= {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					//movement in X-axis D+ A-
+					if (KeyInput(Akey))
+					{
+						cameraFocus -= {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Dkey))
+					{
+						cameraFocus += {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					//movement in Y-axis Q+ E-
+					if (KeyInput(Qkey))
+					{
+						cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Ekey))
+					{
+						cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					//rest position with HOME
+					if (KeyInput(Homekey))
+					{
+						cameraFocus = cameraOriginalFocus;
+					}
 				}
-				//movement in Y-axis Q+ E-
-				if (KeyInput(Qkey))
-				{
-					cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
-				}
-				if (KeyInput(Ekey))
-				{
-					cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
-				}
-				//rest position with HOME
-				if (KeyInput(Homekey))
-				{
-					cameraPosition = cameraOriginalPostion;
-				}
+
 				//rotate ENTER // BACKSPACE
 				if (KeyInput(Enterkey))
 				{
@@ -1023,6 +1074,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				{
 					rotationValue = 0.0f;
 				}
+				
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
