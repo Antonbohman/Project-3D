@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <chrono>
 #include <algorithm>
-
+#include "KeyInput.h"
 //#include "bth_image.h"
 
 #include <d3d11.h>
@@ -10,6 +10,7 @@
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
+
 
 // window size
 #define W_WIDTH 640.0f
@@ -88,7 +89,8 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR cameraOriginalPostion = cameraPosition;
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -712,7 +714,7 @@ void CreateConstantBuffer() {
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
 	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
-	gLightData->cameraView = CameraView;
+	gLightData->cameraView = cameraPosition;
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -952,7 +954,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("banankontakt2.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -980,6 +982,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				//upate rotation depending on time since last update
 				rotation += delta.count()*0.01f;
+
+				//CHANGE CAMERA POSITION
+				if(KeyInput(Akey))
 
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
@@ -1018,7 +1023,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				XMMATRIX View = XMMatrixLookAtLH(
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
-					CameraView,
+					cameraPosition,
 					{ 0.0f, 0.0f, 0.0f, 0.0f },
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);

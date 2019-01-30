@@ -68,4 +68,4 @@ VK_HOME 0x24 Home key
 VK_RETURN 0x0D ENTER KEY
 */
 
-bool KeyNewInput(KEY akey);
+bool KeyInput(KEY akey);

@@ -36,7 +36,7 @@ VK_HOME 0x24 Home key
 VK_RETURN 0x0D ENTER KEY
 */
 
-bool KeyNewInput(KEY akey) {
+bool KeyInput(KEY akey) {
 	
 	int keyToCheck = 0;
 	bool toReturn = false;
@@ -56,7 +56,6 @@ bool KeyNewInput(KEY akey) {
 	case Homekey: keyToCheck = 0x24;
 		break;
 	case Enterkey:keyToCheck = 0x0D;
-		
 	}
 	//-32, 768 through 32, 767
 	short check = GetAsyncKeyState(keyToCheck);
