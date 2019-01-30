@@ -945,6 +945,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
 
+	//Control values
+	float rotationValue=0.01f;
+
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
 
@@ -975,24 +978,64 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				DispatchMessage(&msg);
 			}
 			else {
+
+				
+				//CHANGE CAMERA POSITION without delta
+				//movement in Z-axis W+ S-
+				if (KeyInput(Wkey))
+				{
+					cameraPosition += {0.0f, 0.0f, 0.001f,0.0f};
+				}
+				if (KeyInput(Skey))
+				{
+					cameraPosition -= {0.0f, 0.0f, 0.001f, 0.0f};
+				}
+				//movement in X-axis D+ A-
+				if (KeyInput(Akey))
+				{
+					cameraPosition -= {0.0f, 0.001f, 0.0f, 0.0f};
+				}
+				if (KeyInput(Dkey))
+				{
+					cameraPosition += {0.0f, 0.001f, 0.0f, 0.0f};
+				}
+				//movement in Y-axis Q+ E-
+				if (KeyInput(Qkey))
+				{
+					cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
+				}
+				if (KeyInput(Ekey))
+				{
+					cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
+				}
+				//rest position with HOME
+				if (KeyInput(Homekey))
+				{
+					cameraPosition = cameraOriginalPostion;
+				}
+				//rotate ENTER // BACKSPACE
+				if (KeyInput(Enterkey))
+				{
+					rotationValue = 0.01f;
+				}
+				if (KeyInput(Backspacekey))
+				{
+					rotationValue = 0.0f;
+				}
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				
 				//upate rotation depending on time since last update
-				rotation += delta.count()*0.01f;
-
-				//CHANGE CAMERA POSITION
-				if(KeyInput(Akey))
-
+				rotation += delta.count()*rotationValue;
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
-					rotation -= 2 * XM_PI;
-
+				rotation -= 2 * XM_PI;
+				
 				XMMATRIX World;
-
 
 				//alternativly use XMMatrixRotationX(rotation);
 				XMMATRIX WorldX = XMMatrixSet(
