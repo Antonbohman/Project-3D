@@ -91,6 +91,7 @@ ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 // CAMERAVIEW
 XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
+XMVECTOR cameraFocus = { 0.0f,0.0f,0.0f,0.0f };
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -1067,7 +1068,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				XMMATRIX View = XMMatrixLookAtLH(
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
 					cameraPosition,
-					{ 0.0f, 0.0f, 0.0f, 0.0f },
+					cameraFocus,
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);
 				View = XMMatrixTranspose(View);
