@@ -88,7 +88,7 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR CameraView = { 0.0f, 25.00f, 1.0f, 0.0f };
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -296,8 +296,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 	// Array of Structs (AoS)
 	//63 900 vertices 300x213
 	//384404
-
-	//gHeightfactor = 25.5 * 6;
 
 	XMFLOAT4 bedrock =
 	{
@@ -830,7 +828,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	int padding = heightmap.imageWidth % 4; //Ta det sen
+	int padding = (3 * heightmap.imageWidth) % 4; //Ta det sen
 	if (padding > 0)
 	{
 		padding = 4 - padding;
@@ -848,10 +846,10 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	fread(bitmapImage, 1, imageSize, fileptr);
 
 	//int vertNr = 0;
-	//XMFLOAT3 test = 
-	//{ 
-	//	0, 0, 0
-	//};
+	XMFLOAT3 test =
+	{
+		0, 0, 0
+	};
 	//for (int i = 600; i < imageSize; i++)
 	//{
 	//	vertNr = bitmapImage[i];
@@ -867,24 +865,24 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 0.5f; //mountain smoothing
+	gHeightfactor = 25.50f * 1.5f; //mountain smoothing
 
 	//read and put vertex position
-	for (int i = 0; i < heightmap.imageHeight; i++)
+	for (int i = 0; i < heightmap.imageWidth; i++)
 	{
-		for (int j = 0; j < heightmap.imageWidth; j++)
+		for (int j = 0; j < heightmap.imageHeight; j++)
 		{
 			height = bitmapImage[counter];
-			index = (heightmap.imageHeight * i) + j;
+			index = ((heightmap.imageWidth - 1) - i) + (j * heightmap.imageWidth);
 
 			heightmap.verticesPos[index].x = (float)j;
 			//if (height < 0) height = 0;
 			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
 			heightmap.verticesPos[index].z = (float)i;
-			//test = heightmap.verticesPos[index];
+			test = heightmap.verticesPos[index];
 			counter += 3;
 		}
-		counter += padding; //Skip bumper info at the end of each row.
+		counter += padding; //Skip padding info at the end of each row.
 	}
 
 	delete[] bitmapImage;
@@ -952,7 +950,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("banankontakt2.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("flag.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -979,7 +977,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				start = high_resolution_clock::now();
 
 				//upate rotation depending on time since last update
-				rotation += delta.count()*0.01f;
+				rotation += delta.count()*0.0f;
 
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
