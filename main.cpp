@@ -936,6 +936,21 @@ void Render() {
 	gDeviceContext->Draw(gnrOfVertices, 0);
 }
 
+void deferredRender()
+{
+	//Geometry pass
+	// - Position
+	// - Normals
+	// - Specular
+	// - Diffuse "Albedo"
+	//At least 1 light pass
+	// Screensized Quad - 
+	//Merge in the ComputeShader.hlsl
+
+
+
+}
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
@@ -946,7 +961,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
 
 	//Control values
-	float rotationValue=0.01f;
+	float rotationValue = 0.00f;
 	bool orbital = true;
 
 	if (wndHandle) {
@@ -980,9 +995,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 			else {
 
-				
+
 				//CHANGE CAMERA POSITION without delta
-				
+
 				if (KeyInput(Okey)) //camera postion locking at focus
 				{
 					orbital = true;
@@ -1072,20 +1087,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				{
 					rotationValue = 0.0f;
 				}
-				
+
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				
+
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
-				rotation -= 2 * XM_PI;
-				
+					rotation -= 2 * XM_PI;
+
 				XMMATRIX World;
 
 				//alternativly use XMMatrixRotationX(rotation);
@@ -1145,6 +1160,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 
 				Render(); //10. Rendera
+				deferredRender();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
