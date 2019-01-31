@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <chrono>
 #include <algorithm>
-
+#include "KeyInput.h"
 //#include "bth_image.h"
 
 #include <d3d11.h>
@@ -10,6 +10,7 @@
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
+
 
 // window size
 #define W_WIDTH 640.0f
@@ -88,7 +89,10 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR CameraView = { 0.0f, 25.00f, 1.0f, 0.0f };
+XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR cameraOriginalPostion = cameraPosition;
+XMVECTOR cameraFocus = { 0.0f,0.0f,0.0f,0.0f };
+XMVECTOR cameraOriginalFocus = cameraFocus;
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -710,7 +714,7 @@ void CreateConstantBuffer() {
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
 	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
-	gLightData->cameraView = CameraView;
+	gLightData->cameraView = cameraPosition;
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -941,6 +945,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
 
+	//Control values
+	float rotationValue=0.01f;
+	bool orbital = true;
+
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
 
@@ -950,7 +958,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("flag.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -971,21 +979,114 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				DispatchMessage(&msg);
 			}
 			else {
+
+				
+				//CHANGE CAMERA POSITION without delta
+				
+				if (KeyInput(Okey)) //camera postion locking at focus
+				{
+					orbital = true;
+				}
+				if (KeyInput(Fkey)) //Focus change
+				{
+					orbital = false;
+				}
+
+				if (orbital == true)
+				{
+					//movement in Z-axis W+ S-
+					if (KeyInput(Wkey))
+					{
+						cameraPosition += {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					if (KeyInput(Skey))
+					{
+						cameraPosition -= {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					//movement in X-axis D+ A-
+					if (KeyInput(Akey))
+					{
+						cameraPosition -= {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Dkey))
+					{
+						cameraPosition += {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					//movement in Y-axis Q+ E-
+					if (KeyInput(Qkey))
+					{
+						cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Ekey))
+					{
+						cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					//rest position with HOME
+					if (KeyInput(Homekey))
+					{
+						cameraPosition = cameraOriginalPostion;
+					}
+				}
+				else
+				{
+					//movement in Z-axis W+ S-
+					if (KeyInput(Wkey))
+					{
+						cameraFocus += {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					if (KeyInput(Skey))
+					{
+						cameraFocus -= {0.0f, 0.0f, 0.001f, 0.0f};
+					}
+					//movement in X-axis D+ A-
+					if (KeyInput(Akey))
+					{
+						cameraFocus -= {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Dkey))
+					{
+						cameraFocus += {0.0f, 0.001f, 0.0f, 0.0f};
+					}
+					//movement in Y-axis Q+ E-
+					if (KeyInput(Qkey))
+					{
+						cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					if (KeyInput(Ekey))
+					{
+						cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
+					}
+					//rest position with HOME
+					if (KeyInput(Homekey))
+					{
+						cameraFocus = cameraOriginalFocus;
+					}
+				}
+
+				//rotate ENTER // BACKSPACE
+				if (KeyInput(Enterkey))
+				{
+					rotationValue = 0.01f;
+				}
+				if (KeyInput(Backspacekey))
+				{
+					rotationValue = 0.0f;
+				}
+				
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				
 				//upate rotation depending on time since last update
-				rotation += delta.count()*0.0f;
-
+				rotation += delta.count()*rotationValue;
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
-					rotation -= 2 * XM_PI;
-
+				rotation -= 2 * XM_PI;
+				
 				XMMATRIX World;
-
 
 				//alternativly use XMMatrixRotationX(rotation);
 				XMMATRIX WorldX = XMMatrixSet(
@@ -1016,8 +1117,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				XMMATRIX View = XMMatrixLookAtLH(
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
-					CameraView,
-					{ 0.0f, 0.0f, 0.0f, 0.0f },
+					cameraPosition,
+					cameraFocus,
 					{ 0.0f, 1.0f, 0.0f, 0.0f }
 				);
 				View = XMMatrixTranspose(View);
