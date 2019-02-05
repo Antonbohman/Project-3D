@@ -89,7 +89,7 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 // CAMERAVIEW
-XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR cameraPosition = { 0.0f, 3.0f, -2.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
 XMVECTOR cameraFocus = { 0.0f,0.0f,0.0f,0.0f };
 XMVECTOR cameraOriginalFocus = cameraFocus;
@@ -297,10 +297,8 @@ struct TriangleVertex {
 int gnrOfVertices = 0;
 
 void CreateHeightmapData(Heightmap heightmap) {
-	// Array of Structs (AoS)
-	//63 900 vertices 300x213
-	//384404
 
+	//Colourscheme before texturing
 	XMFLOAT4 bedrock =
 	{
 		35.0f / 255,
@@ -332,7 +330,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 	gnrOfVertices = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
 
 	TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
-	//TriangleVertex triangleVertices[3820];
 
 	int vertNr = 0;
 
@@ -341,12 +338,12 @@ void CreateHeightmapData(Heightmap heightmap) {
 		int X = (i * heightmap.imageWidth);
 		int Y = ((i + 1) * heightmap.imageWidth);
 
-		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth - 1; k++)
+		for (int k = 0; k < heightmap.imageWidth - 1; k++)
 		{
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -378,9 +375,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
@@ -391,9 +385,9 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*..............................*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[X + 1].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -425,9 +419,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
@@ -438,9 +429,9 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*-------------------------------*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -472,9 +463,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
@@ -488,9 +476,9 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*Next triangle*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -522,9 +510,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
@@ -535,9 +520,9 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*..............................*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[X + heightmap.imageWidth].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -569,9 +554,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 1.0f;
@@ -582,9 +564,9 @@ void CreateHeightmapData(Heightmap heightmap) {
 			/*-------------------------------*/
 
 			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
+			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - 0.5f;
 			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
+			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - 0.5f;
 			/*Colour*/
 			if (triangleVertices[vertNr].y > grass.w)
 			{
@@ -616,9 +598,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 				triangleVertices[vertNr].g = bedrock.y;
 				triangleVertices[vertNr].b = bedrock.z;
 			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
 
 			/*UV*/
 			triangleVertices[vertNr].u = 0.0f;
@@ -638,8 +617,6 @@ void CreateHeightmapData(Heightmap heightmap) {
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	// how big in bytes each element in the buffer is.
 	bufferDesc.ByteWidth = sizeof(TriangleVertex) * gnrOfVertices;
-
-	//int size = sizeof(triangleVertices);
 
 	// this struct is created just to set a pointer to the
 	// data containing the vertices.
@@ -807,7 +784,7 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, &vp);
 }
 
-bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24-depth, 25x25 .bmp images*/
+bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 {
 
 	FILE *fileptr; //filepointer
@@ -832,13 +809,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	int padding = (3 * heightmap.imageWidth) % 4; //Ta det sen
+	int padding = (3 * heightmap.imageWidth) % 4; //Rows end in an divider by 4
 	if (padding > 0)
 	{
 		padding = 4 - padding;
 	}
 
-	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * padding); //3 is for the three values RGB, added 2 byte per row for bumper data.
+	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * padding); //3 is for the three values RGB, added byte per row for padding data.
 
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
@@ -849,18 +826,6 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	//read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
 
-	//int vertNr = 0;
-	XMFLOAT3 test =
-	{
-		0, 0, 0
-	};
-	//for (int i = 600; i < imageSize; i++)
-	//{
-	//	vertNr = bitmapImage[i];
-
-	//	test.x = vertNr+1-1;
-	//}
-
 	//close file
 	fclose(fileptr);
 
@@ -869,7 +834,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 1.5f; //mountain smoothing
+	gHeightfactor = 25.50f * 10.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageWidth; i++)
@@ -879,11 +844,9 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 			height = bitmapImage[counter];
 			index = ((heightmap.imageWidth - 1) - i) + (j * heightmap.imageWidth);
 
-			heightmap.verticesPos[index].x = (float)j;
-			//if (height < 0) height = 0;
+			heightmap.verticesPos[index].x = (float)j / heightmap.imageWidth;
 			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
-			heightmap.verticesPos[index].z = (float)i;
-			test = heightmap.verticesPos[index];
+			heightmap.verticesPos[index].z = (float)i / heightmap.imageHeight;
 			counter += 3;
 		}
 		counter += padding; //Skip padding info at the end of each row.
