@@ -936,21 +936,6 @@ void Render() {
 	gDeviceContext->Draw(gnrOfVertices, 0);
 }
 
-void deferredRender()
-{
-	//Geometry pass
-	// - Position
-	// - Normals
-	// - Specular
-	// - Diffuse "Albedo"
-	//At least 1 light pass
-	// Screensized Quad - 
-	//Merge in the ComputeShader.hlsl
-
-
-
-}
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
@@ -1160,7 +1145,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 
 				Render(); //10. Rendera
-				deferredRender();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
