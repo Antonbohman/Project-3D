@@ -3,10 +3,40 @@
 #include <algorithm>
 #include "KeyInput.h"
 //#include "bth_image.h"
+#include <Mouse.h>
+
+#include <Keyboard.h>
+//
+
+std::unique_ptr<DirectX::Mouse>m_mouse;
+std::unique_ptr<DirectX::Keyboard>m_keyboard;
+
+
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+
+//std::unique_ptr<DirectX::Keyboard>m_keyboard; //NOT IMPLEMENTED
+//TOOL KIT
+//#include "CommonStates.h"
+//#include "DDSTextureLoader.h"
+//#include "DirectXHelpers.h"
+//#include "Effects.h"
+//#include "GamePad.h"
+//#include "GeometricPrimitive.h"
+//#include "GraphicsMemory.h"
+//#include "Keyboard.h"
+//#include "Model.h"
+//#include "Mouse.h"
+//#include "PostProcess.h"
+//#include "PrimitiveBatch.h"
+//#include "ScreenGrab.h"
+#include "SimpleMath.h"
+//#include "SpriteBatch.h"
+//#include "SpriteFont.h"
+//#include "VertexTypes.h"
+//#include "WICTextureLoader.h"
 
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
@@ -20,6 +50,7 @@
 #define VERTICES 6
 
 using namespace DirectX;
+using namespace SimpleMath;
 using namespace std::chrono;
 
 // external variables imported from bth_image.h for raw image data
@@ -88,11 +119,132 @@ struct WorldMatrix {
 WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
+
+//wastd::unique_ptr< DirectX::Keyboard >m_keyboard;
+//struct CameraData {
+//	XMVECTOR cameraPosition;
+//	XMVECTOR cameraFocus;
+//	XMVECTOR upDirection;
+//};
+
 // CAMERAVIEW
-XMVECTOR cameraPosition = { 0.0f, 30.0f, -20.0f, 0.0f };
+XMVECTOR cameraPosition = { 0.0f, 10.0f, -20.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
-XMVECTOR cameraFocus = { 0.0f,0.0f,0.0f,0.0f };
+XMVECTOR cameraFocus = { 0.0f, 0.0f, 0.0f, 0.0f };// XMVECTOR camTarget;
 XMVECTOR cameraOriginalFocus = cameraFocus;
+XMVECTOR cameraUp = { 0.0f,1.0f,0.0f,0.0f };
+
+XMMATRIX camRotationMatrix;
+
+float pitch;
+float yaw;
+
+#define ROTATION_GAIN 0.004f
+#define MOVEMENT_GAIN 0.07f
+
+
+//CAMERA MANIPULATION
+XMVECTOR DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+XMVECTOR camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+
+
+
+//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
+
+//XMMATRIX camRotationMatrix;
+//XMMATRIX groundWorld;
+//
+//float moveLeftRight = 0.0f;
+//float moveBackForward = 0.0f;
+//float moveDownUp = 0.0f;
+//
+//float camYaw = 0.0f;
+//float camPitch = 0.0f;
+//
+//XMVECTOR camPosition;
+//XMMATRIX camView;
+//
+//
+//void UpdateCamera()
+//{
+//	//update target 
+//	camRotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
+//	cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
+//	cameraFocus = XMVector3Normalize(cameraFocus);
+//
+//	//FIRST PERSON
+//	//XMMATRIX RotateYTempMatrix;
+//	//RotateYTempMatrix = XMMatrixRotationY(camYaw);
+//
+//	//camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
+//	//camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix); //DECLARE
+//	//camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
+//
+//	//FREE-LOOK camera
+//	camRight = XMVector3TransformCoord(DefaultRight, camRotationMatrix);
+//	camForward = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
+//	cameraUp = XMVector3Cross(camForward, camRight);
+//
+//
+//	camPosition = moveLeftRight * camRight; 
+//	camPosition += moveBackForward * camForward;
+//
+//	moveLeftRight = 0.0f;
+//	moveBackForward = 0.0f;
+//	moveDownUp = 0.0f; //not implemented
+//
+//	cameraFocus = camPosition + cameraFocus;
+//
+//	camView = XMMatrixLookAtLH(camPosition, cameraFocus, cameraUp);
+//}
+//
+//void Input(double deltaT)
+//{
+//	float movementSpeed = 15.0f*deltaT;
+//
+//	//CHANGE CAMERA POSITION without delta
+//		//movement in Z-axis W+ S-
+//	if (KeyInput(Wkey))
+//	{
+//		moveBackForward += movementSpeed;
+//	}
+//	if (KeyInput(Skey))
+//	{
+//		moveBackForward -= movementSpeed;
+//	}
+//	//movement in X-axis D+ A-
+//	if (KeyInput(Akey))
+//	{
+//		moveLeftRight -= movementSpeed;
+//	}
+//	if (KeyInput(Dkey))
+//	{
+//		moveLeftRight += movementSpeed;
+//	}
+//	//movement in Y-axis Q+ E-
+//	if (KeyInput(Qkey))
+//	{
+//		cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
+//		cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
+//	}
+//	if (KeyInput(Ekey))
+//	{
+//		cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
+//		cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
+//	}
+//	//rest position with HOME
+//	if (KeyInput(Homekey))
+//	{
+//		cameraPosition = cameraOriginalPostion;
+//	}
+//	//rest position with HOME
+//	if (KeyInput(Homekey))
+//	{
+//		cameraFocus = cameraOriginalFocus;
+//	}
+//}
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -944,9 +1096,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
 	duration<double, std::ratio<1, 15>> delta;
 
+	//m_mouse->SetWindow();
+
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
 
+	//Mouse and keyboard ini (ONLY MOUSE)
+	m_keyboard = std::make_unique<Keyboard>();
+	m_mouse = std::make_unique<Mouse>();
+	m_mouse->SetWindow(wndHandle);
 	//Control values
 	float rotationValue=0.01f;
 	bool orbital = true;
@@ -982,107 +1140,115 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 			else {
 
-				
-				//CHANGE CAMERA POSITION without delta
-				
-				if (KeyInput(Okey)) //camera postion locking at focus
-				{
-					orbital = true;
-				}
-				if (KeyInput(Fkey)) //Focus change
-				{
-					orbital = false;
-				}
-
-				if (orbital == true)
-				{
-					//movement in Z-axis W+ S-
-					if (KeyInput(Wkey))
-					{
-						cameraPosition += {0.0f, 0.0f, 0.001f, 0.0f};
-					}
-					if (KeyInput(Skey))
-					{
-						cameraPosition -= {0.0f, 0.0f, 0.001f, 0.0f};
-					}
-					//movement in X-axis D+ A-
-					if (KeyInput(Akey))
-					{
-						cameraPosition -= {0.0f, 0.001f, 0.0f, 0.0f};
-					}
-					if (KeyInput(Dkey))
-					{
-						cameraPosition += {0.0f, 0.001f, 0.0f, 0.0f};
-					}
-					//movement in Y-axis Q+ E-
-					if (KeyInput(Qkey))
-					{
-						cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
-					}
-					if (KeyInput(Ekey))
-					{
-						cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
-					}
-					//rest position with HOME
-					if (KeyInput(Homekey))
-					{
-						cameraPosition = cameraOriginalPostion;
-					}
-				}
-				else
-				{
-					//movement in Z-axis W+ S-
-					if (KeyInput(Wkey))
-					{
-						cameraFocus += {0.0f, 0.0f, 0.001f, 0.0f};
-					}
-					if (KeyInput(Skey))
-					{
-						cameraFocus -= {0.0f, 0.0f, 0.001f, 0.0f};
-					}
-					//movement in X-axis D+ A-
-					if (KeyInput(Akey))
-					{
-						cameraFocus -= {0.0f, 0.001f, 0.0f, 0.0f};
-					}
-					if (KeyInput(Dkey))
-					{
-						cameraFocus += {0.0f, 0.001f, 0.0f, 0.0f};
-					}
-					//movement in Y-axis Q+ E-
-					if (KeyInput(Qkey))
-					{
-						cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
-					}
-					if (KeyInput(Ekey))
-					{
-						cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
-					}
-					//rest position with HOME
-					if (KeyInput(Homekey))
-					{
-						cameraFocus = cameraOriginalFocus;
-					}
-				}
-
-				//rotate ENTER // BACKSPACE
-				if (KeyInput(Enterkey))
-				{
-					rotationValue = 0.01f;
-				}
-				if (KeyInput(Backspacekey))
-				{
-					rotationValue = 0.0f;
-				}
-				
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
-				start = high_resolution_clock::now();
+				
+				//NEW CONTROLS 
+				//KEYBOARD
+				auto kb = m_keyboard->GetState();
+				if (kb.Escape) {
+					cameraPosition = cameraOriginalPostion;
+					cameraFocus = cameraOriginalFocus;
+					pitch = yaw = 0;
 
+				}
+				Vector3 move = Vector3::Zero;
+				Vector3 smartMove = Vector3::Zero;
+				Vector4 toAdd =Vector4::Zero ;
+				//UPDATE VECTOR
+				if (kb.W) {//FORWARD IN
+					move.z += 1.0f;  //IN Z
+					toAdd += cameraFocus - cameraPosition; //till fokus
+					
+				}
+				if (kb.S) { //BACK
+					move.z -= 1.0f; //UT Z
+					toAdd -= cameraFocus - cameraPosition; //från fokus
+				}
+				if (kb.D) { //RIGHT
+					move.x += 1.0f;
+				
+				}
+				if (kb.A) { //LEFT
+					move.x -= 1.0f;
+					
+				}
+				if (kb.Q) { //UP
+					move.y += 1.0f;
+					
+				}
+				if (kb.E) { //DOWN
+					move.y -= 1.0f;
+					
+				}
+
+				//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+				auto mouse = m_mouse->GetState();
+
+				if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+					float deltaPos[3] = { float(mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+					pitch -= deltaPos[1]; //Y
+					yaw -= deltaPos[0]; //X
+
+					float limit = XM_PI / 2.0f - 0.2f;
+					pitch = max(-limit, pitch);
+					pitch = min(+limit, pitch);
+
+					if (yaw > XM_PI)
+					{
+						yaw -= XM_PI * 2.0f;
+					}
+					else if (yaw < -XM_PI)
+					{
+						yaw += XM_PI * 2.0f;
+					}
+
+				}
+				m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+
+				//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
+				
+				//UPDATE CAMERA
+				{
+					//ROTATION OF CAMERA
+					camRotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0);
+					//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
+					//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
+
+					//DID WORK
+					float y = sinf(pitch);
+					float r = cosf(pitch);
+					float z = r * cosf(yaw);
+					float x = r * sinf(yaw);
+
+					cameraFocus = cameraPosition + XMVECTOR{ x, y, z, 0.0f };
+					//cameraFocus = XMVector3Normalize(cameraFocus); 
+
+					XMMATRIX RotateYTempMatrix;
+					RotateYTempMatrix = XMMatrixRotationY(yaw);
+
+					//Update cameraForward,Up,Right
+					camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
+					camRight = XMVector3Normalize(camRight);
+					cameraUp = XMVector3TransformCoord(cameraUp, RotateYTempMatrix);
+					camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
+
+					start = high_resolution_clock::now();
+					//NOT FINISHED SOON DONE
+					move = move * float(delta.count());
+					toAdd = toAdd * float(delta.count());
+					toAdd += move.x*camRight + move.y*cameraUp /*+ move.z*camForward*/;
+
+					cameraPosition += toAdd;
+				}
+
+				//ROTATING WORLD
 				
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
+				
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
@@ -1121,7 +1287,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
 					cameraPosition,
 					cameraFocus,
-					{ 0.0f, 1.0f, 0.0f, 0.0f }
+					cameraUp
 				);
 				View = XMMatrixTranspose(View);
 
@@ -1213,7 +1379,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+	case WM_ACTIVATEAPP:
+
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
+
+	case WM_INPUT:
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
+
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		break;
 	}
+	
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

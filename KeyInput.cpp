@@ -196,3 +196,4 @@ bool KeyInput(KEY akey) {
 	}
 	return toReturn;
 }
+
