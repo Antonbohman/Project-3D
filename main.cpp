@@ -88,6 +88,16 @@ struct WorldMatrix {
 WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
+//ObjectFile vertexes;
+struct ObjInfo
+{
+	float x, y, z;
+	float x_n, y_n, z_n;
+	float u, v;
+};
+
+ObjInfo* objObject = nullptr;
+
 // CAMERAVIEW
 XMVECTOR cameraPosition = { 0.0f, 3.0f, -2.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
@@ -782,6 +792,129 @@ void SetViewport() {
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	gDeviceContext->RSSetViewports(1, &vp);
+}
+
+void LoadObjectFile(char* filename)
+{
+	FILE* fileptr;
+	fileptr = fopen(filename, "r");
+	if (fileptr == NULL)
+	{
+		return;
+	}
+
+	int loopControl = 1;
+	char line[128];
+
+	XMFLOAT3* arrOfVertices = new XMFLOAT3[100];
+	int arrSize = 100;
+	int nrOfVert = 0;
+
+	bool textureCordStart = false;
+	XMFLOAT2* arrOfTxtCord = nullptr;
+	int nrOfTxtCord;
+
+	bool normalStart = false;
+	XMFLOAT3* arrOfNormals = nullptr;
+	int nrOfNormals;
+
+	bool indexStart = false;
+	XMINT3* arrOfIndex = nullptr;
+	int nrOfIndex;
+	int indexArrSize = 0;
+
+	while (loopControl != EOF)
+	{
+		loopControl = fscanf(fileptr, "%s", line);
+		if (loopControl == EOF) {}
+		else
+		{
+			if (strcmp(line, "v") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				if (nrOfVert == arrSize)
+				{
+					XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
+					for (int i = 0; i < arrSize; i++)
+					{
+						tempArr[i] = arrOfVertices[i];
+					}
+					delete arrOfVertices;
+					arrOfVertices = tempArr;
+
+					arrSize += 50;
+				}
+				arrOfVertices[nrOfVert] = vertex;
+				nrOfVert++;
+			}
+			else if (strcmp(line, "vt") == 0)
+			{
+				if (textureCordStart == false)
+				{
+					arrOfTxtCord = new XMFLOAT2[nrOfVert];
+					textureCordStart = true;
+				}
+
+				XMFLOAT2 vertex;
+				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
+
+				arrOfTxtCord[nrOfTxtCord] = vertex;
+				nrOfTxtCord++;
+			}
+			else if (strcmp(line, "vn") == 0)
+			{
+				if (normalStart == false)
+				{
+					arrOfNormals = new XMFLOAT3[nrOfNormals];
+					normalStart = true;
+				}
+
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+
+				arrOfNormals[nrOfNormals] = vertex;
+				nrOfNormals++;
+			}
+			else if (strcmp(line, "f") == 0)
+			{
+				if (indexStart == false)
+				{
+					indexArrSize = (nrOfVert * 1.5);
+					arrOfIndex = new XMINT3[indexArrSize];
+					normalStart = true;
+				}
+				if (nrOfIndex == indexArrSize)
+				{
+					XMINT3* tempArr = new XMINT3[arrSize + 50];
+					for (int i = 0; i < arrSize; i++)
+					{
+						tempArr[i] = arrOfIndex[i];
+					}
+					delete arrOfIndex;
+					arrOfIndex = tempArr;
+
+					indexArrSize += 50;
+				}
+
+			}
+		}
+	}
+
+	objObject = new ObjInfo[nrOfVert];
+	for (int i = 0; i < nrOfVert; i++)
+	{
+		objObject[i].x = arrOfVertices[i].x;
+		objObject[i].y = arrOfVertices[i].y;
+		objObject[i].z = arrOfVertices[i].z;
+
+		objObject[i].x_n = arrOfNormals[i].x;
+		objObject[i].y_n = arrOfNormals[i].y;
+		objObject[i].z_n = arrOfNormals[i].z;
+
+		objObject[i].u = arrOfTxtCord[i].x;
+		objObject[i].v = arrOfTxtCord[i].y;
+	}
 }
 
 bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
