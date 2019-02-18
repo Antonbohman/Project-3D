@@ -806,6 +806,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 	HRESULT error;
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
 	delete triangleVertices;
+	//4ret
 }
 
 void CreateTriangleData() {
@@ -981,16 +982,16 @@ void LoadObjectFile(char* filename)
 
 	bool textureCordStart = false;
 	XMFLOAT2* arrOfTxtCord = nullptr;
-	int nrOfTxtCord;
+	int nrOfTxtCord = 0;
 
 	bool normalStart = false;
 	XMFLOAT3* arrOfNormals = nullptr;
-	int nrOfNormals;
+	int nrOfNormals = 0;
 
 	bool indexStart = false;
 	XMINT3* arrOfIndex = nullptr;
-	int nrOfIndex;
-	int indexArrSize = 0;
+	int nrOfFaces = 0;
+	int objArrSize = 0;
 
 	while (loopControl != EOF)
 	{
@@ -1047,43 +1048,69 @@ void LoadObjectFile(char* filename)
 			}
 			else if (strcmp(line, "f") == 0)
 			{
+				XMINT3 vertex[3];
+				fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
+				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
 				if (indexStart == false)
 				{
-					indexArrSize = (nrOfVert * 1.5);
-					arrOfIndex = new XMINT3[indexArrSize];
-					normalStart = true;
+					objArrSize = (nrOfVert * 1.5);
+					objObject = new ObjInfo[objArrSize];
+					indexStart = true;
 				}
-				if (nrOfIndex == indexArrSize)
+				if (nrOfFaces + 3 >= objArrSize)
 				{
-					XMINT3* tempArr = new XMINT3[arrSize + 50];
-					for (int i = 0; i < arrSize; i++)
+					ObjInfo* tempArr = new ObjInfo[objArrSize + 50];
+					for (int i = 0; i < nrOfFaces; i++)
 					{
-						tempArr[i] = arrOfIndex[i];
+						tempArr[i] = objObject[i];
 					}
-					delete arrOfIndex;
-					arrOfIndex = tempArr;
+					delete objObject;
+					objObject = tempArr;
 
-					indexArrSize += 50;
+					objArrSize += 50;
 				}
+				for (int i = 0; i < 3; i++)
+				{
+					objObject[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x;
+					objObject[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y;
+					objObject[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z;
 
+					objObject[nrOfFaces + i].x_n = arrOfNormals[vertex[i].y - 1].x;
+					objObject[nrOfFaces + i].y_n = arrOfNormals[vertex[i].y - 1].y;
+					objObject[nrOfFaces + i].z_n = arrOfNormals[vertex[i].y - 1].z;
+
+					objObject[nrOfFaces + i].u = arrOfTxtCord[vertex[i].z - 1].x;
+					objObject[nrOfFaces + i].v = arrOfTxtCord[vertex[i].z - 1].y;
+				}
+				nrOfFaces += 3;
 			}
 		}
 	}
+	fclose(fileptr);
 
-	objObject = new ObjInfo[nrOfVert];
-	for (int i = 0; i < nrOfVert; i++)
-	{
-		objObject[i].x = arrOfVertices[i].x;
-		objObject[i].y = arrOfVertices[i].y;
-		objObject[i].z = arrOfVertices[i].z;
+	// Describe the Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	// what type of buffer will this be?
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// what type of usage (press F1, read the docs)
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// how big in bytes each element in the buffer is.
+	bufferDesc.ByteWidth = sizeof(ObjInfo) * nrOfFaces;
 
-		objObject[i].x_n = arrOfNormals[i].x;
-		objObject[i].y_n = arrOfNormals[i].y;
-		objObject[i].z_n = arrOfNormals[i].z;
+	//int size = sizeof(triangleVertices);
 
-		objObject[i].u = arrOfTxtCord[i].x;
-		objObject[i].v = arrOfTxtCord[i].y;
-	}
+	// this struct is created just to set a pointer to the
+	// data containing the vertices.
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = (void*)objObject;
+
+	// create a Vertex Buffer
+	HRESULT error;
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
+
+	gnrOfVertices = nrOfFaces;
+	//4ret
 }
 
 bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
@@ -1231,7 +1258,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue=0.01f;
+	float rotationValue = 0.01f;
 	bool orbital = true;
 
 	if (wndHandle) {
@@ -1243,12 +1270,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
+		//if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
 
-		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+		//CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+
+		//delete[] _heightmap.verticesPos;
+
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		delete[] _heightmap.verticesPos;
+		LoadObjectFile("hotModel.obj");
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
@@ -1268,7 +1298,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
-				
+
 				//NEW CONTROLS 
 				//KEYBOARD
 				auto kb = m_keyboard->GetState();
@@ -1280,12 +1310,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				}
 				Vector3 move = Vector3::Zero;
 				Vector3 smartMove = Vector3::Zero;
-				Vector4 toAdd =Vector4::Zero ;
+				Vector4 toAdd = Vector4::Zero;
 				//UPDATE VECTOR
 				if (kb.W) {//FORWARD IN
 					move.z += 1.0f;  //IN Z
 					toAdd += cameraFocus - cameraPosition; //till fokus
-					
+
 				}
 				if (kb.S) { //BACK
 					move.z -= 1.0f; //UT Z
@@ -1293,19 +1323,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				}
 				if (kb.D) { //RIGHT
 					move.x += 1.0f;
-				
+
 				}
 				if (kb.A) { //LEFT
 					move.x -= 1.0f;
-					
+
 				}
 				if (kb.Q) { //UP
 					move.y += 1.0f;
-					
+
 				}
 				if (kb.E) { //DOWN
 					move.y -= 1.0f;
-					
+
 				}
 
 				//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
@@ -1334,7 +1364,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 				//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
-				
+
 				//UPDATE CAMERA
 				{
 					//ROTATION OF CAMERA
@@ -1370,15 +1400,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				}
 
 				//ROTATING WORLD
-				
+
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
-				
+
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
-				rotation -= 2 * XM_PI;
-				
+					rotation -= 2 * XM_PI;
+
 				XMMATRIX World;
 
 				//alternativly use XMMatrixRotationX(rotation);
@@ -1532,7 +1562,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 	}
-	
+
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
