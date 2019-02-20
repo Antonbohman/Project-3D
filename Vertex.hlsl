@@ -17,7 +17,7 @@ struct VS_OUT
 //-----------------------------------------------------------------------------------------
 VS_OUT VS_main(VS_IN input)
 {
-    VS_OUT output = (VS_OUT) 0;
+    VS_OUT output = (VS_OUT)0;
 
     //copy values from input to output
     output.Pos = float4(input.Pos, 1);
