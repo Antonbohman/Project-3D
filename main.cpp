@@ -55,6 +55,8 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
 
+Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
+
 
 void CreateDeferredQuad() {
 	PositionVertex triangleVertices[6] =
@@ -647,7 +649,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 0.5f; //mountain smoothing
+	gHeightfactor = 25.50f * 1.5f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
