@@ -127,7 +127,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 	//TriangleVertex* gMap = new TriangleVertex[gnrOfVertices];
 	//TriangleVertex gMap[3820];
 
-	gMap = new VertexInfo[gnrOfVertices];
+	gMap = new TriangleVertex[gnrOfVertices];
 
 	int vertNr = 0;
 
@@ -432,7 +432,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 	// what type of usage (press F1, read the docs)
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	// how big in bytes each element in the buffer is.
-	bufferDesc.ByteWidth = sizeof(VertexInfo) * gnrOfVertices;
+	bufferDesc.ByteWidth = sizeof(TriangleVertex) * gnrOfVertices;
 
 	//int size = sizeof(gMap);
 
@@ -443,7 +443,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 
 	// create a Vertex Buffer
 	HRESULT error;
-	error = gDevice->CreateBuffer(&bufferDesc, &data, &VertexBuffers);
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
 	//delete gMap;
 	//4ret
 }
@@ -572,7 +572,7 @@ void CreateLigths() {
 	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(0,XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),0.0f,0.0f,0.0f);
+	Lights[0] = LightSource(0, XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
 }
 
 void SetViewport() {
@@ -586,6 +586,14 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, &vp);
 }
 
+void LoadObjectFile(char* filename)
+{
+	FILE* fileptr;
+	fileptr = fopen(filename, "r");
+	if (fileptr == NULL)
+	{
+		return;
+	}
 	int loopControl = 1;
 	char line[128];
 
@@ -667,12 +675,12 @@ void SetViewport() {
 				if (indexStart == false)
 				{
 					objArrSize = (nrOfVert * 1.5);
-					gObject = new VertexInfo[objArrSize];
+					gObject = new TriangleVertex[objArrSize];
 					indexStart = true;
 				}
 				if (gnrOfFaces + 3 >= objArrSize)
 				{
-					VertexInfo* tempArr = new VertexInfo[objArrSize + 50];
+					TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
 					for (int i = 0; i < gnrOfFaces; i++)
 					{
 						tempArr[i] = gObject[i];
@@ -713,7 +721,7 @@ void SetViewport() {
 	// what type of usage (press F1, read the docs)
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	// how big in bytes each element in the buffer is.
-	bufferDesc.ByteWidth = sizeof(VertexInfo) * gnrOfFaces;
+	bufferDesc.ByteWidth = sizeof(TriangleVertex) * gnrOfFaces;
 
 	//int size = sizeof(gMap);
 
@@ -724,7 +732,7 @@ void SetViewport() {
 
 	// create a Vertex Buffer
 	HRESULT error;
-	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffers[1]);
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
 	/*int ok = 0;
 	ok++;*/
 	/*gnrOfVertices = nrOfFaces;*/
@@ -889,7 +897,7 @@ void Render() {
 	gDeviceContext->Draw(gnrOfVertices, 0);
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
-    gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
 	SetLightShaders();
 
@@ -933,7 +941,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue=0.01f;
+	float rotationValue = 0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -1030,16 +1038,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
-						
+
 						deltaChange = deltaChange;
 						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD
-				
+
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
-				
+
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
@@ -1157,7 +1165,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 	}
-	
+
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

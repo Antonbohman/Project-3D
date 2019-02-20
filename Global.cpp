@@ -15,6 +15,9 @@ ID3D11SamplerState* gSampling = nullptr;
 
 // a resource to store Vertices in the GPU
 ID3D11Buffer* gVertexBuffer = nullptr;
+TriangleVertex* gMap = nullptr;
+TriangleVertex* gObject = nullptr;
+int gnrOfFaces = 0;
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;
 
 // input layouts
