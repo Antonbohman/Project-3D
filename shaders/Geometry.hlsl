@@ -28,7 +28,7 @@ void GS_main(
 {
     PS_INOUT output = (PS_INOUT) 0;
 
-    float3 cameraVector = CameraOrigin.xyz - input[0].Pos_W.xyz;
+    //float3 cameraVector = CameraOrigin.xyz - input[0].Pos_W.xyz;
 
     //calculate a normal based on the world position
     float3 v0 = input[1].Pos_W.xyz - input[0].Pos_W.xyz;
