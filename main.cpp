@@ -1163,10 +1163,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				}
 
-				if (kb.LeftAlt && rotationValue>0) {
-					rotationValue = 0;
+				if (kb.LeftControl && rotationValue>0) {
+					rotationValue = 0.0f;
 				}
-				else {
+				else if (kb.LeftShift){
 					rotationValue = 0.01;
 				}
 				Vector3 move = Vector3::Zero;
