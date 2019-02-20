@@ -999,7 +999,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("skoj.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -1022,10 +1022,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
-				
-
-				
-				//Keyboard, mouse and Camera
+				start = high_resolution_clock::now();
+				//KEYBOARD 
 				{
 					auto kb = m_keyboard->GetState();
 					if (kb.Escape) {
@@ -1083,7 +1081,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
-						start = high_resolution_clock::now();
+						
 						deltaChange = deltaChange;
 						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
 					}
