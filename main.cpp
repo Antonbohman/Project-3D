@@ -122,136 +122,12 @@ WorldMatrix* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
 
-//wastd::unique_ptr< DirectX::Keyboard >m_keyboard;
-//struct CameraData {
-//	XMVECTOR cameraPosition;
-//	XMVECTOR cameraFocus;
-//	XMVECTOR upDirection;
-//};
-
-// CAMERAVIEW
-
-XMVECTOR cameraPosition = { 0.0f, 10.0f, -20.0f, 0.0f };
-XMVECTOR cameraOriginalPostion = cameraPosition;
-XMVECTOR cameraFocus = { 0.0f, 10.0f, 0.0f, 0.0f };// XMVECTOR camTarget;
-XMVECTOR cameraOriginalFocus = cameraFocus;
-XMVECTOR cameraUp = { 0.0f,1.0f,0.0f,0.0f };
-
-XMMATRIX camRotationMatrix;
-
-float pitch;
-float yaw;
-
-#define ROTATION_GAIN 0.004f
-#define MOVEMENT_GAIN 0.07f
-
-
-//CAMERA MANIPULATION
-XMVECTOR DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-XMVECTOR camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-
-//CREATE CAMERA 
+//CREATE CAMERA, providing a position and a focus point
 Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 
 
 //https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
-
-//XMMATRIX camRotationMatrix;
-//XMMATRIX groundWorld;
-//
-//float moveLeftRight = 0.0f;
-//float moveBackForward = 0.0f;
-//float moveDownUp = 0.0f;
-//
-//float camYaw = 0.0f;
-//float camPitch = 0.0f;
-//
-//XMVECTOR camPosition;
-//XMMATRIX camView;
-//
-//
-//void UpdateCamera()
-//{
-//	//update target 
-//	camRotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
-//	cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-//	cameraFocus = XMVector3Normalize(cameraFocus);
-//
-//	//FIRST PERSON
-//	//XMMATRIX RotateYTempMatrix;
-//	//RotateYTempMatrix = XMMatrixRotationY(camYaw);
-//
-//	//camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-//	//camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix); //DECLARE
-//	//camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
-//
-//	//FREE-LOOK camera
-//	camRight = XMVector3TransformCoord(DefaultRight, camRotationMatrix);
-//	camForward = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-//	cameraUp = XMVector3Cross(camForward, camRight);
-//
-//
-//	camPosition = moveLeftRight * camRight; 
-//	camPosition += moveBackForward * camForward;
-//
-//	moveLeftRight = 0.0f;
-//	moveBackForward = 0.0f;
-//	moveDownUp = 0.0f; //not implemented
-//
-//	cameraFocus = camPosition + cameraFocus;
-//
-//	camView = XMMatrixLookAtLH(camPosition, cameraFocus, cameraUp);
-//}
-//
-//void Input(double deltaT)
-//{
-//	float movementSpeed = 15.0f*deltaT;
-//
-//	//CHANGE CAMERA POSITION without delta
-//		//movement in Z-axis W+ S-
-//	if (KeyInput(Wkey))
-//	{
-//		moveBackForward += movementSpeed;
-//	}
-//	if (KeyInput(Skey))
-//	{
-//		moveBackForward -= movementSpeed;
-//	}
-//	//movement in X-axis D+ A-
-//	if (KeyInput(Akey))
-//	{
-//		moveLeftRight -= movementSpeed;
-//	}
-//	if (KeyInput(Dkey))
-//	{
-//		moveLeftRight += movementSpeed;
-//	}
-//	//movement in Y-axis Q+ E-
-//	if (KeyInput(Qkey))
-//	{
-//		cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
-//		cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
-//	}
-//	if (KeyInput(Ekey))
-//	{
-//		cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
-//		cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
-//	}
-//	//rest position with HOME
-//	if (KeyInput(Homekey))
-//	{
-//		cameraPosition = cameraOriginalPostion;
-//	}
-//	//rest position with HOME
-//	if (KeyInput(Homekey))
-//	{
-//		cameraFocus = cameraOriginalFocus;
-//	}
-//}
-
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
@@ -874,7 +750,7 @@ void CreateConstantBuffer() {
 	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
 	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
 	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
-	gLightData->cameraView = cameraPosition;
+	gLightData->cameraView = camera.GetCamPos();
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -1123,7 +999,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("kon.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("skoj.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
@@ -1149,155 +1025,69 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				
 
 				
-				//KEYBOARD
-				auto kb = m_keyboard->GetState();
-				if (kb.Escape) {
-					camera.SetCamPos(camera.GetCamOriginalPos());
-					camera.SetCamTarget(camera.GetCamOriginalTarget());
-					camera.SetYawAndPitch(0,0);
-
-
-					cameraPosition = cameraOriginalPostion;
-					cameraFocus = cameraOriginalFocus;
-					pitch = yaw = 0;
-
-				}
-
-				if (kb.LeftControl && rotationValue>0) {
-					rotationValue = 0.0f;
-				}
-				else if (kb.LeftShift){
-					rotationValue = 0.01;
-				}
-				Vector3 move = Vector3::Zero;
-
-				Vector3 moveInDepth = Vector3::Zero;
-
-				Vector3 moveInDepthCameraClass = Vector3::Zero;
-
-				Vector3 deltaChange = Vector3::Zero;
-
-				//UPDATE VECTOR
-				if (kb.W) {//FORWARD IN
-					//move.z += 1.0f;  //IN Z
-					moveInDepth += cameraFocus -cameraPosition;
-					 //till fokus
-					moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
-					
-				}
-				if (kb.S) { //BACK
-					//move.z -= 1.0f; //UT Z
-					//från fokus
-					moveInDepth -= cameraFocus - cameraPosition;
-
-					moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
-				}
-				if (kb.D) { //RIGHT
-					move.x += 1.0f;
-
-					deltaChange.x += 1.0f;
-				
-				}
-				if (kb.A) { //LEFT
-					move.x -= 1.0f;
-
-					deltaChange.x -= 1.0f;
-					
-				}
-				if (kb.Q) { //UP
-					move.y += 1.0f;
-
-					deltaChange.y += 1.0f;
-					
-				}
-				if (kb.E) { //DOWN
-					move.y -= 1.0f;
-
-					deltaChange.y -= 1.0f;
-					
-				}
-				//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
-				auto mouse = m_mouse->GetState();
-
-				if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-					//MOUSE RELATIVE CONTROL
-					float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
-
-					camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
-
-					pitch -= deltaPos[1]; //Y
-					yaw -= deltaPos[0]; //X
-
-					float limit = XM_PI / 2.0f - 0.1f;
-					pitch = max(-limit, pitch);
-					pitch = min(+limit, pitch);
-
-					if (yaw > XM_PI)
-					{
-						yaw -= XM_PI * 2.0f;
-					}
-					else if (yaw < -XM_PI)
-					{
-						yaw += XM_PI * 2.0f;
-					}
-
-				}
-
-				m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
-
-				
-				//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
-				
-				//UPDATE CAMERA
+				//Keyboard, mouse and Camera
 				{
-					move = XMVector3Normalize(move);
-					deltaChange = XMVector3Normalize(deltaChange);
-					//ROTATION OF CAMERA
+					auto kb = m_keyboard->GetState();
+					if (kb.Escape) {
+						camera.SetCamPos(camera.GetCamOriginalPos());
+						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						camera.SetYawAndPitch(0, 0);
+					}
+
+					if (kb.LeftControl && rotationValue > 0) {
+						rotationValue = 0.0f;
+					}
+					else if (kb.LeftShift) {
+						rotationValue = 0.01;
+					}
+					Vector3 moveInDepthCameraClass = Vector3::Zero;
+					Vector3 deltaChange = Vector3::Zero;
+
+					//UPDATE VECTOR
+					if (kb.W) {//FORWARD IN
+						moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
+
+					}
+					if (kb.S) { //BACK
+						moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
+					}
+					if (kb.D) { //RIGHT
+						deltaChange.x += 1.0f;
+
+					}
+					if (kb.A) { //LEFT
+						deltaChange.x -= 1.0f;
+					}
+					if (kb.Q) { //UP
+						deltaChange.y += 1.0f;
+					}
+					if (kb.E) { //DOWN
+						deltaChange.y -= 1.0f;
+					}
+					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+					auto mouse = m_mouse->GetState();
+
+					if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+						//MOUSE RELATIVE CONTROL
+						float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+						camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+					}
+
+					m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 
-					camRotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0);
-					//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-					//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
-
-					//DID WORK
-					float y = sinf(pitch);
-					float r = cosf(pitch);
-					float z = r * cosf(yaw);
-					float x = r * sinf(yaw);
-
-					cameraFocus = cameraPosition + XMVECTOR{ x, y, z, 0.0f };
-					//cameraFocus = XMVector3Normalize(cameraFocus); 
-
-					XMMATRIX RotateYTempMatrix;
-					RotateYTempMatrix = XMMatrixRotationY(yaw);
-
-					//Update cameraForward,Up,Right
-					camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-					camRight = XMVector3Normalize(camRight);
-					cameraUp = XMVector3TransformCoord(cameraUp, RotateYTempMatrix);
-					camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
-
-					//UPDATE ROTATION
-					
-					move = move.x *camRight+ move.y * cameraUp ; //ONE PLANE NO CHANGE IN Y
-					move += moveInDepth;
-
-					deltaChange = deltaChange.x*camera.GetCamRight()+ deltaChange.y*camera.GetCamUp();
-					/*Vector3 Forward = camera.GetCamPos()-;*/
-					deltaChange +=moveInDepthCameraClass ;
-					
-					start = high_resolution_clock::now();
-
-					move = move * float(delta.count());
-					deltaChange = deltaChange;
-					//toAdd = toAdd * float(delta.count());
-
-					camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
-
-					cameraPosition += move;
-					cameraFocus += move;
+					//UPDATE CAMERA
+					{
+						deltaChange = XMVector3Normalize(deltaChange);
+						//ROTATION OF CAMERA
+						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
+						deltaChange += moveInDepthCameraClass;
+						start = high_resolution_clock::now();
+						deltaChange = deltaChange;
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+					}
 				}
-
 				//ROTATING WORLD
 				
 				//upate rotation depending on time since last update
@@ -1339,12 +1129,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//World = XMMatrixMultiply(World, WorldZ);
 
 				XMMATRIX View = XMMatrixLookAtLH(
-					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
 					
-					/*cameraPosition,
-					cameraFocus,
-					cameraUp*/
-					camera.GetCamPos(),camera.GetCamTarget(),camera.GetCamUp()
+					camera.GetCamPos(),
+					camera.GetCamTarget(),
+					camera.GetCamUp()
 				);
 				View = XMMatrixTranspose(View);
 
@@ -1352,7 +1140,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					(float)XM_PI*0.45,
 					(float)W_WIDTH / (float)W_HEIGHT,
 					0.1f,
-					200.0f
+					600.0f
 				);
 				Projection = XMMatrixTranspose(Projection);
 
