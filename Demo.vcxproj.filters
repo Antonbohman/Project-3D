@@ -13,9 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\shaders">
+      <UniqueIdentifier>{ac5c55ad-b05b-48c8-b5e9-88414e184044}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+	<ClCompile Include="LightSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KeyInput.cpp">
@@ -26,23 +38,38 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Fragment.hlsl">
-      <Filter>Source Files</Filter>
+    <FxCompile Include="shaders\Fragment.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Vertex.hlsl">
-      <Filter>Source Files</Filter>
+    <FxCompile Include="shaders\Geometry.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Geometry.hlsl">
-      <Filter>Source Files</Filter>
+    <FxCompile Include="shaders\Vertex.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ComputeShader.hlsl">
-      <Filter>Source Files</Filter>
+    <FxCompile Include="shaders\LightVertex.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\LightFragment.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Compute.hlsl">
+      <Filter>Source Files\shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+	<ClInclude Include="LightSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="KeyInput.h">
       <Filter>Source Files</Filter>
     </ClInclude>

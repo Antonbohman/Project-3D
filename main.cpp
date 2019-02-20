@@ -1,10 +1,8 @@
+#pragma once
 #include <windows.h>
 #include <chrono>
 #include <algorithm>
-#include "KeyInput.h"
-//#include "bth_image.h"
 #include <Mouse.h>
-
 #include <Keyboard.h>
 //
 
@@ -41,424 +39,55 @@ std::unique_ptr<DirectX::Keyboard>m_keyboard;
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
-
-// window size
-#define W_WIDTH 640.0f
-#define W_HEIGHT 480.0f
-
-// define number of vertices used in rendering
-#define VERTICES 6
+#include "KeyInput.h"
+#include "Camera.h"
+#include "LightSource.h"
+#include "Global.h"
+#include "Shaders.h"
 
 using namespace DirectX;
 using namespace SimpleMath;
 using namespace std::chrono;
 
-// external variables imported from bth_image.h for raw image data
-/*extern const unsigned int BTH_IMAGE_WIDTH;
-extern const unsigned int BTH_IMAGE_HEIGHT;
-extern unsigned char BTH_IMAGE_DATA[];*/
-
-struct Heightmap //Heightmap
-{
-	int imageWidth; //Width of image file
-	int imageHeight; //Height of image file
-	XMFLOAT3 *verticesPos; //Array of vertex positions
-};
 
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
 
-// Most directX Objects are COM Interfaces
-// https://es.wikipedia.org/wiki/Component_Object_Model
-IDXGISwapChain* gSwapChain = nullptr;
 
-// Device and DeviceContext are the most common objects to
-// instruct the API what to do. It is handy to have a reference
-// to them available for simple applications.
-ID3D11Device* gDevice = nullptr;
-ID3D11DeviceContext* gDeviceContext = nullptr;
+void CreateDeferredQuad() {
+	PositionVertex triangleVertices[6] =
+	{
+		-1, -1,	//v0 pos
+		-1, 1,	//v1 pos
+		1, -1,    //v2 pos
 
-// A "view" of a particular resource (the color buffer)
-ID3D11RenderTargetView* gBackbufferRTV = nullptr;
+		//----//
 
-// a resource to store Vertices in the GPU
-//ID3D11Buffer** gVertexBuffers = new ID3D11Buffer*[2];
-ID3D11Buffer* gVertexBuffers[2] = {nullptr, nullptr};
-ID3D11Buffer* VertexBuffers = nullptr;
-
-
-ID3D11InputLayout* gVertexLayout = nullptr;
-
-// resources for depth buffer image and texture image
-ID3D11ShaderResourceView* gResource = nullptr;
-ID3D11DepthStencilView* gDepth = nullptr;
-
-// resources that represent shaders
-ID3D11ComputeShader* gComputeShader = nullptr;
-ID3D11VertexShader* gVertexShader = nullptr;
-ID3D11GeometryShader* gGeometryShader = nullptr;
-ID3D11PixelShader* gPixelShader = nullptr;
-
-int nrOfVertices;
-float gHeightfactor;
-// resource storing lightning source
-struct LightData {
-	XMVECTOR ambient;
-	XMVECTOR light; //POSITION
-	XMVECTOR colour;
-	XMVECTOR cameraView;
-};
-LightData* gLightData = nullptr;
-ID3D11Buffer* gLightDataBuffer = nullptr;
-
-// a resource to store world,view,porojection matrix for object in the GPU
-
-struct WorldMatrix {
-	XMMATRIX world;
-	XMMATRIX view;
-	XMMATRIX projection;
-};
-WorldMatrix* gWorldMatrix = nullptr;
-ID3D11Buffer* gWorldMatrixBuffer = nullptr;
-
-//ObjectFile vertexes;
-struct VertexInfo
-{
-	float x, y, z;
-	float u, v;
-	float r, g, b;
-};
-
-//struct TriangleVertex {
-//	float x, y, z;
-//	float r, g, b;
-//	float u, v;
-//};
-
-VertexInfo* gObject = nullptr;
-VertexInfo* gMap = nullptr;
-
-//TriangleVertex* gMap = new TriangleVertex[gnrOfVertices];
-
-//VertexInfo* garrayOfObjects[2] = { nullptr, nullptr };
-
-// CAMERAVIEW
-XMVECTOR cameraPosition = { 0.0f, 10.0f, -20.0f, 0.0f };
-XMVECTOR cameraOriginalPostion = cameraPosition;
-XMVECTOR cameraFocus = { 0.0f, 0.0f, 0.0f, 0.0f };// XMVECTOR camTarget;
-XMVECTOR cameraOriginalFocus = cameraFocus;
-XMVECTOR cameraUp = { 0.0f,1.0f,0.0f,0.0f };
-
-XMMATRIX camRotationMatrix;
-
-float pitch;
-float yaw;
-
-#define ROTATION_GAIN 0.004f
-#define MOVEMENT_GAIN 0.07f
-
-
-//CAMERA MANIPULATION
-XMVECTOR DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-XMVECTOR camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-
-
-
-//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
-
-//XMMATRIX camRotationMatrix;
-//XMMATRIX groundWorld;
-//
-//float moveLeftRight = 0.0f;
-//float moveBackForward = 0.0f;
-//float moveDownUp = 0.0f;
-//
-//float camYaw = 0.0f;
-//float camPitch = 0.0f;
-//
-//XMVECTOR camPosition;
-//XMMATRIX camView;
-//
-//
-//void UpdateCamera()
-//{
-//	//update target 
-//	camRotationMatrix = XMMatrixRotationRollPitchYaw(camPitch, camYaw, 0);
-//	cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-//	cameraFocus = XMVector3Normalize(cameraFocus);
-//
-//	//FIRST PERSON
-//	//XMMATRIX RotateYTempMatrix;
-//	//RotateYTempMatrix = XMMatrixRotationY(camYaw);
-//
-//	//camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-//	//camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix); //DECLARE
-//	//camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
-//
-//	//FREE-LOOK camera
-//	camRight = XMVector3TransformCoord(DefaultRight, camRotationMatrix);
-//	camForward = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-//	cameraUp = XMVector3Cross(camForward, camRight);
-//
-//
-//	camPosition = moveLeftRight * camRight; 
-//	camPosition += moveBackForward * camForward;
-//
-//	moveLeftRight = 0.0f;
-//	moveBackForward = 0.0f;
-//	moveDownUp = 0.0f; //not implemented
-//
-//	cameraFocus = camPosition + cameraFocus;
-//
-//	camView = XMMatrixLookAtLH(camPosition, cameraFocus, cameraUp);
-//}
-//
-//void Input(double deltaT)
-//{
-//	float movementSpeed = 15.0f*deltaT;
-//
-//	//CHANGE CAMERA POSITION without delta
-//		//movement in Z-axis W+ S-
-//	if (KeyInput(Wkey))
-//	{
-//		moveBackForward += movementSpeed;
-//	}
-//	if (KeyInput(Skey))
-//	{
-//		moveBackForward -= movementSpeed;
-//	}
-//	//movement in X-axis D+ A-
-//	if (KeyInput(Akey))
-//	{
-//		moveLeftRight -= movementSpeed;
-//	}
-//	if (KeyInput(Dkey))
-//	{
-//		moveLeftRight += movementSpeed;
-//	}
-//	//movement in Y-axis Q+ E-
-//	if (KeyInput(Qkey))
-//	{
-//		cameraPosition += {0.001f, 0.0f, 0.0f, 0.0f};
-//		cameraFocus += {0.001f, 0.0f, 0.0f, 0.0f};
-//	}
-//	if (KeyInput(Ekey))
-//	{
-//		cameraPosition -= {0.001f, 0.0f, 0.0f, 0.0f};
-//		cameraFocus -= {0.001f, 0.0f, 0.0f, 0.0f};
-//	}
-//	//rest position with HOME
-//	if (KeyInput(Homekey))
-//	{
-//		cameraPosition = cameraOriginalPostion;
-//	}
-//	//rest position with HOME
-//	if (KeyInput(Homekey))
-//	{
-//		cameraFocus = cameraOriginalFocus;
-//	}
-//}
-
-// keeping track of current rotation
-float rotation = 1.5f*XM_PI;
-
-HRESULT CreateShaders() {
-	// Binary Large OBject (BLOB), for compiled shader, and errors.
-	ID3DBlob* pCS = nullptr;
-	ID3DBlob* errorBlob = nullptr;
-
-	/*HRESULT result = D3DCompileFromFile(
-		L"Compute.hlsl",   // filename
-		nullptr,		  // optional macros
-		nullptr,		  // optional include files
-		"VS_main",		  // entry point
-		"vs_5_0",		  // shader model (target)
-		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
-		0,				  // IGNORE...DEPRECATED.
-		&pCS,			  // double pointer to ID3DBlob
-		&errorBlob		  // pointer for Error Blob messages.
-	);
-
-	// compilation failed?
-	if (FAILED(result)) {
-		if (errorBlob) {
-			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-			// release "reference" to errorBlob interface object
-			errorBlob->Release();
-		}
-		if (pCS)
-			pCS->Release();
-		return result;
-	}
-
-	gDevice->CreateComputeShader(
-		pCS->GetBufferPointer(),
-		pCS->GetBufferSize(),
-		nullptr,
-		&gComputeShader
-	);
-
-	pCS->Release();*/
-
-	ID3DBlob* pVS = nullptr;
-
-	// https://msdn.microsoft.com/en-us/library/windows/desktop/hh968107(v=vs.85).aspx
-	HRESULT result = D3DCompileFromFile(
-		L"Vertex.hlsl",   // filename
-		nullptr,		  // optional macros
-		nullptr,		  // optional include files
-		"VS_main",		  // entry point
-		"vs_5_0",		  // shader model (target)
-		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
-		0,				  // IGNORE...DEPRECATED.
-		&pVS,			  // double pointer to ID3DBlob		
-		&errorBlob		  // pointer for Error Blob messages.
-	);
-
-	// compilation failed?
-	if (FAILED(result)) {
-		if (errorBlob) {
-			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-			// release "reference" to errorBlob interface object
-			errorBlob->Release();
-		}
-		if (pVS)
-			pVS->Release();
-		return result;
-	}
-
-	gDevice->CreateVertexShader(
-		pVS->GetBufferPointer(),
-		pVS->GetBufferSize(),
-		nullptr,
-		&gVertexShader
-	);
-
-	// create input layout (verified using vertex shader)
-	// Press F1 in Visual Studio with the cursor over the datatype to jump
-	// to the documentation online!
-	// please read:
-	// https://msdn.microsoft.com/en-us/library/windows/desktop/bb205117(v=vs.85).aspx
-	D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
-		{
-			"POSITION",					 // "semantic" name in shader
-			0,							 // "semantic" index (not used)
-			DXGI_FORMAT_R32G32B32_FLOAT, // size of ONE element (3 floats)
-			0,							 // input slot
-			0,							 // offset of first element
-			D3D11_INPUT_PER_VERTEX_DATA, // specify data PER vertex
-			0							 // used for INSTANCING (ignore)
-		},
-		{
-			"COLOR",
-			0,							 // same slot as previous (same vertexBuffer)
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,// offset of FIRST element (after POSITION)
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
-		{
-			"UV_POS",
-			0,							// same slot as previous (same vertexBuffer)
-			DXGI_FORMAT_R32G32B32_FLOAT,
-			0,
-			D3D11_APPEND_ALIGNED_ELEMENT,// offset of FIRST element (after COLOR)
-			D3D11_INPUT_PER_VERTEX_DATA,
-			0
-		},
+		1, 1, 	//v3 pos
+		1, -1,	//v4 pos
+		-1, 1,    //v5 pos
 	};
 
-	gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), pVS->GetBufferPointer(), pVS->GetBufferSize(), &gVertexLayout);
+	// Describe the Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	// what type of buffer will this be?
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// what type of usage (press F1, read the docs)
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// how big in bytes each element in the buffer is.
+	bufferDesc.ByteWidth = sizeof(PositionVertex) * 6;
 
-	// we do not need anymore this COM object, so we release it.
-	pVS->Release();
+	// this struct is created just to set a pointer to the
+	// data containing the vertices.
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = triangleVertices;
 
-	ID3DBlob* pGS = nullptr;
-	if (errorBlob) errorBlob->Release();
-	errorBlob = nullptr;
-
-	result = D3DCompileFromFile(
-		L"Geometry.hlsl",	// filename
-		nullptr,			// optional macros
-		nullptr,			// optional include files
-		"main",				// entry point
-		"gs_5_0",			// shader model (target)
-		D3DCOMPILE_DEBUG,	// shader compile options
-		0,					// effect compile options
-		&pGS,				// double pointer to ID3DBlob		
-		&errorBlob			// pointer for Error Blob messages.
-	);
-
-	// compilation failed?
-	if (FAILED(result)) {
-		if (errorBlob) {
-			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-			// release "reference" to errorBlob interface object
-			errorBlob->Release();
-		}
-		if (pGS)
-			pGS->Release();
-		return result;
-	}
-
-	gDevice->CreateGeometryShader(
-		pGS->GetBufferPointer(),
-		pGS->GetBufferSize(),
-		nullptr,
-		&gGeometryShader
-	);
-
-	pGS->Release();
-
-	//create pixel shader
-	ID3DBlob* pPS = nullptr;
-	if (errorBlob) errorBlob->Release();
-	errorBlob = nullptr;
-
-	result = D3DCompileFromFile(
-		L"Fragment.hlsl",   // filename
-		nullptr,		    // optional macros
-		nullptr,		    // optional include files
-		"PS_main",		    // entry point
-		"ps_5_0",		    // shader model (target)
-		D3DCOMPILE_DEBUG,	// shader compile options
-		0,				    // effect compile options
-		&pPS,			    // double pointer to ID3DBlob		
-		&errorBlob			// pointer for Error Blob messages.
-	);
-
-	// compilation failed?
-	if (FAILED(result)) {
-		if (errorBlob) {
-			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
-			// release "reference" to errorBlob interface object
-			errorBlob->Release();
-		}
-		if (pPS)
-			pPS->Release();
-		return result;
-	}
-
-	gDevice->CreatePixelShader(
-		pPS->GetBufferPointer(),
-		pPS->GetBufferSize(),
-		nullptr,
-		&gPixelShader
-	);
-
-	// we do not need anymore this COM object, so we release it.
-	pPS->Release();
-
-	return S_OK;
+	// create a Vertex Buffer
+	gDevice->CreateBuffer(&bufferDesc, &data, &gDeferredQuadBuffer);
 }
-
-int gnrOfVertices = 0;
-int gnrOfFaces = 0;
 
 void CreateHeightmapData(Heightmap heightmap) {
 	// Array of Structs (AoS)
@@ -821,69 +450,68 @@ void CreateHeightmapData(Heightmap heightmap) {
 	//4ret
 }
 
-//void CreateTriangleData() {
-//	// Array of Structs (AoS)
-//	VertexInfo gMap[VERTICES]
-//	{
-//		-0.5f, -0.5f, 0.0f,	//v0 pos
-//		1.0f, 0.0f, 0.0f,	//v0 color
-//		0.0f, 1.0f,			//v0 uv
-//
-//		-0.5f, 0.5f, 0.0f,	//v1 pos
-//		0.0f, 1.0f, 0.0f,	//v1 color
-//		0.0f, 0.0f,			//v1 uv
-//
-//		0.5f, -0.5f, 0.0f,  //v2 pos
-//		0.0f, 0.0f, 1.0f,	//v2 color
-//		1.0f, 1.0f,			//v2 uv
-//
-//		//----//
-//
-//		0.5f, 0.5f, 0.0f,	//v3 pos
-//		1.0f, 1.0f, 0.0f,	//v3 color
-//		1.0f, 0.0f,			//v3 uv
-//
-//		0.5f, -0.5f, 0.0f,	//v4 pos
-//		0.0f, 0.0f, 1.0f,	//v4 color
-//		1.0f, 1.0f,			//v4 uv
-//
-//		-0.5f, 0.5f, 0.0f,  //v5 pos
-//		0.0f, 1.0f, 0.0f,   //v5 color
-//		0.0f, 0.0f			//v5 uv
-//	};
-//
-//	// Describe the Vertex Buffer
-//	D3D11_BUFFER_DESC bufferDesc;
-//	memset(&bufferDesc, 0, sizeof(bufferDesc));
-//	// what type of buffer will this be?
-//	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-//	// what type of usage (press F1, read the docs)
-//	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-//	// how big in bytes each element in the buffer is.
-//	bufferDesc.ByteWidth = sizeof(gMap);
-//
-//	int size = sizeof(gMap);
-//
-//	// this struct is created just to set a pointer to the
-//	// data containing the vertices.
-//	D3D11_SUBRESOURCE_DATA data;
-//	data.pSysMem = gMap;
-//
-//	// create a Vertex Buffer
-//	gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
-//	delete gMap;
-//}
-
 void CreateConstantBuffer() {
-	//allocate space in memory aligned to a multitude of 16
-	gLightData = (LightData*)_aligned_malloc(sizeof(LightData), 16);
+	/////////////////
+	// Camera	   //
+	///////////////// 
 
-	//set our faked light source values, 
+	//allocate space in memory aligned to a multitude of 16
+	gCameraMatrix = (CameraMatrix*)_aligned_malloc(sizeof(CameraMatrix), 16);
+
+	//temmp static camera
+	gCameraMatrix->Origin = XMVectorSet(0.0f, 10.0f, -200.0f, 0.0f);
+	gCameraMatrix->Focus = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+
+	//create a description objekt defining how the buffer should be handled
+	D3D11_BUFFER_DESC cameraDesc;
+	ZeroMemory(&cameraDesc, sizeof(cameraDesc));
+	cameraDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cameraDesc.ByteWidth = sizeof(CameraMatrix);
+	cameraDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cameraDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	//bind light data to a subresource
+	D3D11_SUBRESOURCE_DATA cameraData;
+	ZeroMemory(&cameraData, sizeof(cameraData));
+	cameraData.pSysMem = gCameraMatrix;
+	cameraData.SysMemPitch = 0;
+	cameraData.SysMemSlicePitch = 0;
+
+	//create buffer for light subresource
+	gDevice->CreateBuffer(&cameraDesc, &cameraData, &gCameraMatrixBuffer);
+
+	/////////////////
+	// Ambient	   //
+	///////////////// 
+
+	//allocate space in memory aligned to a multitude of 16
+	gAmbientSpecularData = (AmbientSpecular*)_aligned_malloc(sizeof(AmbientSpecular), 16);
+
 	//since we won't be updating these values while program is running
-	gLightData->ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gLightData->light = XMVectorSet(0.0f, 50.0f, -30.0f, 1.0f);
-	gLightData->colour = XMVectorSet(1.0f, 1.0f, 1.0f, 50.0f);
-	gLightData->cameraView = cameraPosition;
+	gAmbientSpecularData->Ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
+	gAmbientSpecularData->Specular = XMVectorSet(0.0f, 0.0f, 0.0f, 10000.0f);
+
+	//create a description objekt defining how the buffer should be handled
+	D3D11_BUFFER_DESC ambientDesc;
+	ZeroMemory(&ambientDesc, sizeof(ambientDesc));
+	ambientDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	ambientDesc.ByteWidth = sizeof(XMVECTOR);
+	ambientDesc.Usage = D3D11_USAGE_DYNAMIC;
+	ambientDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	//bind light data to a subresource
+	D3D11_SUBRESOURCE_DATA ambientData;
+	ZeroMemory(&ambientData, sizeof(ambientData));
+	ambientData.pSysMem = gAmbientSpecularData;
+	ambientData.SysMemPitch = 0;
+	ambientData.SysMemSlicePitch = 0;
+
+	//create buffer for light subresource
+	gDevice->CreateBuffer(&ambientDesc, &ambientData, &gAmbientSpecularBuffer);
+
+	/////////////////
+	// Light	   //
+	///////////////// 
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC lightDesc;
@@ -893,15 +521,12 @@ void CreateConstantBuffer() {
 	lightDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lightDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-	//bind light data to a subresource
-	D3D11_SUBRESOURCE_DATA lightData;
-	ZeroMemory(&lightData, sizeof(lightData));
-	lightData.pSysMem = gLightData;
-	lightData.SysMemPitch = 0;
-	lightData.SysMemSlicePitch = 0;
-
 	//create buffer for light subresource
-	gDevice->CreateBuffer(&lightDesc, &lightData, &gLightDataBuffer);
+	gDevice->CreateBuffer(&lightDesc, nullptr, &gLightDataBuffer);
+
+	///////////////////////////
+	// World/View/Projection //
+	///////////////////////////
 
 	//allocate space in memory aligned to a multitude of 16
 	gWorldMatrix = (WorldMatrix*)_aligned_malloc(sizeof(WorldMatrix), 16);
@@ -924,45 +549,32 @@ void CreateConstantBuffer() {
 	gDevice->CreateBuffer(&bufferDesc, &data, &gWorldMatrixBuffer);
 }
 
-void CreateTextureResource() {
-	//pointer to texture data in memory
-	ID3D11Texture2D* pTextureData;
+HRESULT CreateSampling() {
+	D3D11_SAMPLER_DESC samplingDesc;
+	// Create a texture sampler state description.
+	samplingDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	samplingDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplingDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplingDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplingDesc.MipLODBias = 0.0f;
+	samplingDesc.MaxAnisotropy = 1;
+	samplingDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplingDesc.BorderColor[0] = 0;
+	samplingDesc.BorderColor[1] = 0;
+	samplingDesc.BorderColor[2] = 0;
+	samplingDesc.BorderColor[3] = 0;
+	samplingDesc.MinLOD = 0;
+	samplingDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	//describe how the texture should be handled
-	D3D11_TEXTURE2D_DESC textureDesc;
-	//textureDesc.Width = BTH_IMAGE_WIDTH;
-	//textureDesc.Height = BTH_IMAGE_HEIGHT;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = 1;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.MiscFlags = 0;
-	textureDesc.CPUAccessFlags = 0;
+	// Create the texture sampler state.
+	return gDevice->CreateSamplerState(&samplingDesc, &gSampling);
+}
 
-	//bind texture to a subresource
-	D3D11_SUBRESOURCE_DATA subData;
-	ZeroMemory(&subData, sizeof(subData));
-	//subData.pSysMem = (void*)BTH_IMAGE_DATA;
-	//subData.SysMemPitch = BTH_IMAGE_WIDTH * 4 * sizeof(char);
+void CreateLigths() {
+	nrOfLights = 1;
+	Lights = new LightSource[nrOfLights];
 
-	//load texture data into the texture object
-	gDevice->CreateTexture2D(&textureDesc, &subData, &pTextureData);
-
-	//describe how the resource should be rendered in view 
-	D3D11_SHADER_RESOURCE_VIEW_DESC resourceViewDesc;
-	resourceViewDesc.Format = textureDesc.Format;
-	resourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	resourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-	resourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-	//apply the view description on texture to our global variable
-	gDevice->CreateShaderResourceView(pTextureData, &resourceViewDesc, &gResource);
-
-	//release our pointer
-	pTextureData->Release();
+	Lights[0] = LightSource(0,XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),0.0f,0.0f,0.0f);
 }
 
 void SetViewport() {
@@ -975,15 +587,6 @@ void SetViewport() {
 	vp.TopLeftY = 0;
 	gDeviceContext->RSSetViewports(1, &vp);
 }
-
-void LoadObjectFile(char* filename)
-{
-	FILE* fileptr;
-	fileptr = fopen(filename, "r");
-	if (fileptr == NULL)
-	{
-		return;
-	}
 
 	int loopControl = 1;
 	char line[128];
@@ -1202,53 +805,118 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 	return true;
 }
 
-//void createVertexBuffer()
-//{
-//
-//}
+void updateWorldViewProjection() {
+	XMMATRIX World;
+
+	//alternativly use XMMatrixRotationX(rotation);
+	/*XMMATRIX WorldX = XMMatrixSet(
+		1.0, 0.0, 0.0, 0.0,
+		0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
+		0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	);*/
+
+	//alternativly use XMMatrixRotationY(rotation);
+	XMMATRIX WorldY = XMMatrixSet(
+		(float)cos(rotation), 0.0, (float)-sin(rotation), 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		(float)sin(rotation), 0.0, (float)cos(rotation), 0.0,
+		0.0, 0.0, 0.0, 1.0
+	);
+
+	//alternativly use XMMatrixRotationZ(rotation); 
+	/*XMMATRIX WorldZ = XMMatrixSet(
+		(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
+		(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0
+	);*/
+
+	World = WorldY;
+	//World = XMMatrixMultiply(WorldX, World);
+	//World = XMMatrixMultiply(World, WorldZ);
+
+	XMMATRIX View = XMMatrixLookAtLH(
+		camera.GetCamPos(),
+		camera.GetCamTarget(),
+		camera.GetCamUp()
+	);
+	View = XMMatrixTranspose(View);
+
+	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
+		(float)XM_PI*0.45,
+		(float)W_WIDTH / (float)W_HEIGHT,
+		0.1f,
+		200.0f
+	);
+	Projection = XMMatrixTranspose(Projection);
+
+	//set each matrix to our cpu side memory
+	gWorldMatrix->World = World;
+	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gWorldMatrix, sizeof(WorldMatrix));
+	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
+}
 
 void Render() {
 	// clear the back buffer to a deep blue
-	float clearColor[] = { 0, 0, 0, 1 };
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	// use DeviceContext to talk to the API
-	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
+	// Clear the render target buffers.
+	for (int i = 0; i < G_BUFFER; i++) {
+		gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[i], clearColor);
+	}
 
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	// Set the sampler state in the pixel shader.
+	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
+
+	SetDeferredShaders();
+
 	//bind our constant buffers to coresponding shader
-	gDeviceContext->GSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
-	gDeviceContext->PSSetConstantBuffers(0, 1, &gLightDataBuffer);
+	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
+	gDeviceContext->Draw(gnrOfVertices, 0);
 
-	// specifying NULL or nullptr we are disabling that stage
-	// in the pipeline
-	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
-	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
-	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
-	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
-	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
-	gDeviceContext->PSSetShader(gPixelShader, nullptr, 0);
+	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
+    gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
-	UINT32 vertexSize = sizeof(VertexInfo);
-	UINT32 offset = 0;
+	SetLightShaders();
 
-	// specify which vertex buffer to use next.
-	gDeviceContext->IASetVertexBuffers(0, 1, &VertexBuffers, &vertexSize, &offset);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);
 
-	// specify the topology to use when drawing
-	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//bind our g-buffer textures to pixelshader
+	gDeviceContext->PSSetShaderResources(0, 1, &gShaderResourceViewArray[0]);
+	gDeviceContext->PSSetShaderResources(1, 1, &gShaderResourceViewArray[1]);
+	gDeviceContext->PSSetShaderResources(2, 1, &gShaderResourceViewArray[2]);
+	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
 
-	// specify the IA Layout (how is data passed)
-	gDeviceContext->IASetInputLayout(gVertexLayout);
+	// render each light source
+	for (int j = 0; j < nrOfLights; j++) {
+		Lights[j].Load(gDeviceContext, gLightDataBuffer);
+		gDeviceContext->Draw(6, 0);
+	}
 
-	// issue a draw call of 3 vertices (similar to OpenGL)
-	gDeviceContext->Draw(gnrOfVertices/* + gnrOfFaces*/, 0);
-	//gDeviceContext->DrawIndexed(2, 0, 0);
+	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(1, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
+
+	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
@@ -1267,8 +935,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue = 0.01f;
-	bool orbital = true;
+	float rotationValue=0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -1277,23 +944,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
 
+		CreateDeferredQuad();
+
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("banankontakt3.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("maps/height/spiral_50x50.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		//delete[] _heightmap.verticesPos;
-
-		//CreateTriangleData(); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
-
-		//LoadObjectFile("hotModel.obj");
+		delete[] _heightmap.verticesPos;
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
-		//CreateTextureResource(); //9. Create and store texture image
+		CreateSampling();
 
-
+		CreateLigths();
 
 		ShowWindow(wndHandle, nCmdShow);
 
@@ -1307,174 +972,82 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
+				start = high_resolution_clock::now();
 
-				//NEW CONTROLS 
-				//KEYBOARD
-				auto kb = m_keyboard->GetState();
-				if (kb.Escape) {
-					cameraPosition = cameraOriginalPostion;
-					cameraFocus = cameraOriginalFocus;
-					pitch = yaw = 0;
-
-				}
-				Vector3 move = Vector3::Zero;
-				Vector3 smartMove = Vector3::Zero;
-				Vector4 toAdd = Vector4::Zero;
-				//UPDATE VECTOR
-				if (kb.W) {//FORWARD IN
-					move.z += 1.0f;  //IN Z
-					toAdd += cameraFocus - cameraPosition; //till fokus
-
-				}
-				if (kb.S) { //BACK
-					move.z -= 1.0f; //UT Z
-					toAdd -= cameraFocus - cameraPosition; //från fokus
-				}
-				if (kb.D) { //RIGHT
-					move.x += 1.0f;
-
-				}
-				if (kb.A) { //LEFT
-					move.x -= 1.0f;
-
-				}
-				if (kb.Q) { //UP
-					move.y += 1.0f;
-
-				}
-				if (kb.E) { //DOWN
-					move.y -= 1.0f;
-
-				}
-
-				//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
-				auto mouse = m_mouse->GetState();
-
-				if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-					float deltaPos[3] = { float(mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
-
-					pitch -= deltaPos[1]; //Y
-					yaw -= deltaPos[0]; //X
-
-					float limit = XM_PI / 2.0f - 0.2f;
-					pitch = max(-limit, pitch);
-					pitch = min(+limit, pitch);
-
-					if (yaw > XM_PI)
-					{
-						yaw -= XM_PI * 2.0f;
-					}
-					else if (yaw < -XM_PI)
-					{
-						yaw += XM_PI * 2.0f;
-					}
-
-				}
-				m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
-
-				//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
-
-				//UPDATE CAMERA
+				//KEYBOARD 
 				{
-					//ROTATION OF CAMERA
-					camRotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0);
-					//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
-					//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
+					auto kb = m_keyboard->GetState();
+					if (kb.Escape) {
+						camera.SetCamPos(camera.GetCamOriginalPos());
+						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						camera.SetYawAndPitch(0, 0);
+					}
 
-					//DID WORK
-					float y = sinf(pitch);
-					float r = cosf(pitch);
-					float z = r * cosf(yaw);
-					float x = r * sinf(yaw);
+					if (kb.LeftControl && rotationValue > 0) {
+						rotationValue = 0.0f;
+					}
+					else if (kb.LeftShift) {
+						rotationValue = 0.01;
+					}
+					Vector3 moveInDepthCameraClass = Vector3::Zero;
+					Vector3 deltaChange = Vector3::Zero;
 
-					cameraFocus = cameraPosition + XMVECTOR{ x, y, z, 0.0f };
-					//cameraFocus = XMVector3Normalize(cameraFocus); 
+					//UPDATE VECTOR
+					if (kb.W) {//FORWARD IN
+						moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
 
-					XMMATRIX RotateYTempMatrix;
-					RotateYTempMatrix = XMMatrixRotationY(yaw);
+					}
+					if (kb.S) { //BACK
+						moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
+					}
+					if (kb.D) { //RIGHT
+						deltaChange.x += 1.0f;
 
-					//Update cameraForward,Up,Right
-					camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-					camRight = XMVector3Normalize(camRight);
-					cameraUp = XMVector3TransformCoord(cameraUp, RotateYTempMatrix);
-					camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
+					}
+					if (kb.A) { //LEFT
+						deltaChange.x -= 1.0f;
+					}
+					if (kb.Q) { //UP
+						deltaChange.y += 1.0f;
+					}
+					if (kb.E) { //DOWN
+						deltaChange.y -= 1.0f;
+					}
+					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+					auto mouse = m_mouse->GetState();
 
-					start = high_resolution_clock::now();
-					//NOT FINISHED SOON DONE
-					move = move * float(delta.count());
-					toAdd = toAdd * float(delta.count());
-					toAdd += move.x*camRight + move.y*cameraUp /*+ move.z*camForward*/;
+					if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+						//MOUSE RELATIVE CONTROL
+						float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
 
-					cameraPosition += toAdd;
+						camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+					}
+
+					m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+
+
+					//UPDATE CAMERA
+					{
+						deltaChange = XMVector3Normalize(deltaChange);
+						//ROTATION OF CAMERA
+						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
+						deltaChange += moveInDepthCameraClass;
+						
+						deltaChange = deltaChange;
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+					}
 				}
-
 				//ROTATING WORLD
-
+				
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
-
+				
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
 					rotation -= 2 * XM_PI;
 
-				XMMATRIX World;
-
-				//alternativly use XMMatrixRotationX(rotation);
-				XMMATRIX WorldX = XMMatrixSet(
-					1.0, 0.0, 0.0, 0.0,
-					0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
-					0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
-					0.0, 0.0, 0.0, 1.0
-				);
-
-				//alternativly use XMMatrixRotationY(rotation);
-				XMMATRIX WorldY = XMMatrixSet(
-					(float)cos(rotation), 0.0, (float)-sin(rotation), 0.0,
-					0.0, 1.0, 0.0, 0.0,
-					(float)sin(rotation), 0.0, (float)cos(rotation), 0.0,
-					0.0, 0.0, 0.0, 1.0
-				);
-				//alternativly use XMMatrixRotationZ(rotation); 
-				XMMATRIX WorldZ = XMMatrixSet(
-					(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
-					(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
-					0.0, 0.0, 1.0, 0.0,
-					0.0, 0.0, 0.0, 1.0
-				);
-
-				World = WorldY;
-				//World = XMMatrixMultiply(WorldX, World);
-				//World = XMMatrixMultiply(World, WorldZ);
-
-				XMMATRIX View = XMMatrixLookAtLH(
-					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
-					cameraPosition,
-					cameraFocus,
-					cameraUp
-				);
-				View = XMMatrixTranspose(View);
-
-				XMMATRIX Projection = XMMatrixPerspectiveFovLH(
-					(float)XM_PI*0.45,
-					(float)W_WIDTH / (float)W_HEIGHT,
-					0.1f,
-					200.0f
-				);
-				Projection = XMMatrixTranspose(Projection);
-
-				//set each matrix to our cpu side memory
-				gWorldMatrix->world = World;
-				gWorldMatrix->view = View;
-				gWorldMatrix->projection = Projection;
-
-				//create a subresource to hold our data while we copy between cpu and gpu memory
-				D3D11_MAPPED_SUBRESOURCE mappedMemory;
-
-				//copy and map our cpu memory to our gpu buffert
-				gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-				memcpy(mappedMemory.pData, gWorldMatrix, sizeof(WorldMatrix));
-				gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
+				updateWorldViewProjection();
 
 				Render(); //10. Rendera
 
@@ -1483,26 +1056,38 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		}
 
 		//make sure there are no leaks by releasing stored pointers
-		//gVertexBufferMap->Release();
-		//gVertexBufferObj->Release();
-		//gVertexBuffers[0]->Release();
-		//gVertexBuffers[1]->Release();
+		gVertexBuffer->Release();
+		gDeferredQuadBuffer->Release();
 
-		_aligned_free(gLightData);
 		gLightDataBuffer->Release();
+
+		_aligned_free(gAmbientSpecularData);
+		gAmbientSpecularBuffer->Release();
+
+		_aligned_free(gCameraMatrix);
+		gCameraMatrixBuffer->Release();
 
 		_aligned_free(gWorldMatrix);
 		gWorldMatrixBuffer->Release();
 
-		gVertexLayout->Release();
-		gVertexShader->Release();
-		gGeometryShader->Release();
-		gPixelShader->Release();
+		DestroyShaders();
 
-		//gResource->Release();
 		gDepth->Release();
 
-		gBackbufferRTV->Release();
+		for (int i = 0; i < G_BUFFER; i++) {
+			if (gRenderTargetViewArray[i]) {
+				gRenderTargetViewArray[i]->Release();
+			}
+
+			if (gShaderResourceViewArray[i]) {
+				gShaderResourceViewArray[i]->Release();
+			}
+
+			if (gRenderTargetTextureArray[i]) {
+				gRenderTargetTextureArray[i]->Release();
+			}
+		}
+
 		gSwapChain->Release();
 		gDevice->Release();
 		gDeviceContext->Release();
@@ -1574,9 +1159,116 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 	}
-
+	
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+HRESULT CreateDepthBuffer(ID3D11Texture2D** pDepthTexture) {
+	//describe how the texture should be handled
+	D3D11_TEXTURE2D_DESC depthDesc;
+	depthDesc.ArraySize = 1;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.CPUAccessFlags = 0;
+	depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+	depthDesc.Height = W_HEIGHT;
+	depthDesc.Width = W_WIDTH;
+	depthDesc.MipLevels = 1;
+	depthDesc.MiscFlags = 0;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	//load texture data into the texture object, 
+	//for now it's a blank texture to be used later as depth buffer
+	return gDevice->CreateTexture2D(&depthDesc, NULL, pDepthTexture);
+}
+
+HRESULT CreateDepthStencilView(ID3D11Texture2D** pDepthTexture) {
+	//describe how the resource should be rendered in view 
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthViewDesc;
+	ZeroMemory(&depthViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	depthViewDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+	depthViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthViewDesc.Flags = 0;
+
+	//apply the view description on texture to our global variable
+	return gDevice->CreateDepthStencilView(*pDepthTexture, &depthViewDesc, &gDepth);
+}
+
+HRESULT CreateRenderTargets() {
+	// get the address of the back buffer
+	ID3D11Texture2D* pBackBuffer = nullptr;
+	gSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
+
+	// use the back buffer address to create the render target
+	gDevice->CreateRenderTargetView(pBackBuffer, NULL, &gBackbufferRTV);
+	pBackBuffer->Release();
+
+	for (int i = 0; i < G_BUFFER; i++) {
+		gRenderTargetTextureArray[i] = nullptr;
+		gRenderTargetViewArray[i] = nullptr;
+		gShaderResourceViewArray[i] = nullptr;
+	}
+
+	D3D11_TEXTURE2D_DESC textureDesc;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+
+	// Initialize the render target texture description.
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	// Setup the render target texture description.
+	textureDesc.Width = W_WIDTH;
+	textureDesc.Height = W_HEIGHT;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	// Create the render target textures.
+	for (int i = 0; i < G_BUFFER; i++) {
+		if (FAILED(gDevice->CreateTexture2D(&textureDesc, NULL, &gRenderTargetTextureArray[i]))) {
+			return S_FALSE;
+		}
+	}
+
+	ZeroMemory(&renderTargetViewDesc, sizeof(renderTargetViewDesc));
+
+	// Setup the description of the render target view.
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	// Create the render target views.
+	for (int j = 0; j < G_BUFFER; j++) {
+		if (FAILED(gDevice->CreateRenderTargetView(gRenderTargetTextureArray[j], &renderTargetViewDesc, &gRenderTargetViewArray[j]))) {
+			return S_FALSE;
+		}
+	}
+
+	ZeroMemory(&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
+
+	// Setup the description of the shader resource view.
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	// Create the shader resource views.
+	for (int k = 0; k < G_BUFFER; k++) {
+		if (FAILED(gDevice->CreateShaderResourceView(gRenderTargetTextureArray[k], &shaderResourceViewDesc, &gShaderResourceViewArray[k]))) {
+			return S_FALSE;
+		}
+	}
+
+	//gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
+
+	return S_OK;
 }
 
 HRESULT CreateDirect3DContext(HWND wndHandle) {
@@ -1594,8 +1286,9 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 	scd.SampleDesc.Count = 1;                               // how many multisamples
 	scd.Windowed = TRUE;                                    // windowed/full-screen mode
 
-															// create a device, device context and swap chain using the information in the scd struct
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(NULL,
+	// create a device, device context and swap chain using the information in the scd struct
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
+		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
 		D3D11_CREATE_DEVICE_DEBUG,
@@ -1606,55 +1299,24 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 		&gSwapChain,
 		&gDevice,
 		NULL,
-		&gDeviceContext);
+		&gDeviceContext
+	);
 
 	if (SUCCEEDED(hr)) {
 		//pointer to texture data in memory
 		ID3D11Texture2D* pDepthTexture = nullptr;
 
-		//describe how the texture should be handled
-		D3D11_TEXTURE2D_DESC depthDesc;
-		depthDesc.ArraySize = 1;
-		depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthDesc.CPUAccessFlags = 0;
-		depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
-		depthDesc.Height = W_HEIGHT;
-		depthDesc.Width = W_WIDTH;
-		depthDesc.MipLevels = 1;
-		depthDesc.MiscFlags = 0;
-		depthDesc.SampleDesc.Count = 1;
-		depthDesc.SampleDesc.Quality = 0;
-		depthDesc.Usage = D3D11_USAGE_DEFAULT;
+		hr = CreateDepthBuffer(&pDepthTexture);
 
-		//load texture data into the texture object, 
-		//for now it's a blank texture to be used later as depth buffer
-		HRESULT error = gDevice->CreateTexture2D(&depthDesc, NULL, &pDepthTexture);
+		if (SUCCEEDED(hr)) {
+			hr = CreateDepthStencilView(&pDepthTexture);
 
-		if (SUCCEEDED(error)) {
-			//describe how the resource should be rendered in view 
-			D3D11_DEPTH_STENCIL_VIEW_DESC depthViewDesc;
-			ZeroMemory(&depthViewDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-			depthViewDesc.Format = depthDesc.Format;
-			depthViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-			depthViewDesc.Flags = 0;
-
-			//apply the view description on texture to our global variable
-			gDevice->CreateDepthStencilView(pDepthTexture, &depthViewDesc, &gDepth);
-
-			//release our pointer
-			pDepthTexture->Release();
+			if (SUCCEEDED(hr)) {
+				CreateRenderTargets();
+			}
 		}
 
-		// get the address of the back buffer
-		ID3D11Texture2D* pBackBuffer = nullptr;
-		gSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
-
-		// use the back buffer address to create the render target
-		gDevice->CreateRenderTargetView(pBackBuffer, NULL, &gBackbufferRTV);
-		pBackBuffer->Release();
-
-		// set the render target as the back buffer and add depth buffer target
-		gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, gDepth);
+		pDepthTexture->Release();
 	}
 
 	return hr;
