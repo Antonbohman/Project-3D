@@ -15,12 +15,20 @@ struct PS_INOUT
     float3 Norm : NORMAL;
 };
 
+cbuffer VS_CB_CAMERA : register(b0)
+{
+    float4 CameraOrigin;
+    float4 CameraFocus;
+};
+
 [maxvertexcount(9)]
 void GS_main(
 	triangle GS_IN input[3],
 	inout TriangleStream<PS_INOUT> OutputStream)
 {
     PS_INOUT output = (PS_INOUT) 0;
+
+    float3 cameraVector = CameraOrigin.xyz - input[0].Pos_W.xyz;
 
     //calculate a normal based on the world position
     float3 v0 = input[1].Pos_W.xyz - input[0].Pos_W.xyz;
