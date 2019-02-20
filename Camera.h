@@ -35,7 +35,7 @@ private:
 	XMVECTOR cameraPosition;
 	XMVECTOR cameraOriginalPosition;
 	XMVECTOR cameraTarget;
-	XMVECTOR cameraOriginalFocus;
+	XMVECTOR cameraOriginalTarget;
 
 	//CAM MANIPULATION
 	XMVECTOR const defaultForward = {0.0f,0.0f,1.0f,0.0f};
@@ -43,40 +43,46 @@ private:
 	XMVECTOR camForward = { 0.0f,0.0f,1.0f,0.0f };
 	XMVECTOR camRight = { 1.0f,0.0f,0.0f,0.0f };
 	XMVECTOR camUp = { 0.0f,1.0f,0.0f,0.0f };
+
+	XMMATRIX camRotationMatrix;
 	
-	float pitch;
-	float yaw;
+	float pitch=0.0f;
+	float yaw=0.0f;
 
 public:
 	Camera();
 	Camera(Vector4 camPos,Vector4 camFocus);
 	~Camera();
 
-	Camera(const Camera &orignalObj);
+	Camera(const Camera &originalObj);
 
 	Camera &operator= (const Camera &originalObj);
 
-	XMVECTOR getCamPos() const;
-	XMVECTOR getCamOriginalPos() const;
-	XMVECTOR getCamTarget()const;
-	XMVECTOR getCamOriginalFocus() const;
-	XMVECTOR getCamForward()const;
-	XMVECTOR getCamRight()const;
-	XMVECTOR getCamUp() const;
+	XMVECTOR GetCamPos() const;
+	XMVECTOR GetCamOriginalPos() const;
+	XMVECTOR GetCamTarget()const;
+	XMVECTOR GetCamOriginalTarget() const;
+	XMVECTOR GetCamForward()const;
+	XMVECTOR GetCamRight()const;
+	XMVECTOR GetCamUp() const;
 
-	float getYaw()const;
-	float getPitch()const;
+	float GetYaw()const;
+	float GetPitch()const;
 
-	void setCamPos(Vector4 position);
-	void setCamTarget(Vector4 focusPoint);
+	void SetCamPos(Vector4 position);
+	void SetCamTarget(Vector4 focusPoint);
 
-	void moveCamPos(Vector4 move);
-	void moveCamTarget(Vector4 move);
+	void MoveCamPos(Vector4 move);
+	void MoveCamTarget(Vector4 move);
+	
+	void UpdateCamera(Vector3 movement,double time);
 
-	void addYaw(float rotationY);
+	void AddYaw(float rotationY);
 
-	void addPitch(float rotationZ);
+	void AddPitch(float rotationZ);
 
-	void updateYawAndPitch(float rotationY, float rotationZ);
+	void UpdateYawAndPitch(float rotationY, float rotationZ);
+
+	void SetYawAndPitch(float rotationY, float rotationZ);
 		
 };

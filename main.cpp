@@ -41,6 +41,8 @@ std::unique_ptr<DirectX::Keyboard>m_keyboard;
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
+#include "Camera.h"
+
 
 // window size
 #define W_WIDTH 640.0f
@@ -128,9 +130,10 @@ ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 //};
 
 // CAMERAVIEW
+
 XMVECTOR cameraPosition = { 0.0f, 10.0f, -20.0f, 0.0f };
 XMVECTOR cameraOriginalPostion = cameraPosition;
-XMVECTOR cameraFocus = { 0.0f, 0.0f, 0.0f, 0.0f };// XMVECTOR camTarget;
+XMVECTOR cameraFocus = { 0.0f, 10.0f, 0.0f, 0.0f };// XMVECTOR camTarget;
 XMVECTOR cameraOriginalFocus = cameraFocus;
 XMVECTOR cameraUp = { 0.0f,1.0f,0.0f,0.0f };
 
@@ -148,6 +151,9 @@ XMVECTOR DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 XMVECTOR camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+
+//CREATE CAMERA 
+Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 
 
@@ -1107,7 +1113,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse->SetWindow(wndHandle);
 	//Control values
 	float rotationValue=0.01f;
-	bool orbital = true;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -1129,8 +1134,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//CreateTextureResource(); //9. Create and store texture image
 
-
-
 		ShowWindow(wndHandle, nCmdShow);
 
 		while (WM_QUIT != msg.message) {
@@ -1144,55 +1147,88 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				end = high_resolution_clock::now();
 				delta = end - start;
 				
-				//NEW CONTROLS 
+
+				
 				//KEYBOARD
 				auto kb = m_keyboard->GetState();
 				if (kb.Escape) {
+					camera.SetCamPos(camera.GetCamOriginalPos());
+					camera.SetCamTarget(camera.GetCamOriginalTarget());
+					camera.SetYawAndPitch(0,0);
+
+
 					cameraPosition = cameraOriginalPostion;
 					cameraFocus = cameraOriginalFocus;
 					pitch = yaw = 0;
 
 				}
+
+				if (kb.LeftAlt && rotationValue>0) {
+					rotationValue = 0;
+				}
+				else {
+					rotationValue = 0.01;
+				}
 				Vector3 move = Vector3::Zero;
-				Vector3 smartMove = Vector3::Zero;
-				Vector4 toAdd =Vector4::Zero ;
+
+				Vector3 moveInDepth = Vector3::Zero;
+
+				Vector3 moveInDepthCameraClass = Vector3::Zero;
+
+				Vector3 deltaChange = Vector3::Zero;
+
 				//UPDATE VECTOR
 				if (kb.W) {//FORWARD IN
-					move.z += 1.0f;  //IN Z
-					toAdd += cameraFocus - cameraPosition; //till fokus
+					//move.z += 1.0f;  //IN Z
+					moveInDepth += cameraFocus -cameraPosition;
+					 //till fokus
+					moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
 					
 				}
 				if (kb.S) { //BACK
-					move.z -= 1.0f; //UT Z
-					toAdd -= cameraFocus - cameraPosition; //från fokus
+					//move.z -= 1.0f; //UT Z
+					//från fokus
+					moveInDepth -= cameraFocus - cameraPosition;
+
+					moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
 				}
 				if (kb.D) { //RIGHT
 					move.x += 1.0f;
+
+					deltaChange.x += 1.0f;
 				
 				}
 				if (kb.A) { //LEFT
 					move.x -= 1.0f;
+
+					deltaChange.x -= 1.0f;
 					
 				}
 				if (kb.Q) { //UP
 					move.y += 1.0f;
+
+					deltaChange.y += 1.0f;
 					
 				}
 				if (kb.E) { //DOWN
 					move.y -= 1.0f;
+
+					deltaChange.y -= 1.0f;
 					
 				}
-
 				//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
 				auto mouse = m_mouse->GetState();
 
 				if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-					float deltaPos[3] = { float(mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+					//MOUSE RELATIVE CONTROL
+					float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+					camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
 
 					pitch -= deltaPos[1]; //Y
 					yaw -= deltaPos[0]; //X
 
-					float limit = XM_PI / 2.0f - 0.2f;
+					float limit = XM_PI / 2.0f - 0.1f;
 					pitch = max(-limit, pitch);
 					pitch = min(+limit, pitch);
 
@@ -1206,13 +1242,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 
 				}
+
 				m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
+				
 				//https://www.braynzarsoft.net/viewtutorial/q16390-19-first-person-camera
 				
 				//UPDATE CAMERA
 				{
+					move = XMVector3Normalize(move);
+					deltaChange = XMVector3Normalize(deltaChange);
 					//ROTATION OF CAMERA
+
+
 					camRotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, 0);
 					//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
 					//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
@@ -1235,13 +1277,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					cameraUp = XMVector3TransformCoord(cameraUp, RotateYTempMatrix);
 					camForward = XMVector3TransformCoord(DefaultForward, RotateYTempMatrix);
 
-					start = high_resolution_clock::now();
-					//NOT FINISHED SOON DONE
-					move = move * float(delta.count());
-					toAdd = toAdd * float(delta.count());
-					toAdd += move.x*camRight + move.y*cameraUp /*+ move.z*camForward*/;
+					//UPDATE ROTATION
+					
+					move = move.x *camRight+ move.y * cameraUp ; //ONE PLANE NO CHANGE IN Y
+					move += moveInDepth;
 
-					cameraPosition += toAdd;
+					deltaChange = deltaChange.x*camera.GetCamRight()+ deltaChange.y*camera.GetCamUp();
+					/*Vector3 Forward = camera.GetCamPos()-;*/
+					deltaChange +=moveInDepthCameraClass ;
+					
+					start = high_resolution_clock::now();
+
+					move = move * float(delta.count());
+					deltaChange = deltaChange;
+					//toAdd = toAdd * float(delta.count());
+
+					camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+
+					cameraPosition += move;
+					cameraFocus += move;
 				}
 
 				//ROTATING WORLD
@@ -1253,6 +1307,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
 				rotation -= 2 * XM_PI;
+				//rotation = 0;
 				
 				XMMATRIX World;
 
@@ -1285,9 +1340,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				XMMATRIX View = XMMatrixLookAtLH(
 					/*{ 0.0f, 10.0f, -20.0f, 0.0f },*/
-					cameraPosition,
+					
+					/*cameraPosition,
 					cameraFocus,
-					cameraUp
+					cameraUp*/
+					camera.GetCamPos(),camera.GetCamTarget(),camera.GetCamUp()
 				);
 				View = XMMatrixTranspose(View);
 
