@@ -4,12 +4,9 @@
 #include <algorithm>
 #include <Mouse.h>
 #include <Keyboard.h>
-//
 
 std::unique_ptr<DirectX::Mouse>m_mouse;
 std::unique_ptr<DirectX::Keyboard>m_keyboard;
-
-
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
@@ -49,6 +46,7 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace std::chrono;
 
+Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -816,7 +814,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("maps/height/spiral_50x50.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
