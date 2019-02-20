@@ -2,19 +2,51 @@
 #include <windows.h>
 #include <chrono>
 #include <algorithm>
+#include <Mouse.h>
+#include <Keyboard.h>
+//
+
+std::unique_ptr<DirectX::Mouse>m_mouse;
+std::unique_ptr<DirectX::Keyboard>m_keyboard;
+
+
 
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+//std::unique_ptr<DirectX::Keyboard>m_keyboard; //NOT IMPLEMENTED
+//TOOL KIT
+//#include "CommonStates.h"
+//#include "DDSTextureLoader.h"
+//#include "DirectXHelpers.h"
+//#include "Effects.h"
+//#include "GamePad.h"
+//#include "GeometricPrimitive.h"
+//#include "GraphicsMemory.h"
+//#include "Keyboard.h"
+//#include "Model.h"
+//#include "Mouse.h"
+//#include "PostProcess.h"
+//#include "PrimitiveBatch.h"
+//#include "ScreenGrab.h"
+#include "SimpleMath.h"
+//#include "SpriteBatch.h"
+//#include "SpriteFont.h"
+//#include "VertexTypes.h"
+//#include "WICTextureLoader.h"
+
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
+#include "KeyInput.h"
+#include "Camera.h"
 #include "LightSource.h"
 #include "Global.h"
 #include "Shaders.h"
 
 using namespace DirectX;
+using namespace SimpleMath;
 using namespace std::chrono;
 
 
@@ -578,7 +610,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	imageSize = heightmap.imageHeight * heightmap.imageWidth * 3 + heightmap.imageHeight; //3 is for the three values RGB
+	int padding = heightmap.imageWidth % 4; //Ta det sen
+	if (padding > 0)
+	{
+		padding = 4 - padding;
+	}
+
+	imageSize = (heightmap.imageHeight * heightmap.imageWidth * 3) + (heightmap.imageHeight * padding); //3 is for the three values RGB, added 2 byte per row for bumper data.
 
 	//array of image data
 	unsigned char* bitmapImage = new unsigned char[imageSize];
@@ -609,7 +647,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 5; //mountain smoothing
+	gHeightfactor = 25.50f * 0.5f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -620,13 +658,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 			index = (heightmap.imageHeight * i) + j;
 
 			heightmap.verticesPos[index].x = (float)j;
-			if (height < 0) height = 0;
+			//if (height < 0) height = 0;
 			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
 			heightmap.verticesPos[index].z = (float)i;
 			//test = heightmap.verticesPos[index];
 			counter += 3;
 		}
-		counter += 1;
+		counter += padding; //Skip bumper info at the end of each row.
 	}
 
 	delete[] bitmapImage;
@@ -665,9 +703,9 @@ void updateWorldViewProjection() {
 	//World = XMMatrixMultiply(World, WorldZ);
 
 	XMMATRIX View = XMMatrixLookAtLH(
-		CameraView,
-		{ 0.0f, 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f, 0.0f }
+		camera.GetCamPos(),
+		camera.GetCamTarget(),
+		camera.GetCamUp()
 	);
 	View = XMMatrixTranspose(View);
 
@@ -753,8 +791,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
 	duration<double, std::ratio<1, 15>> delta;
 
+	//m_mouse->SetWindow();
+
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
+
+	//Mouse and keyboard ini (ONLY MOUSE)
+	m_keyboard = std::make_unique<Keyboard>();
+	m_mouse = std::make_unique<Mouse>();
+	m_mouse->SetWindow(wndHandle);
+	//Control values
+	float rotationValue=0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -787,14 +834,80 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				DispatchMessage(&msg);
 			}
 			else {
+
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				//upate rotation depending on time since last update
-				rotation += delta.count()*0.01f;
+				//KEYBOARD 
+				{
+					auto kb = m_keyboard->GetState();
+					if (kb.Escape) {
+						camera.SetCamPos(camera.GetCamOriginalPos());
+						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						camera.SetYawAndPitch(0, 0);
+					}
 
+					if (kb.LeftControl && rotationValue > 0) {
+						rotationValue = 0.0f;
+					}
+					else if (kb.LeftShift) {
+						rotationValue = 0.01;
+					}
+					Vector3 moveInDepthCameraClass = Vector3::Zero;
+					Vector3 deltaChange = Vector3::Zero;
+
+					//UPDATE VECTOR
+					if (kb.W) {//FORWARD IN
+						moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
+
+					}
+					if (kb.S) { //BACK
+						moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
+					}
+					if (kb.D) { //RIGHT
+						deltaChange.x += 1.0f;
+
+					}
+					if (kb.A) { //LEFT
+						deltaChange.x -= 1.0f;
+					}
+					if (kb.Q) { //UP
+						deltaChange.y += 1.0f;
+					}
+					if (kb.E) { //DOWN
+						deltaChange.y -= 1.0f;
+					}
+					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+					auto mouse = m_mouse->GetState();
+
+					if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+						//MOUSE RELATIVE CONTROL
+						float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+						camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+					}
+
+					m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+
+
+					//UPDATE CAMERA
+					{
+						deltaChange = XMVector3Normalize(deltaChange);
+						//ROTATION OF CAMERA
+						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
+						deltaChange += moveInDepthCameraClass;
+						
+						deltaChange = deltaChange;
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+					}
+				}
+				//ROTATING WORLD
+				
+				//upate rotation depending on time since last update
+				rotation += delta.count()*rotationValue;
+				
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
@@ -884,7 +997,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+	case WM_ACTIVATEAPP:
+
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
+
+	case WM_INPUT:
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONDOWN:
+	case WM_MBUTTONUP:
+	case WM_MOUSEWHEEL:
+	case WM_XBUTTONDOWN:
+	case WM_XBUTTONUP:
+	case WM_MOUSEHOVER:
+		Mouse::ProcessMessage(message, wParam, lParam);
+		break;
+
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		Keyboard::ProcessMessage(message, wParam, lParam);
+		break;
 	}
+	
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
