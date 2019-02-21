@@ -53,7 +53,7 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
 
-Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
+//Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
 
 
 void CreateDeferredQuad() {
@@ -445,7 +445,7 @@ void CreateHeightmapData(Heightmap heightmap) {
 
 	// create a Vertex Buffer
 	HRESULT error;
-	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBufferMap);
 	//delete gMap;
 	//4ret
 }
@@ -734,7 +734,7 @@ void LoadObjectFile(char* filename)
 
 	// create a Vertex Buffer
 	HRESULT error;
-	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBufferObj);
 	/*int ok = 0;
 	ok++;*/
 	/*gnrOfVertices = nrOfFaces;*/
@@ -811,6 +811,13 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 
 	delete[] bitmapImage;
 	return true;
+}
+
+void setVertexBuffers()
+{
+	//ppVertexBuffers = new ID3D11Buffer*[2];
+	ppVertexBuffers[0] = gVertexBufferMap;
+	ppVertexBuffers[1] = gVertexBufferObj;
 }
 
 void updateWorldViewProjection() {
@@ -915,7 +922,7 @@ void Render() {
 	// render each light source
 	for (int j = 0; j < nrOfLights; j++) {
 		Lights[j].Load(gDeviceContext, gLightDataBuffer);
-		gDeviceContext->Draw(6, 0);
+		gDeviceContext->Draw(gnrOfVertices, 0);
 	}
 
 	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
@@ -1064,7 +1071,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		}
 
 		//make sure there are no leaks by releasing stored pointers
-		gVertexBuffer->Release();
+		//gVertexBuffer->Release();
 		gDeferredQuadBuffer->Release();
 
 		gLightDataBuffer->Release();

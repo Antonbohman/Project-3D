@@ -321,7 +321,7 @@ void SetDeferredShaders() {
 	UINT32 offset = 0;
 
 	// specify which vertex buffer to use next.
-	gDeviceContext->IASetVertexBuffers(0, 1, &gVertexBuffer, &vertexSize, &offset);
+	gDeviceContext->IASetVertexBuffers(0, 1, &gVertexBufferMap, &vertexSize, &offset);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

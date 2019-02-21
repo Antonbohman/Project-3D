@@ -104,10 +104,13 @@ extern ID3D11DeviceContext* gDeviceContext;
 extern ID3D11SamplerState* gSampling;
 
 // a resource to store Vertices in the GPU
-extern ID3D11Buffer* gVertexBuffer;
+extern ID3D11Buffer* gVertexBufferObj;
+extern ID3D11Buffer* gVertexBufferMap;
 extern TriangleVertex* gMap;
 extern TriangleVertex* gObject;
 extern int gnrOfFaces;
+extern ID3D11Buffer**ppVertexBuffers;
+extern int gTotalNrOfVert;
 
 extern ID3D11Buffer* gDeferredQuadBuffer;
 
