@@ -606,10 +606,12 @@ void LoadObjectFile(char* filename)
 	bool textureCordStart = false;
 	XMFLOAT2* arrOfTxtCord = nullptr;
 	int nrOfTxtCord = 0;
+	int txtCoordArrSize = 0;
 
 	bool normalStart = false;
 	XMFLOAT3* arrOfNormals = nullptr;
 	int nrOfNormals = 0;
+	int normArrSize = 0;
 
 	bool indexStart = false;
 	XMINT3* arrOfIndex = nullptr;
@@ -645,10 +647,22 @@ void LoadObjectFile(char* filename)
 			{
 				if (textureCordStart == false)
 				{
-					arrOfTxtCord = new XMFLOAT2[nrOfVert];
+					txtCoordArrSize = nrOfVert;
+					arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
 					textureCordStart = true;
 				}
+				if (nrOfTxtCord == txtCoordArrSize)
+				{
+					XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
+					for (int i = 0; i < txtCoordArrSize; i++)
+					{
+						tempArr[i] = arrOfTxtCord[i];
+					}
+					delete arrOfTxtCord;
+					arrOfTxtCord = tempArr;
 
+					txtCoordArrSize += 50;
+				}
 				XMFLOAT2 vertex;
 				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
 
@@ -659,8 +673,21 @@ void LoadObjectFile(char* filename)
 			{
 				if (normalStart == false)
 				{
-					arrOfNormals = new XMFLOAT3[nrOfNormals];
+					normArrSize = nrOfVert;
+					arrOfNormals = new XMFLOAT3[normArrSize];
 					normalStart = true;
+				}
+				if (nrOfNormals == normArrSize)
+				{
+					XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
+					for (int i = 0; i < normArrSize; i++)
+					{
+						tempArr[i] = arrOfNormals[i];
+					}
+					delete arrOfNormals;
+					arrOfNormals = tempArr;
+
+					normArrSize += 50;
 				}
 
 				XMFLOAT3 vertex;
@@ -702,8 +729,8 @@ void LoadObjectFile(char* filename)
 					//gObject[gnrOfFaces + i].y_n = arrOfNormals[vertex[i].y - 1].y;
 					//gObject[gnrOfFaces + i].z_n = arrOfNormals[vertex[i].y - 1].z;
 
-					gObject[gnrOfFaces + i].u = arrOfTxtCord[vertex[i].z - 1].x;
-					gObject[gnrOfFaces + i].v = arrOfTxtCord[vertex[i].z - 1].y;
+					gObject[gnrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+					gObject[gnrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
 					gObject[gnrOfFaces + i].r = 0.5f;
 					gObject[gnrOfFaces + i].g = 0.0f;
@@ -714,6 +741,12 @@ void LoadObjectFile(char* filename)
 		}
 	}
 	fclose(fileptr);
+
+	TriangleVertex* objectArray = new TriangleVertex[gnrOfFaces];
+	for (int i = 0; i < gnrOfFaces; i++)
+	{
+		objectArray[i] = gObject[i];
+	}
 
 	// Describe the Vertex Buffer
 	D3D11_BUFFER_DESC bufferDesc;
@@ -730,13 +763,18 @@ void LoadObjectFile(char* filename)
 	// this struct is created just to set a pointer to the
 	// data containing the vertices.
 	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = (void*)gObject;
+	data.pSysMem = (void*)objectArray;
 
 	// create a Vertex Buffer
 	HRESULT error;
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBufferObj);
-	/*int ok = 0;
-	ok++;*/
+	int ok = 0;
+
+	//delete[] objectArray;
+	delete[] arrOfVertices;
+	delete[] arrOfTxtCord;
+	//delete[] arrOfNormals;
+	delete[] arrOfIndex;
 	/*gnrOfVertices = nrOfFaces;*/
 	//4ret
 }
@@ -815,9 +853,9 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 
 void setVertexBuffers()
 {
-	//ppVertexBuffers = new ID3D11Buffer*[2];
-	ppVertexBuffers[0] = gVertexBufferMap;
-	ppVertexBuffers[1] = gVertexBufferObj;
+	ppVertexBuffers[1] = gVertexBufferMap;
+	ppVertexBuffers[0] = gVertexBufferObj;
+	gTotalNrOfVert = gnrOfVertices + gnrOfFaces;
 }
 
 void updateWorldViewProjection() {
@@ -903,7 +941,13 @@ void Render() {
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
-	gDeviceContext->Draw(gnrOfVertices, 0);
+	UINT32 vertexSize = sizeof(TriangleVertex);
+	UINT32 offset = 0;
+
+	gDeviceContext->Draw(gTotalNrOfVert, 0);
+	//gDeviceContext->IASetVertexBuffers(0, 2, ppVertexBuffers, &vertexSize, &offset);
+	//gDeviceContext->Draw(gnrOfVertices, 0);
+
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
@@ -922,7 +966,7 @@ void Render() {
 	// render each light source
 	for (int j = 0; j < nrOfLights; j++) {
 		Lights[j].Load(gDeviceContext, gLightDataBuffer);
-		gDeviceContext->Draw(gnrOfVertices, 0);
+		gDeviceContext->Draw(gTotalNrOfVert, 0);
 	}
 
 	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
@@ -961,13 +1005,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		Heightmap _heightmap;
+			Heightmap _heightmap;
 
-		if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
+			if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
 
-		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+			CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		delete[] _heightmap.verticesPos;
+			delete[] _heightmap.verticesPos;
+
+		LoadObjectFile("hotModel.obj");
+
+		setVertexBuffers();
 
 		CreateConstantBuffer(); //8. Create constant buffers
 

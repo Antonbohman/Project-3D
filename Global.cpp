@@ -19,7 +19,7 @@ ID3D11Buffer* gVertexBufferObj = nullptr;
 TriangleVertex* gMap = nullptr;
 TriangleVertex* gObject = nullptr;
 int gnrOfFaces = 0;
-ID3D11Buffer **ppVertexBuffers = new ID3D11Buffer*[2];
+ID3D11Buffer *ppVertexBuffers[2];
 int gTotalNrOfVert = 0;
 
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;

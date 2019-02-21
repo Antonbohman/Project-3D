@@ -308,7 +308,7 @@ HRESULT CreateLightPS() {
 }
 
 void SetDeferredShaders() {
-	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth); 
+	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -317,11 +317,11 @@ void SetDeferredShaders() {
 	gDeviceContext->PSSetShader(gPixelShader, nullptr, 0);
 	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 
-	UINT32 vertexSize = sizeof(TriangleVertex);
-	UINT32 offset = 0;
+	UINT32 vertexSize[] = { sizeof(TriangleVertex), sizeof(TriangleVertex) };
+	UINT32 offset[] = { 0,0 };
 
 	// specify which vertex buffer to use next.
-	gDeviceContext->IASetVertexBuffers(0, 1, &gVertexBufferMap, &vertexSize, &offset);
+	gDeviceContext->IASetVertexBuffers(0, 2, ppVertexBuffers, vertexSize, offset);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
