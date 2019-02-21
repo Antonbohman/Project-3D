@@ -1028,13 +1028,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-			Heightmap _heightmap;
+		Heightmap _heightmap;
 
-			if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
 
-			CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-			delete[] _heightmap.verticesPos;
+		delete[] _heightmap.verticesPos;
 
 		LoadObjectFile("hotModel.obj");
 
