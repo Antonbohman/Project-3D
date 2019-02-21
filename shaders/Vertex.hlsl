@@ -24,7 +24,7 @@ cbuffer VS_CB_SPACE : register(b0)
 //-----------------------------------------------------------------------------------------
 VS_OUT VS_main(VS_IN input)
 {
-    VS_OUT output = (VS_OUT) 0;
+    VS_OUT output = (VS_OUT)0;
 
     //add world position and world normal
     output.Pos_W = mul(World, float4(input.Pos, 1.0f));

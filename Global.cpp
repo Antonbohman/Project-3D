@@ -14,7 +14,14 @@ ID3D11DeviceContext* gDeviceContext = nullptr;
 ID3D11SamplerState* gSampling = nullptr;
 
 // a resource to store Vertices in the GPU
-ID3D11Buffer* gVertexBuffer = nullptr;
+ID3D11Buffer* gVertexBufferMap = nullptr;
+ID3D11Buffer* gVertexBufferObj = nullptr;
+TriangleVertex* gMap = nullptr;
+TriangleVertex* gObject = nullptr;
+int gnrOfFaces = 0;
+ID3D11Buffer *ppVertexBuffers[2];
+int gTotalNrOfVert = 0;
+
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;
 
 // input layouts

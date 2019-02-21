@@ -308,7 +308,7 @@ HRESULT CreateLightPS() {
 }
 
 void SetDeferredShaders() {
-	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth); 
+	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
