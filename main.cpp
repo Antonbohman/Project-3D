@@ -824,7 +824,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 1.5f; //mountain smoothing
+	gHeightfactor = 25.50f * 10.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -844,13 +844,6 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 
 	delete[] bitmapImage;
 	return true;
-}
-
-void setVertexBuffers()
-{
-	ppVertexBuffers[1] = gVertexBufferMap;
-	ppVertexBuffers[0] = gVertexBufferObj;
-	gTotalNrOfVert = gnrOfVertices + gnrOfFaces;
 }
 
 void updateWorldViewProjection() {
@@ -922,7 +915,7 @@ void updateCameraValues() {
 
 	//copy and map our cpu memory to our gpu buffert
 	gDeviceContext->Map(gCameraMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gCameraMatrix, sizeof(WorldMatrix));
+	memcpy(mappedMemory.pData, gCameraMatrix, sizeof(CameraMatrix));
 	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
 };
 
@@ -934,7 +927,7 @@ void setSpecularValues(XMVECTOR specular) {
 
 	//copy and map our cpu memory to our gpu buffert
 	gDeviceContext->Map(gAmbientSpecularBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gAmbientSpecularData, sizeof(WorldMatrix));
+	memcpy(mappedMemory.pData, gAmbientSpecularData, sizeof(AmbientSpecular));
 	gDeviceContext->Unmap(gAmbientSpecularBuffer, 0);
 };
 
@@ -954,7 +947,6 @@ void Render() {
 	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
 
 	SetDeferredShaders();
-	setVertexBuffer(gVertexBuffer, sizeof(TriangleVertex), 0);
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
@@ -963,12 +955,8 @@ void Render() {
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
-	UINT32 vertexSize = sizeof(TriangleVertex);
-	UINT32 offset = 0;
-
-	gDeviceContext->Draw(gTotalNrOfVert, 0);
-	//gDeviceContext->IASetVertexBuffers(0, 2, ppVertexBuffers, &vertexSize, &offset);
-	//gDeviceContext->Draw(gnrOfVertices, 0);
+	setVertexBuffer(gVertexBufferMap, sizeof(TriangleVertex), 0);
+	gDeviceContext->Draw(gnrOfVertices, 0);
 
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
@@ -989,7 +977,7 @@ void Render() {
 	// render each light source
 	for (int j = 0; j < nrOfLights; j++) {
 		Lights[j].Load(gDeviceContext, gLightDataBuffer);
-		gDeviceContext->Draw(gTotalNrOfVert, 0);
+		gDeviceContext->Draw(6, 0);
 	}
 
 	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
@@ -1037,8 +1025,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		delete[] _heightmap.verticesPos;
 
 		LoadObjectFile("hotModel.obj");
-
-		setVertexBuffers();
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
@@ -1134,6 +1120,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					rotation -= 2 * XM_PI;
 
 				updateWorldViewProjection();
+
+				updateCameraValues();
+
+				//setSpecularValues(XMVectorSet(0, 0, 0, 0));
 
 				Render(); //10. Rendera
 
