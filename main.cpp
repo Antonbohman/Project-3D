@@ -453,10 +453,6 @@ void CreateConstantBuffer() {
 	//allocate space in memory aligned to a multitude of 16
 	gCameraMatrix = (CameraMatrix*)_aligned_malloc(sizeof(CameraMatrix), 16);
 
-	//temmp static camera
-	gCameraMatrix->Origin = XMVectorSet(0.0f, 10.0f, -200.0f, 0.0f);
-	gCameraMatrix->Focus = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC cameraDesc;
 	ZeroMemory(&cameraDesc, sizeof(cameraDesc));
@@ -484,7 +480,6 @@ void CreateConstantBuffer() {
 
 	//since we won't be updating these values while program is running
 	gAmbientSpecularData->Ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gAmbientSpecularData->Specular = XMVectorSet(0.0f, 0.0f, 0.0f, 10000.0f);
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC ambientDesc;
@@ -728,6 +723,32 @@ void updateWorldViewProjection() {
 	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 }
 
+void updateCameraValues() {
+	//temmp static camera
+	gCameraMatrix->Origin = camera.GetCamPos();
+	gCameraMatrix->Focus = camera.GetCamTarget();
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gCameraMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gCameraMatrix, sizeof(WorldMatrix));
+	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
+};
+
+void setSpecularValues(XMVECTOR specular) {
+	gAmbientSpecularData->Specular = specular;
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gAmbientSpecularBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gAmbientSpecularData, sizeof(WorldMatrix));
+	gDeviceContext->Unmap(gAmbientSpecularBuffer, 0);
+};
+
 void Render() {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -744,6 +765,7 @@ void Render() {
 	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
 
 	SetDeferredShaders();
+	setVertexBuffer(gVertexBuffer, sizeof(TriangleVertex), 0);
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
@@ -758,6 +780,7 @@ void Render() {
     gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
 	SetLightShaders();
+	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);

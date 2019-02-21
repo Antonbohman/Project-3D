@@ -23,3 +23,4 @@ HRESULT CreateLightPS();
 
 void SetDeferredShaders();
 void SetLightShaders();
+void setVertexBuffer(ID3D11Buffer* buffer, UINT32 size, UINT32 offset);
