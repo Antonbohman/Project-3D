@@ -111,6 +111,7 @@ extern TriangleVertex* gObject;
 extern int gnrOfFaces;
 extern ID3D11Buffer*ppVertexBuffers[2];
 extern int gTotalNrOfVert;
+extern char* textureName;
 
 extern ID3D11Buffer* gDeferredQuadBuffer;
 

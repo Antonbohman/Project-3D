@@ -91,10 +91,6 @@ void CreateDeferredQuad() {
 
 void CreateHeightmapData(Heightmap heightmap) {
 	// Array of Structs (AoS)
-	//63 900 vertices 300x213
-	//384404
-
-	//gHeightfactor = 25.5 * 6;
 
 	XMFLOAT4 bedrock =
 	{
@@ -691,6 +687,12 @@ void LoadObjectFile(char* filename)
 				arrOfNormals[nrOfNormals] = vertex;
 				nrOfNormals++;
 			}
+			else if (strcmp(line, "usemtl") == 0)
+			{
+				textureName = new char[30];
+				fscanf(fileptr, "%s", textureName);
+				int okok = 2;
+			}
 			else if (strcmp(line, "f") == 0)
 			{
 				XMINT3 vertex[3];
@@ -717,7 +719,7 @@ void LoadObjectFile(char* filename)
 				for (int i = 0; i < 3; i++)
 				{
 					gObject[gnrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x;
-					gObject[gnrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y;
+					gObject[gnrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + 10;
 					gObject[gnrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z;
 
 					//gObject[gnrOfFaces + i].x_n = arrOfNormals[vertex[i].y - 1].x;
@@ -799,7 +801,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	int padding = heightmap.imageWidth % 4; //Ta det sen
+	int padding = heightmap.imageWidth * 3 % 4; //Ta det sen
 	if (padding > 0)
 	{
 		padding = 4 - padding;
@@ -824,7 +826,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 10.0f; //mountain smoothing
+	gHeightfactor = 25.50f * 1.5f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -958,6 +960,9 @@ void Render() {
 	setVertexBuffer(gVertexBufferMap, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(gnrOfVertices, 0);
 
+	setVertexBuffer(gVertexBufferObj, sizeof(TriangleVertex), 0);
+	gDeviceContext->Draw(gnrOfFaces, 0);
+
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
@@ -1018,13 +1023,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("Objects/Heightmaps/castle.bmp", _heightmap)) return 404;
 
 		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		delete[] _heightmap.verticesPos;
 
-		LoadObjectFile("hotModel.obj");
+		LoadObjectFile("Objects/OBJs/veryHotModel.obj");
 
 		CreateConstantBuffer(); //8. Create constant buffers
 

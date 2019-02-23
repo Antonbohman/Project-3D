@@ -21,6 +21,7 @@ TriangleVertex* gObject = nullptr;
 int gnrOfFaces = 0;
 ID3D11Buffer *ppVertexBuffers[2];
 int gTotalNrOfVert = 0;
+char* textureName = nullptr;
 
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;
 
