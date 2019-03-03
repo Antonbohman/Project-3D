@@ -14,7 +14,16 @@ ID3D11DeviceContext* gDeviceContext = nullptr;
 ID3D11SamplerState* gSampling = nullptr;
 
 // a resource to store Vertices in the GPU
-ID3D11Buffer* gVertexBuffer = nullptr;
+//ID3D11Buffer* gVertexBufferMap = nullptr;
+//ID3D11Buffer* gVertexBufferObj = nullptr;
+//TriangleVertex* gMap = nullptr;
+//TriangleVertex* gObject = nullptr;
+int gnrOfVert[5];
+ID3D11Buffer *ppVertexBuffers[5];
+int nrOfVertexBuffers;
+//int gTotalNrOfVert = 0;
+char* textureName = nullptr;
+
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;
 
 // input layouts
@@ -59,7 +68,7 @@ XMVECTOR CameraView = { 0.0f, 10.0f, -20.0f, 0.0f };
 float rotation = 1.5f*XM_PI;
 
 int nrOfVertices = 0;
-float gHeightfactor = 0;
+//float gHeightfactor = 0;
 
 int gnrOfVertices = 0;
 

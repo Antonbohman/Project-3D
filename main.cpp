@@ -52,7 +52,7 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
 
-Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
+//Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
 
 
 void CreateDeferredQuad() {
@@ -88,364 +88,6 @@ void CreateDeferredQuad() {
 	gDevice->CreateBuffer(&bufferDesc, &data, &gDeferredQuadBuffer);
 }
 
-void CreateHeightmapData(Heightmap heightmap) {
-	// Array of Structs (AoS)
-	//63 900 vertices 300x213
-	//384404
-
-	//gHeightfactor = 25.5 * 6;
-
-	XMFLOAT4 bedrock =
-	{
-		35.0f / 255,
-		98.0f / 255,
-		175.0f / 255,
-		0.0f
-	};
-	XMFLOAT4 grass =
-	{
-		53.0f / 255,
-		178.0f / 255,
-		0.0f / 255,
-		(2.55f / gHeightfactor)
-	};
-	XMFLOAT4 mountain =
-	{
-		128.0f / 255,
-		128.0f / 255,
-		128.0f / 255,
-		(30.0f / gHeightfactor)
-	};
-	XMFLOAT4 snow =
-	{
-		180.0f / 255,
-		180.0f / 255,
-		180.0f / 255,
-		(200.0f / gHeightfactor)
-	};
-	gnrOfVertices = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
-
-	TriangleVertex* triangleVertices = new TriangleVertex[gnrOfVertices];
-	//TriangleVertex triangleVertices[3820];
-
-	int vertNr = 0;
-
-	for (int i = 0; i < heightmap.imageHeight - 1; i++)
-	{
-		int X = (i * heightmap.imageWidth);
-		int Y = ((i + 1) * heightmap.imageWidth);
-
-		for (int k = 0/*i * heightmap.imageWidth*/; k < /*(i + 1) **/ heightmap.imageWidth - 1; k++)
-		{
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 0.0f;
-			triangleVertices[vertNr].v = 1.0f;
-
-			vertNr++;
-
-			/*..............................*/
-
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + 1].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[X + 1].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + 1].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 1.0f;
-			triangleVertices[vertNr].v = 1.0f;
-
-			vertNr++;
-
-			/*-------------------------------*/
-
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 0.0f;
-			triangleVertices[vertNr].v = 0.0f;
-
-
-			vertNr++;
-			X++;
-
-			/*-------------------------------*/
-			/*Next triangle*/
-
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[Y].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 1.0f;
-			triangleVertices[vertNr].v = 1.0f;
-
-			vertNr++;
-
-			/*..............................*/
-
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[X + heightmap.imageWidth].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 1.0f;
-			triangleVertices[vertNr].v = 0.0f;
-
-			vertNr++;
-
-			/*-------------------------------*/
-
-			/*Position*/
-			triangleVertices[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
-			triangleVertices[vertNr].y = heightmap.verticesPos[X].y;
-			triangleVertices[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
-			/*Colour*/
-			if (triangleVertices[vertNr].y > grass.w)
-			{
-				if (triangleVertices[vertNr].y > mountain.w)
-				{
-					if (triangleVertices[vertNr].y > snow.w)
-					{
-						triangleVertices[vertNr].r = snow.x;
-						triangleVertices[vertNr].g = snow.y;
-						triangleVertices[vertNr].b = snow.z;
-					}
-					else
-					{
-						triangleVertices[vertNr].r = mountain.x;
-						triangleVertices[vertNr].g = mountain.y;
-						triangleVertices[vertNr].b = mountain.z;
-					}
-				}
-				else
-				{
-					triangleVertices[vertNr].r = grass.x;
-					triangleVertices[vertNr].g = grass.y;
-					triangleVertices[vertNr].b = grass.z;
-				}
-			}
-			else
-			{
-				triangleVertices[vertNr].r = bedrock.x;
-				triangleVertices[vertNr].g = bedrock.y;
-				triangleVertices[vertNr].b = bedrock.z;
-			}
-			//triangleVertices[vertNr].r = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].g = heightmap.verticesPos[Y].y;
-			//triangleVertices[vertNr].b = heightmap.verticesPos[Y].y;
-
-			/*UV*/
-			triangleVertices[vertNr].u = 0.0f;
-			triangleVertices[vertNr].v = 0.0f;
-
-			vertNr++;
-			Y++;
-		}
-	}
-
-	// Describe the Vertex Buffer
-	D3D11_BUFFER_DESC bufferDesc;
-	memset(&bufferDesc, 0, sizeof(bufferDesc));
-	// what type of buffer will this be?
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	// what type of usage (press F1, read the docs)
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	// how big in bytes each element in the buffer is.
-	bufferDesc.ByteWidth = sizeof(TriangleVertex) * gnrOfVertices;
-
-	//int size = sizeof(triangleVertices);
-
-	// this struct is created just to set a pointer to the
-	// data containing the vertices.
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = (void*)triangleVertices;
-
-	// create a Vertex Buffer
-	HRESULT error;
-	error = gDevice->CreateBuffer(&bufferDesc, &data, &gVertexBuffer);
-	delete triangleVertices;
-}
-
 void CreateConstantBuffer() {
 	/////////////////
 	// Camera	   //
@@ -453,10 +95,6 @@ void CreateConstantBuffer() {
 
 	//allocate space in memory aligned to a multitude of 16
 	gCameraMatrix = (CameraMatrix*)_aligned_malloc(sizeof(CameraMatrix), 16);
-
-	//temmp static camera
-	gCameraMatrix->Origin = XMVectorSet(0.0f, 10.0f, -200.0f, 0.0f);
-	gCameraMatrix->Focus = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC cameraDesc;
@@ -485,7 +123,6 @@ void CreateConstantBuffer() {
 
 	//since we won't be updating these values while program is running
 	gAmbientSpecularData->Ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-	gAmbientSpecularData->Specular = XMVectorSet(0.0f, 0.0f, 0.0f, 10000.0f);
 
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC ambientDesc;
@@ -570,7 +207,34 @@ void CreateLigths() {
 	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(0,XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),0.0f,0.0f,0.0f);
+	Lights[0] = LightSource(0, XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
+}
+
+void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
+{
+	gnrOfVert[nrOfVertexBuffers] = nrOfVertices;
+
+	// Describe the Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	// what type of buffer will this be?
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// what type of usage (press F1, read the docs)
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// how big in bytes each element in the buffer is.
+	bufferDesc.ByteWidth = sizeof(TriangleVertex) * nrOfVertices;
+
+	//int size = sizeof(gMap);
+
+	// this struct is created just to set a pointer to the
+	// data containing the vertices.
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = (void*)ArrOfVert;
+
+	// create a Vertex Buffer
+	HRESULT error;
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &ppVertexBuffers[nrOfVertexBuffers]);
+	nrOfVertexBuffers++;
 }
 
 void SetViewport() {
@@ -584,7 +248,183 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, &vp);
 }
 
-bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24-depth, 25x25 .bmp images*/
+void LoadObjectFile(char* filename)
+{
+	TriangleVertex* object = nullptr;
+	FILE* fileptr;
+	fileptr = fopen(filename, "r");
+	if (fileptr == NULL)
+	{
+		return;
+	}
+	int loopControl = 1;
+	char line[128];
+
+	XMFLOAT3* arrOfVertices = new XMFLOAT3[100]; //positionVertices
+	int arrSize = 100;
+	int nrOfVert = 0;
+
+	bool textureCordStart = false;
+	XMFLOAT2* arrOfTxtCord = nullptr; //TextureCoordinates
+	int nrOfTxtCord = 0;
+	int txtCoordArrSize = 0;
+
+	bool normalStart = false;
+	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
+	int nrOfNormals = 0;
+	int normArrSize = 0;
+
+	bool indexStart = false;
+	XMINT3* arrOfIndex = nullptr; //
+	//int nrOfVertices = 0; //kolla detta
+	int objArrSize = 0;
+
+	while (loopControl != EOF)
+	{
+		loopControl = fscanf(fileptr, "%s", line);
+		if (loopControl == EOF) {}
+		else
+		{
+			if (strcmp(line, "v") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				if (nrOfVert == arrSize)
+				{
+					XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
+					for (int i = 0; i < arrSize; i++)
+					{
+						tempArr[i] = arrOfVertices[i];
+					}
+					delete arrOfVertices;
+					arrOfVertices = tempArr;
+
+					arrSize += 50;
+				}
+				arrOfVertices[nrOfVert] = vertex;
+				nrOfVert++;
+			}
+			else if (strcmp(line, "vt") == 0)
+			{
+				if (textureCordStart == false)
+				{
+					txtCoordArrSize = nrOfVert;
+					arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
+					textureCordStart = true;
+				}
+				if (nrOfTxtCord == txtCoordArrSize)
+				{
+					XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
+					for (int i = 0; i < txtCoordArrSize; i++)
+					{
+						tempArr[i] = arrOfTxtCord[i];
+					}
+					delete arrOfTxtCord;
+					arrOfTxtCord = tempArr;
+
+					txtCoordArrSize += 50;
+				}
+				XMFLOAT2 vertex;
+				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
+
+				arrOfTxtCord[nrOfTxtCord] = vertex;
+				nrOfTxtCord++;
+			}
+			else if (strcmp(line, "vn") == 0)
+			{
+				if (normalStart == false)
+				{
+					normArrSize = nrOfVert;
+					arrOfNormals = new XMFLOAT3[normArrSize];
+					normalStart = true;
+				}
+				if (nrOfNormals == normArrSize)
+				{
+					XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
+					for (int i = 0; i < normArrSize; i++)
+					{
+						tempArr[i] = arrOfNormals[i];
+					}
+					delete arrOfNormals;
+					arrOfNormals = tempArr;
+
+					normArrSize += 50;
+				}
+
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+
+				arrOfNormals[nrOfNormals] = vertex;
+				nrOfNormals++;
+			}
+			else if (strcmp(line, "usemtl") == 0)
+			{
+				textureName = new char[30];
+				fscanf(fileptr, "%s", textureName);
+				int okok = 2;
+			}
+			else if (strcmp(line, "f") == 0)
+			{
+				XMINT3 vertex[3];
+				fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
+				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
+				if (indexStart == false)
+				{
+					objArrSize = (nrOfVert * 1.5);
+					object = new TriangleVertex[objArrSize];
+					indexStart = true;
+				}
+				if (nrOfVertices + 3 >= objArrSize)
+				{
+					TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
+					for (int i = 0; i < nrOfVertices; i++)
+					{
+						tempArr[i] = object[i];
+					}
+					delete object;
+					object = tempArr;
+
+					objArrSize += 50;
+				}
+				for (int i = 0; i < 3; i++)
+				{
+					object[nrOfVertices + i].x = arrOfVertices[vertex[i].x - 1].x;
+					object[nrOfVertices + i].y = arrOfVertices[vertex[i].x - 1].y + 10;
+					object[nrOfVertices + i].z = arrOfVertices[vertex[i].x - 1].z;
+
+					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
+					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
+					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
+
+					object[nrOfVertices + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+					object[nrOfVertices + i].v = arrOfTxtCord[vertex[i].y - 1].y;
+
+					object[nrOfVertices + i].r = 0.5f;
+					object[nrOfVertices + i].g = 0.0f;
+					object[nrOfVertices + i].b = 0.5f;
+				}
+				nrOfVertices += 3;
+			}
+		}
+	}
+	fclose(fileptr);
+
+	TriangleVertex* objectArray = new TriangleVertex[nrOfVertices];
+	for (int i = 0; i < nrOfVertices; i++)
+	{
+		objectArray[i] = object[i];
+	}
+
+	createVertexBuffer(nrOfVertices, objectArray);
+
+	delete[] objectArray;
+	delete[] arrOfVertices;
+	delete[] arrOfTxtCord;
+	delete[] arrOfNormals;
+	delete[] arrOfIndex;
+}
+
+bool loadHeightMap(char* filename) //24 bit colour depth
 {
 
 	FILE *fileptr; //filepointer
@@ -592,6 +432,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
 	int imageSize, index;
 	unsigned char height;
+	Heightmap heightmap;
 
 	//Open the file
 	fileptr = fopen(filename, "rb");
@@ -609,7 +450,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	heightmap.imageHeight = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	int padding = heightmap.imageWidth % 4; //Ta det sen
+	int padding = heightmap.imageWidth * 3 % 4; //Ta det sen
 	if (padding > 0)
 	{
 		padding = 4 - padding;
@@ -626,18 +467,6 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 	//read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
 
-	//int vertNr = 0;
-	//XMFLOAT3 test = 
-	//{ 
-	//	0, 0, 0
-	//};
-	//for (int i = 600; i < imageSize; i++)
-	//{
-	//	vertNr = bitmapImage[i];
-
-	//	test.x = vertNr+1-1;
-	//}
-
 	//close file
 	fclose(fileptr);
 
@@ -646,7 +475,7 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	gHeightfactor = 25.50f * 0.5f; //mountain smoothing
+	int heightfactor = 25.50f * 1.0f; //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -657,15 +486,325 @@ bool loadHeightMap(char* filename, Heightmap &heightmap) /*Currently supports 24
 			index = (heightmap.imageHeight * i) + j;
 
 			heightmap.verticesPos[index].x = (float)j;
-			//if (height < 0) height = 0;
-			heightmap.verticesPos[index].y = (float)height / gHeightfactor;
+			heightmap.verticesPos[index].y = (float)height / heightfactor;
 			heightmap.verticesPos[index].z = (float)i;
-			//test = heightmap.verticesPos[index];
-			counter += 3;
+			counter += 3; //Skipping GB
 		}
-		counter += padding; //Skip bumper info at the end of each row.
+		counter += padding; //Skip padding info at the end of each row.
 	}
 
+	XMFLOAT4 bedrock =
+	{
+		35.0f / 255,
+		98.0f / 255,
+		175.0f / 255,
+		0.0f
+	};
+	XMFLOAT4 grass =
+	{
+		53.0f / 255,
+		178.0f / 255,
+		0.0f / 255,
+		(2.55f / heightfactor)
+	};
+	XMFLOAT4 mountain =
+	{
+		128.0f / 255,
+		128.0f / 255,
+		128.0f / 255,
+		(30.0f / heightfactor)
+	};
+	XMFLOAT4 snow =
+	{
+		180.0f / 255,
+		180.0f / 255,
+		180.0f / 255,
+		(200.0f / heightfactor)
+	};
+	gnrOfVert[nrOfVertexBuffers] = 4 + ((heightmap.imageWidth - 2) * 4 * 2) + ((heightmap.imageHeight - 2) * 4 * 2) + ((heightmap.imageHeight - 1) * (heightmap.imageWidth - 1) * 6);
+
+	TriangleVertex* map = new TriangleVertex[gnrOfVert[nrOfVertexBuffers]];
+
+	int vertNr = 0;
+
+	for (int i = 0; i < heightmap.imageHeight - 1; i++)
+	{
+		int X = (i * heightmap.imageWidth);
+		int Y = ((i + 1) * heightmap.imageWidth);
+
+		for (int k = 0; k < heightmap.imageWidth - 1; k++)
+		{
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[Y].y;
+			map[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+
+			/*UV*/
+			map[vertNr].u = 0.0f;
+			map[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*..............................*/
+
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[X + 1].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[X + 1].y;
+			map[vertNr].z = heightmap.verticesPos[X + 1].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+
+			/*UV*/
+			map[vertNr].u = 1.0f;
+			map[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*-------------------------------*/
+
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[X].y;
+			map[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+
+			/*UV*/
+			map[vertNr].u = 0.0f;
+			map[vertNr].v = 0.0f;
+
+
+			vertNr++;
+			X++;
+
+			/*-------------------------------*/
+			/*Next triangle*/
+
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[Y].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[Y].y;
+			map[vertNr].z = heightmap.verticesPos[Y].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+
+			/*UV*/
+			map[vertNr].u = 1.0f;
+			map[vertNr].v = 1.0f;
+
+			vertNr++;
+
+			/*..............................*/
+
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[X + heightmap.imageWidth].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[X + heightmap.imageWidth].y;
+			map[vertNr].z = heightmap.verticesPos[X + heightmap.imageWidth].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+			
+			/*UV*/
+			map[vertNr].u = 1.0f;
+			map[vertNr].v = 0.0f;
+
+			vertNr++;
+
+			/*-------------------------------*/
+
+			/*Position*/
+			map[vertNr].x = heightmap.verticesPos[X].x - (heightmap.imageWidth / 2);
+			map[vertNr].y = heightmap.verticesPos[X].y;
+			map[vertNr].z = heightmap.verticesPos[X].z - (heightmap.imageHeight / 2);
+			/*Colour*/
+			if (map[vertNr].y > grass.w)
+			{
+				if (map[vertNr].y > mountain.w)
+				{
+					if (map[vertNr].y > snow.w)
+					{
+						map[vertNr].r = snow.x;
+						map[vertNr].g = snow.y;
+						map[vertNr].b = snow.z;
+					}
+					else
+					{
+						map[vertNr].r = mountain.x;
+						map[vertNr].g = mountain.y;
+						map[vertNr].b = mountain.z;
+					}
+				}
+				else
+				{
+					map[vertNr].r = grass.x;
+					map[vertNr].g = grass.y;
+					map[vertNr].b = grass.z;
+				}
+			}
+			else
+			{
+				map[vertNr].r = bedrock.x;
+				map[vertNr].g = bedrock.y;
+				map[vertNr].b = bedrock.z;
+			}
+			
+			/*UV*/
+			map[vertNr].u = 0.0f;
+			map[vertNr].v = 0.0f;
+
+			vertNr++;
+			Y++;
+		}
+	}
+
+	createVertexBuffer(gnrOfVert[nrOfVertexBuffers], map);
+
+	delete[] map;
 	delete[] bitmapImage;
 	return true;
 }
@@ -729,6 +868,32 @@ void updateWorldViewProjection() {
 	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 }
 
+void updateCameraValues() {
+	//temmp static camera
+	gCameraMatrix->Origin = camera.GetCamPos();
+	gCameraMatrix->Focus = camera.GetCamTarget();
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gCameraMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gCameraMatrix, sizeof(CameraMatrix));
+	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
+};
+
+void setSpecularValues(XMVECTOR specular) {
+	gAmbientSpecularData->Specular = specular;
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gAmbientSpecularBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gAmbientSpecularData, sizeof(AmbientSpecular));
+	gDeviceContext->Unmap(gAmbientSpecularBuffer, 0);
+};
+
 void Render() {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -753,12 +918,17 @@ void Render() {
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
-	gDeviceContext->Draw(gnrOfVertices, 0);
+	for(int i = 0; i < nrOfVertexBuffers; i++)
+	{
+		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+		gDeviceContext->Draw(gnrOfVert[i], 0);
+	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
-    gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
 	SetLightShaders();
+	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);
@@ -800,7 +970,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue=0.01f;
+	float rotationValue = 0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -813,11 +983,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		Heightmap _heightmap;
 
-		if (!loadHeightMap("maps/height/kon.bmp", _heightmap)) return 404;
+		if (!loadHeightMap("Objects/Heightmaps/castle.bmp")) return 404;
 
-		CreateHeightmapData(_heightmap); //5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
+		//CreateHeightmapData(_heightmap); 
+		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		delete[] _heightmap.verticesPos;
+		//delete[] _heightmap.verticesPos;
+
+		LoadObjectFile("Objects/OBJs/veryHotModel.obj");
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
@@ -897,22 +1070,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
-						
+
 						deltaChange = deltaChange;
 						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD
-				
+
 				//upate rotation depending on time since last update
 				rotation += delta.count()*rotationValue;
-				
+
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values
 				if (rotation > 2 * XM_PI)
 					rotation -= 2 * XM_PI;
 
 				updateWorldViewProjection();
+
+				updateCameraValues();
+
+				//setSpecularValues(XMVectorSet(0, 0, 0, 0));
 
 				Render(); //10. Rendera
 
@@ -921,7 +1098,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		}
 
 		//make sure there are no leaks by releasing stored pointers
-		gVertexBuffer->Release();
+		//gVertexBuffer->Release();
 		gDeferredQuadBuffer->Release();
 
 		gLightDataBuffer->Release();
@@ -1024,7 +1201,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		Keyboard::ProcessMessage(message, wParam, lParam);
 		break;
 	}
-	
+
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

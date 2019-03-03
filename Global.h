@@ -104,7 +104,16 @@ extern ID3D11DeviceContext* gDeviceContext;
 extern ID3D11SamplerState* gSampling;
 
 // a resource to store Vertices in the GPU
-extern ID3D11Buffer* gVertexBuffer;
+//extern ID3D11Buffer* gVertexBufferObj;
+//extern ID3D11Buffer* gVertexBufferMap;
+//extern TriangleVertex* gMap;
+//extern TriangleVertex* gObject;
+extern int gnrOfVert[5];
+extern ID3D11Buffer*ppVertexBuffers[5];
+extern int nrOfVertexBuffers;
+//extern int gTotalNrOfVert;
+extern char* textureName;
+
 extern ID3D11Buffer* gDeferredQuadBuffer;
 
 // input layouts
@@ -149,7 +158,7 @@ extern XMVECTOR CameraView;
 extern float rotation;
 
 extern int nrOfVertices;
-extern float gHeightfactor;
+//extern float gHeightfactor;
 
 extern int gnrOfVertices;
 

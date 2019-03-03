@@ -308,7 +308,7 @@ HRESULT CreateLightPS() {
 }
 
 void SetDeferredShaders() {
-	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth); 
+	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -316,12 +316,6 @@ void SetDeferredShaders() {
 	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gPixelShader, nullptr, 0);
 	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
-
-	UINT32 vertexSize = sizeof(TriangleVertex);
-	UINT32 offset = 0;
-
-	// specify which vertex buffer to use next.
-	gDeviceContext->IASetVertexBuffers(0, 1, &gVertexBuffer, &vertexSize, &offset);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -340,15 +334,14 @@ void SetLightShaders() {
 	gDeviceContext->PSSetShader(gLightPixelShader, nullptr, 0);
 	//gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
-	UINT32 vertexSize = sizeof(PositionVertex);
-	UINT32 offset = 0;
-
-	// specify which vertex buffer to use next.
-	gDeviceContext->IASetVertexBuffers(0, 1, &gDeferredQuadBuffer, &vertexSize, &offset);
-
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// specify the IA Layout (how is data passed)
 	gDeviceContext->IASetInputLayout(gLightVertexLayout);
+}
+
+void setVertexBuffer(ID3D11Buffer* buffer, UINT32 size, UINT32 offset) {
+	// specify which vertex buffer to use next.
+	gDeviceContext->IASetVertexBuffers(0, 1, &buffer, &size, &offset);
 }
