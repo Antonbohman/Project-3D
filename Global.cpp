@@ -1,5 +1,6 @@
 #include "Global.h"
 
+
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
 IDXGISwapChain* gSwapChain = nullptr;

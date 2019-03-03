@@ -843,7 +843,7 @@ void updateWorldViewProjection() {
 	View = XMMatrixTranspose(View);
 
 	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
-		(float)XM_PI*0.45,
+		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
 		0.1f,
 		200.0f
@@ -851,6 +851,7 @@ void updateWorldViewProjection() {
 	Projection = XMMatrixTranspose(Projection);
 
 	//set each matrix to our cpu side memory
+
 	gWorldMatrix->World = World;
 	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
 
