@@ -5,14 +5,10 @@
 #include <Mouse.h>
 #include <Keyboard.h>
 
-std::unique_ptr<DirectX::Mouse>m_mouse;
-std::unique_ptr<DirectX::Keyboard>m_keyboard;
-
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
-//std::unique_ptr<DirectX::Keyboard>m_keyboard; //NOT IMPLEMENTED
 //TOOL KIT
 //#include "CommonStates.h"
 //#include "DDSTextureLoader.h"
@@ -46,15 +42,13 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace std::chrono;
 
-Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
+std::unique_ptr<DirectX::Mouse>m_mouse;
+std::unique_ptr<DirectX::Keyboard>m_keyboard;
 
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
-
-//Camera camera({ 0.0f,10.0f,-20.0f,0.0f }, { 0.0f,0.0f,0.0f,0.0f });
-
 
 void CreateDeferredQuad() {
 	PositionVertex triangleVertices[6] =

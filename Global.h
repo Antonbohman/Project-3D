@@ -7,9 +7,10 @@
 #pragma comment (lib, "d3d11.lib")
 #pragma comment (lib, "d3dcompiler.lib")
 
-using namespace DirectX;
-
 #include "LightSource.h"
+#include "Camera.h"
+
+using namespace DirectX;
 
 ///////////////////
 // Defines       //
@@ -153,6 +154,7 @@ extern int nrOfLights;
 
 // CAMERAVIEW
 extern XMVECTOR CameraView;
+extern Camera camera;
 
 // keeping track of current rotation
 extern float rotation;

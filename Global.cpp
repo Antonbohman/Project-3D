@@ -63,6 +63,7 @@ int nrOfLights = 0;
 
 // CAMERAVIEW
 XMVECTOR CameraView = { 0.0f, 10.0f, -20.0f, 0.0f };
+Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
