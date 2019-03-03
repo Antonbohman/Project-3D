@@ -1031,7 +1031,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					}
 					if (kb.S) { //BACK
-						moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
+						moveInDepthCameraClass -= camera.GetCameraNormal()/*camera.GetCamTarget() - camera.GetCamPos()*/;
 					}
 					if (kb.D) { //RIGHT
 						deltaChange.x += 1.0f;

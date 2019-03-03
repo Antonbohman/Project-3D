@@ -37,6 +37,9 @@ private:
 	XMVECTOR cameraPosition;
 	XMVECTOR cameraOriginalPosition;
 	XMVECTOR cameraTarget;
+	//
+	XMVECTOR cameraNormal;
+	//
 	XMVECTOR cameraOriginalTarget;
 
 	//CAM MANIPULATION
@@ -68,8 +71,11 @@ public:
 	XMVECTOR GetCamRight()const;
 	XMVECTOR GetCamUp() const;
 
+	XMVECTOR GetCameraNormal() const;
+
 	float GetYaw()const;
 	float GetPitch()const;
+	void SetCameraNormal(Vector4 normal);
 
 	void SetCamPos(Vector4 position);
 	void SetCamTarget(Vector4 focusPoint);

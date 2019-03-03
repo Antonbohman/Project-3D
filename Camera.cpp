@@ -6,6 +6,7 @@ Camera::Camera()
 	cameraPosition = { 0.0f,0.0f,-10.0f,0.0f };
 	cameraOriginalPosition = cameraPosition;
 	cameraTarget = { 0.0f,0.0f,0.0f,0.0f };
+	cameraNormal = XMVector3Normalize(cameraTarget - cameraPosition);
 	cameraOriginalTarget = cameraTarget;
 
 }
@@ -15,6 +16,7 @@ Camera::Camera(Vector4 camPos, Vector4 camFocus)
 	cameraPosition = camPos;
 	cameraOriginalPosition = cameraPosition;
 	cameraTarget = camFocus;
+	cameraNormal = XMVector3Normalize(cameraTarget - cameraPosition);
 	cameraOriginalTarget = cameraTarget;
 }
 
@@ -29,6 +31,7 @@ Camera::Camera(const Camera & originalObj)
 	this->cameraPosition=originalObj.cameraPosition;
 	this->cameraOriginalPosition =originalObj.cameraOriginalPosition;
 	this->cameraTarget = originalObj.cameraTarget;
+	this->cameraNormal = originalObj.cameraNormal;
 	this->cameraOriginalTarget = originalObj.cameraOriginalTarget;
 
 	//CAM MANIPULATION
@@ -50,6 +53,7 @@ Camera & Camera::operator=(const Camera & originalObj)
 		this->cameraPosition = originalObj.cameraPosition;
 		this->cameraOriginalPosition = originalObj.cameraOriginalPosition;
 		this->cameraTarget = originalObj.cameraTarget;
+		this->cameraNormal = originalObj.cameraNormal;
 		this->cameraOriginalTarget = originalObj.cameraOriginalTarget;
 
 		//CAM MANIPULATION
@@ -102,6 +106,11 @@ XMVECTOR Camera::GetCamUp() const
 	return camUp;
 }
 
+XMVECTOR Camera::GetCameraNormal() const
+{
+	return this->cameraNormal;
+}
+
 float Camera::GetYaw() const
 {
 	return this->yaw;
@@ -111,6 +120,12 @@ float Camera::GetPitch() const
 {
 	return this->pitch;
 }
+
+void Camera::SetCameraNormal(Vector4 normal)
+{
+	this->cameraNormal = XMVector4Normalize(this->cameraTarget - this->cameraPosition);
+}
+
 
 void Camera::SetCamPos(Vector4 position)
 {
@@ -125,7 +140,6 @@ void Camera::SetCamTarget(Vector4 focusPoint)
 void Camera::MoveCamPos(Vector4 move)
 {
 	cameraPosition += move;
-	
 }
 
 void Camera::MoveCamTarget(Vector4 move)
@@ -158,10 +172,13 @@ void Camera::UpdateCamera(Vector3 movement, double time)
 	camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix);
 	camForward = XMVector3TransformCoord(defaultForward, RotateYTempMatrix);
 
-	Vector4 add =movement * time;
+	Vector4 timeMovement = XMVector3Normalize(movement);
+	SetCameraNormal(timeMovement);
 
-	MoveCamTarget(add);
-	MoveCamPos(add);
+	timeMovement = timeMovement* time;
+
+	MoveCamTarget(timeMovement);
+	MoveCamPos(timeMovement);
 }
 
 
