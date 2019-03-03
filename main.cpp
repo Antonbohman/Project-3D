@@ -840,7 +840,7 @@ void updateWorldViewProjection() {
 	View = XMMatrixTranspose(View);
 
 	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
-		(float)XM_PI*0.45,
+		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
 		0.1f,
 		200.0f
@@ -848,6 +848,7 @@ void updateWorldViewProjection() {
 	Projection = XMMatrixTranspose(Projection);
 
 	//set each matrix to our cpu side memory
+
 	gWorldMatrix->World = World;
 	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
 
@@ -1026,11 +1027,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE VECTOR
 					if (kb.W) {//FORWARD IN
-						moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
+						moveInDepthCameraClass += camera.GetCameraNormal();
 
 					}
 					if (kb.S) { //BACK
-						moveInDepthCameraClass -= camera.GetCamTarget() - camera.GetCamPos();
+						moveInDepthCameraClass -= camera.GetCameraNormal()/*camera.GetCamTarget() - camera.GetCamPos()*/;
 					}
 					if (kb.D) { //RIGHT
 						deltaChange.x += 1.0f;
