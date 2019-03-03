@@ -19,7 +19,7 @@ using namespace DirectX;
 // window size
 #define W_WIDTH 640.0f
 #define W_HEIGHT 480.0f
-#define FOV 45.0f
+#define FOV 0.45f
 
 // define number of vertices used in rendering
 #define VERTICES 6

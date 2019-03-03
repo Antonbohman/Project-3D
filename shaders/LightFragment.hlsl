@@ -79,5 +79,5 @@ float4 PS_light(PS_IN input) : SV_TARGET
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     //return clamp((diffuseColour + specular) * attenuation, 0.0f, 1.0f);
-    return float4(diffuseAlbedo.rgb, 1.0f);
+    return float4(normal.rgb, 1.0f);
 }

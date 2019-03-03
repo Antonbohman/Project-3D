@@ -69,10 +69,10 @@ private:
 	Vector4 frustumNearCenter;
 	Vector4 frustumFarCenter;
 
-	Vector4 frustNbr;
-	Vector4 frustNtr;
-	Vector4 frustNtl;
-	Vector4 frustNbl;
+	Vector4 frustNbr; //bottomright
+	Vector4 frustNtr; //topright
+	Vector4 frustNtl; //topleft
+	Vector4 frustNbl; //bottomleft
 
 	Vector4 frustFbr;
 	Vector4 frustFtr;

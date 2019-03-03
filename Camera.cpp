@@ -121,9 +121,22 @@ void Camera::calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT)
 	this->frustumHightFar = 2 * tan(FOV / 2)* frustumFarDist;
 	this->frustumWidthFar = frustumHightFar * ratio;
 
-	Vector4 temp = camUp;
+	Vector4 tempUp = camUp;
+	Vector4 tempRight = camRight;
 	this->frustumFarCenter = cameraPosition + cameraNormal * frustumFarDist;
-	this->frustFtl = frustumFarCenter + ( temp* (frustumHightFar/2)) ;
+	this->frustFtl = frustumFarCenter + (tempUp* (frustumHightFar / 2)) - (tempRight *(frustumWidthFar / 2));
+	this->frustFtr = frustumFarCenter + (tempUp* (frustumHightFar / 2)) + (tempRight *(frustumWidthFar / 2));
+	this->frustFbl = frustumFarCenter - (tempUp* (frustumHightFar / 2)) - (tempRight *(frustumWidthFar / 2));
+	this->frustFbr = frustumFarCenter - (tempUp* (frustumHightFar / 2)) + (tempRight *(frustumWidthFar / 2));
+
+	this->frustumNearCenter = cameraPosition + cameraNormal * frustumNearDist;
+
+	this->frustNtl = frustumNearCenter + (tempUp* (frustumHightNear / 2)) - (tempRight *(frustumWidthNear / 2));
+	this->frustNtr = frustumNearCenter + (tempUp* (frustumHightNear / 2)) - (tempRight *(frustumWidthNear / 2));
+	this->frustNbl = frustumNearCenter + (tempUp* (frustumHightNear / 2)) - (tempRight *(frustumWidthNear / 2));
+	this->frustNbr = frustumNearCenter + (tempUp* (frustumHightNear / 2)) - (tempRight *(frustumWidthNear / 2));
+
+	//PLANE DEFFINITION WASASAASASASASASASASSAASASSASAASASSASAASAAAAAA
 
 }
 

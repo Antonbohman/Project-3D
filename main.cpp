@@ -1028,7 +1028,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE VECTOR
 					if (kb.W) {//FORWARD IN
-						moveInDepthCameraClass += camera.GetCamTarget() - camera.GetCamPos();
+						moveInDepthCameraClass += camera.GetCameraNormal();
 
 					}
 					if (kb.S) { //BACK
