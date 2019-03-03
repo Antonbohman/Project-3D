@@ -21,7 +21,6 @@ SamplerState Sampling : register(s0);
 
 cbuffer PS_CB_AMBIENT_SPECULAR : register(b0)
 {
-    float4 Ambient;
     float3 SpecularAlbedo;
     float SpecularPower;
 };
@@ -42,7 +41,6 @@ PS_OUT PS_main(PS_IN input)
     pixelColour = float4(input.Color, 1.0f);
 
     //add ambient lightning
-    //output.Diffuse = Ambient * pixelColour;
     output.Diffuse = pixelColour;
     
     //add specular map

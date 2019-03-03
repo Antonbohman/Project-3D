@@ -116,14 +116,11 @@ void CreateConstantBuffer() {
 	//allocate space in memory aligned to a multitude of 16
 	gAmbientSpecularData = (AmbientSpecular*)_aligned_malloc(sizeof(AmbientSpecular), 16);
 
-	//since we won't be updating these values while program is running
-	gAmbientSpecularData->Ambient = XMVectorSet(0.1f, 0.1f, 0.1f, 1.0f);
-
 	//create a description objekt defining how the buffer should be handled
 	D3D11_BUFFER_DESC ambientDesc;
 	ZeroMemory(&ambientDesc, sizeof(ambientDesc));
 	ambientDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ambientDesc.ByteWidth = sizeof(XMVECTOR);
+	ambientDesc.ByteWidth = sizeof(AmbientSpecular);
 	ambientDesc.Usage = D3D11_USAGE_DYNAMIC;
 	ambientDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -202,7 +199,7 @@ void CreateLigths() {
 	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(0, XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), 0.0f, 0.0f, 0.0f);
+	Lights[0] = LightSource(0, 10, XMVectorSet(0.0f, 500.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.5f, 0.0f, 0.0f);
 }
 
 void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
@@ -908,6 +905,7 @@ void Render() {
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
 	//bind our texture to pixelshader
@@ -920,6 +918,7 @@ void Render() {
 	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
 	SetLightShaders();
@@ -1084,7 +1083,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				updateCameraValues();
 
-				//setSpecularValues(XMVectorSet(0, 0, 0, 0));
+				setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 				Render(); //10. Rendera
 

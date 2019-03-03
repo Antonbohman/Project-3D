@@ -1,11 +1,10 @@
 #include "LightSource.h"
 
-LightSource::LightSource(const int type, const XMVECTOR position, 
+LightSource::LightSource(const int type, const int ambient, const XMVECTOR position,
 						const XMVECTOR direction, const XMVECTOR colour, 
 						const float intensity, const float angleX, const float angleY) {
-	data.byte2 = 0;
-
 	data.type = type;
+	data.ambient = ambient;
 	data.position = position;
 	data.direction = direction;
 	data.colour = colour;
@@ -15,9 +14,8 @@ LightSource::LightSource(const int type, const XMVECTOR position,
 }
 
 LightSource::LightSource(const LightSource& origObj) {
-	this->data.byte2 = 0;
-
 	this->data.type = origObj.data.type;
+	this->data.ambient = origObj.data.ambient;
 	this->data.position = origObj.data.position;
 	this->data.direction = origObj.data.direction;
 	this->data.colour = origObj.data.colour;
@@ -28,9 +26,8 @@ LightSource::LightSource(const LightSource& origObj) {
 
 LightSource& LightSource::operator=(const LightSource& origObj) {
 	if (this != &origObj) {
-		this->data.byte2 = 0;
-
 		this->data.type = origObj.data.type;
+		this->data.ambient = origObj.data.ambient;
 		this->data.position = origObj.data.position;
 		this->data.direction = origObj.data.direction;
 		this->data.colour = origObj.data.colour;

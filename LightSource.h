@@ -13,7 +13,7 @@ class LightSource {
 private:
 	struct LightData {
 		int type;
-		int byte2;
+		int ambient;
 		XMVECTOR position;
 		XMVECTOR direction;
 		XMVECTOR colour;
@@ -24,7 +24,7 @@ private:
 	LightData data;
 
 public:
-	LightSource(const int type = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
+	LightSource(const int type = 0, const int ambient = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
 				const XMVECTOR direction = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
 				const XMVECTOR colour = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
 				const float intensity = 0.0f, const float angleX = 0.0f, const float angleY = 0.0f);

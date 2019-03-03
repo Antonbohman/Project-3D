@@ -22,7 +22,8 @@ cbuffer VS_CB_CAMERA : register(b0)
 
 cbuffer VS_CB_LIGHT : register(b1)
 {
-    int2 LightType;
+    int LightType;
+    int AmbientPower;
     float4 LightPos;
     float4 LightDir;
     float4 LightColour;
@@ -67,6 +68,8 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //calculate angle between light source direction and normal 
     float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
 
+    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
+
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
 
@@ -79,5 +82,6 @@ float4 PS_light(PS_IN input) : SV_TARGET
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     //return clamp((diffuseColour + specular) * attenuation, 0.0f, 1.0f);
-    return float4(diffuseAlbedo.rgb, 1.0f);
+
+    return ambientColour + diffuseColour;
 }

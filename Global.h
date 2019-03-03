@@ -46,7 +46,6 @@ struct Heightmap {
 
 // resource storing ambient and specular
 struct AmbientSpecular {
-	XMVECTOR Ambient;
 	XMVECTOR Specular;
 };
 
@@ -77,7 +76,7 @@ struct PositionVertex {
 // resource for storing a light
 struct LightData {
 	int type;
-	int byte2;
+	int ambient;
 	XMVECTOR position;
 	XMVECTOR direction;
 	XMVECTOR colour;
@@ -153,7 +152,6 @@ extern LightSource* Lights;
 extern int nrOfLights;
 
 // CAMERAVIEW
-extern XMVECTOR CameraView;
 extern Camera camera;
 
 // keeping track of current rotation
