@@ -76,3 +76,6 @@ int gnrOfVertices = 0;
 //clear pointers
 ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
 ID3D11Buffer* nullCB = nullptr;
+
+ID3D11ShaderResourceView* gTextureSRV[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };

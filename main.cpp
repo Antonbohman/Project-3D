@@ -11,7 +11,7 @@
 
 //TOOL KIT
 //#include "CommonStates.h"
-//#include "DDSTextureLoader.h"
+#include "DDSTextureLoader.h"
 //#include "DirectXHelpers.h"
 //#include "Effects.h"
 //#include "GamePad.h"
@@ -267,8 +267,7 @@ void LoadObjectFile(char* filename)
 	int normArrSize = 0;
 
 	bool indexStart = false;
-	XMINT3* arrOfIndex = nullptr; //
-	//int nrOfVertices = 0; //kolla detta
+	XMINT3* arrOfIndex = nullptr;
 	int objArrSize = 0;
 
 	while (loopControl != EOF)
@@ -362,7 +361,7 @@ void LoadObjectFile(char* filename)
 				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
 				if (indexStart == false)
 				{
-					objArrSize = (nrOfVert * 1.5);
+					objArrSize = int(nrOfVert * 1.5);
 					object = new TriangleVertex[objArrSize];
 					indexStart = true;
 				}
@@ -416,7 +415,16 @@ void LoadObjectFile(char* filename)
 	delete[] arrOfIndex;
 }
 
-bool loadHeightMap(char* filename) //24 bit colour depth
+void loadTexture()
+{
+	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Water.dds", &gTexture2D[0], &gTextureSRV[0]);
+	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gTexture2D[1], &gTextureSRV[1]);
+	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Cliffs.dds", &gTexture2D[2], &gTextureSRV[2]);
+	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Snow.dds", &gTexture2D[3], &gTextureSRV[3]);
+	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[4], &gTextureSRV[4]);
+}
+
+void loadHeightMap(char* filename) //24 bit colour depth
 {
 
 	FILE *fileptr; //filepointer
@@ -430,7 +438,7 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 	fileptr = fopen(filename, "rb");
 	if (fileptr == 0)
 	{
-		return false;
+		return;
 	}
 
 	//Read headers
@@ -467,7 +475,7 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	int heightfactor = 25.50f * 1.0f; //mountain smoothing
+	int heightfactor = int(25.50f * 1.255f); //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -608,7 +616,7 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 
 			/*UV*/
 			map[vertNr].u = 1.0f;
-			map[vertNr].v = 1.0f;
+			map[vertNr].v = 0.0f;
 
 			vertNr++;
 
@@ -698,7 +706,7 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 			}
 
 			/*UV*/
-			map[vertNr].u = 1.0f;
+			map[vertNr].u =	0.0f;
 			map[vertNr].v = 1.0f;
 
 			vertNr++;
@@ -740,10 +748,10 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 				map[vertNr].g = bedrock.y;
 				map[vertNr].b = bedrock.z;
 			}
-			
+
 			/*UV*/
 			map[vertNr].u = 1.0f;
-			map[vertNr].v = 0.0f;
+			map[vertNr].v = 1.0f;
 
 			vertNr++;
 
@@ -784,9 +792,9 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 				map[vertNr].g = bedrock.y;
 				map[vertNr].b = bedrock.z;
 			}
-			
+
 			/*UV*/
-			map[vertNr].u = 0.0f;
+			map[vertNr].u = 1.0f;
 			map[vertNr].v = 0.0f;
 
 			vertNr++;
@@ -798,7 +806,6 @@ bool loadHeightMap(char* filename) //24 bit colour depth
 
 	delete[] map;
 	delete[] bitmapImage;
-	return true;
 }
 
 void updateWorldViewProjection() {
@@ -889,7 +896,7 @@ void setSpecularValues(XMVECTOR specular) {
 
 void Render() {
 	// clear the back buffer to a deep blue
-	float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
 	// Clear the render target buffers.
 	for (int i = 0; i < G_BUFFER; i++) {
@@ -909,13 +916,24 @@ void Render() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
+	//Texturing
+	for (int i = 0; i < 5; i++)
+	{
+		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
+	}
 	//bind our texture to pixelshader
 	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
-	for(int i = 0; i < nrOfVertexBuffers; i++)
+	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
+	}
+
+	//Release
+	for (int i = 0; i < 5; i++)
+	{
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
 	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
@@ -976,16 +994,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		Heightmap _heightmap;
+		loadHeightMap("Objects/Heightmaps/castle.bmp");
 
-		if (!loadHeightMap("Objects/Heightmaps/castle.bmp")) return 404;
-
-		//CreateHeightmapData(_heightmap); 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		//delete[] _heightmap.verticesPos;
+		LoadObjectFile("Objects/OBJs/elefant.obj");
 
-		LoadObjectFile("Objects/OBJs/veryHotModel.obj");
+		loadTexture();
 
 		CreateConstantBuffer(); //8. Create constant buffers
 
@@ -1020,7 +1035,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						rotationValue = 0.0f;
 					}
 					else if (kb.LeftShift) {
-						rotationValue = 0.01;
+						rotationValue = 0.01f;
 					}
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
