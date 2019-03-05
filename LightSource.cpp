@@ -2,15 +2,14 @@
 
 LightSource::LightSource(const int type, const int ambient, const XMVECTOR position,
 						const XMVECTOR direction, const XMVECTOR colour, 
-						const float intensity, const float angleX, const float angleY) {
+						const float intensity, const float lightFocus) {
 	data.type = type;
 	data.ambient = ambient;
 	data.position = position;
 	data.direction = direction;
 	data.colour = colour;
 	data.intensity = intensity;
-	data.angleX = angleX;
-	data.angleY = angleY;
+	data.lightFocus = lightFocus;
 }
 
 LightSource::LightSource(const LightSource& origObj) {
@@ -20,8 +19,7 @@ LightSource::LightSource(const LightSource& origObj) {
 	this->data.direction = origObj.data.direction;
 	this->data.colour = origObj.data.colour;
 	this->data.intensity = origObj.data.intensity;
-	this->data.angleX = origObj.data.angleX;
-	this->data.angleY = origObj.data.angleY;
+	this->data.lightFocus = origObj.data.lightFocus;
 }
 
 LightSource& LightSource::operator=(const LightSource& origObj) {
@@ -32,8 +30,7 @@ LightSource& LightSource::operator=(const LightSource& origObj) {
 		this->data.direction = origObj.data.direction;
 		this->data.colour = origObj.data.colour;
 		this->data.intensity = origObj.data.intensity;
-		this->data.angleX = origObj.data.angleX;
-		this->data.angleY = origObj.data.angleY;
+		this->data.lightFocus = origObj.data.lightFocus;
 	}
 
 	return *this;

@@ -199,7 +199,7 @@ void CreateLigths() {
 	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(0, 10, XMVectorSet(0.0f, 500.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.5f, 0.0f, 0.0f);
+	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(0.0f, 10.0f, 50.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 }
 
 void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
