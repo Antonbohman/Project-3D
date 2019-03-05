@@ -82,7 +82,7 @@ struct LightData {
 	XMVECTOR direction;
 	XMVECTOR colour;
 	float intensity;
-	float angleX; float angleY;
+	float lightFocus;
 };
 
 

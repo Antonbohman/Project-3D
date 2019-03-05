@@ -18,7 +18,7 @@ private:
 		XMVECTOR direction;
 		XMVECTOR colour;
 		float intensity;
-		float angleX; float angleY;
+		float lightFocus;
 	};
 
 	LightData data;
@@ -27,7 +27,7 @@ public:
 	LightSource(const int type = 0, const int ambient = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
 				const XMVECTOR direction = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
 				const XMVECTOR colour = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
-				const float intensity = 0.0f, const float angleX = 0.0f, const float angleY = 0.0f);
+				const float intensity = 0.0f, const float lightFocus = 0.0f);
 	LightSource(const LightSource& origObj);
 	LightSource& operator=(const LightSource& origObj);
 	virtual ~LightSource();
