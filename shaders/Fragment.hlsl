@@ -15,7 +15,7 @@ struct PS_OUT
     float4 Position : SV_Target3;
 };
 
-Texture2D Texture : register(t1);
+Texture2D Texture : register(t4);
 
 SamplerState Sampling : register(s0);
 

@@ -319,6 +319,7 @@ void LoadObjectFile(char* filename)
 				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
 
 				arrOfTxtCord[nrOfTxtCord] = vertex;
+				arrOfTxtCord[nrOfTxtCord].y = 1 - arrOfTxtCord[nrOfTxtCord].y;
 				nrOfTxtCord++;
 			}
 			else if (strcmp(line, "vn") == 0)
@@ -706,7 +707,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 			}
 
 			/*UV*/
-			map[vertNr].u =	0.0f;
+			map[vertNr].u = 0.0f;
 			map[vertNr].v = 1.0f;
 
 			vertNr++;
@@ -998,7 +999,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		LoadObjectFile("Objects/OBJs/elefant.obj");
+		LoadObjectFile("Objects/OBJs/fish.obj");
 
 		loadTexture();
 
