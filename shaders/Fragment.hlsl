@@ -35,10 +35,10 @@ PS_OUT PS_main(PS_IN input)
     output.Normal = float4(normalize(input.Normal), 1.0f);
     
     //get texture colour for the given uv coordinate with selected sampling format
-    pixelColour = Texture.Sample(Sampling, input.UV);
+    //pixelColour = Texture.Sample(Sampling, input.UV);
     
     //alternative get a given colour
-    //pixelColour = float4(input.Color, 1.0f);
+    pixelColour = float4(input.Color, 1.0f);
 
     //add ambient lightning
     output.Diffuse = pixelColour;

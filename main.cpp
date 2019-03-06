@@ -476,7 +476,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	int heightfactor = int(25.50f * 1.255f); //mountain smoothing
+	int heightfactor = int(25.50f * 0.6f); //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < heightmap.imageHeight; i++)
@@ -484,7 +484,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 		for (int j = 0; j < heightmap.imageWidth; j++)
 		{
 			height = bitmapImage[counter];
-			index = (heightmap.imageHeight * i) + j;
+			index = (heightmap.imageWidth * i) + j;
 
 			heightmap.verticesPos[index].x = (float)j;
 			heightmap.verticesPos[index].y = (float)height / heightfactor;
@@ -995,7 +995,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		loadHeightMap("Objects/Heightmaps/castle.bmp");
+		loadHeightMap("Objects/Heightmaps/island.bmp");
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
