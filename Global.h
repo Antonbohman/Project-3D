@@ -154,7 +154,8 @@ extern Camera camera;
 extern float rotation;
 
 extern int nrOfVertices;
-//extern float gHeightfactor;
+extern Heightmap g_heightmap;
+extern TriangleVertex* g_map;
 
 extern int gnrOfVertices;
 

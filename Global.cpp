@@ -68,7 +68,8 @@ Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 float rotation = 1.5f*XM_PI;
 
 int nrOfVertices = 0;
-//float gHeightfactor = 0;
+Heightmap g_heightmap;
+TriangleVertex* g_map;
 
 int gnrOfVertices = 0;
 

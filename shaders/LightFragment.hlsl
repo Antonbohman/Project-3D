@@ -83,7 +83,7 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp((ambientColour + diffuseColour + specularColour) * attenuation, 0.0f, 1.0f);
+    //return clamp((diffuseColour + specularColour) * attenuation + ambientColour, 0.0f, 1.0f);
 
     //Renders normals
     //return float4(normal.rgb, 1);
@@ -92,5 +92,5 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //return float4(position.rgb, 1);
 
     //Render diffuse albedo
-    //return float4(diffuseAlbedo.rgb, 1);
+    return float4(diffuseAlbedo.rgb, 1);
 }
