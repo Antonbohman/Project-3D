@@ -436,6 +436,11 @@ void LoadObjectFile(char* filename)
 		objectArray[i] = object[i];
 	}
 
+	for (int i = 0; i < nrOfVertices; i++)
+	{
+		objectArray[i].y += 10;
+	}
+
 	createVertexBuffer(nrOfVertices, objectArray);
 
 	delete[] objectArray;
@@ -506,7 +511,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	int heightfactor = int(25.50f * 0.6f); //mountain smoothing
+	int heightfactor = int(25.50f * 0.3f); //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < g_heightmap.imageHeight; i++)
@@ -868,6 +873,21 @@ void updateLightWorldViewProjection() {
 }
 
 void updateCameraValues() {
+	//Walking in Memphis
+	Vector4 CameraPos = camera.GetCamPos();
+	XMINT2 roundedPos;
+	roundedPos.x = CameraPos.x;
+	roundedPos.y = CameraPos.y;
+
+	if (float(roundedPos.x) + 0.5f > CameraPos.x) roundedPos.x++;
+	if (float(roundedPos.y) + 0.5f > CameraPos.y) roundedPos.y++;
+
+	int index = (g_heightmap.imageWidth * (roundedPos.y + (g_heightmap.imageHeight / 2)) +
+		(roundedPos.x + (g_heightmap.imageWidth / 2)));
+
+	float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+
+
 	//temmp static camera
 	gCameraMatrix->Origin = camera.GetCamPos();
 	gCameraMatrix->Focus = camera.GetCamTarget();
@@ -1017,7 +1037,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue = 0.00f;
+	//float rotationValue = 0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -1028,9 +1048,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		loadHeightMap("Objects/Heightmaps/island.bmp");
+		loadHeightMap("Objects/Heightmaps/halv_island.bmp");
 
-		loadMultiTextureMap("Objects/Heightmaps/islandMT.bmp");
+		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
@@ -1067,16 +1087,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.SetYawAndPitch(0, 0);
 					}
 
-					if (kb.LeftControl && rotationValue > 0) {
-						rotationValue = 0.0f;
-					}
-					else if (kb.LeftShift) {
-						rotationValue = 0.01f;
-					}
+					//if (kb.LeftControl && rotationValue > 0) {
+					//	rotationValue = 0.0f;
+					//}
+					//else if (kb.LeftShift) {
+					//	rotationValue = 0.01;
+					//}
+
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
+					float run = 1.0f;
 
 					//UPDATE VECTOR
+
+					if (kb.LeftShift)
+					{
+						run = 3.0f;
+					}
+
+					//pineapple in a green pie
 					if (kb.W) {//FORWARD IN
 						moveInDepthCameraClass += camera.GetCameraNormal();
 
@@ -1112,7 +1141,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE CAMERA
 					{
-						deltaChange = XMVector3Normalize(deltaChange);
+						deltaChange = XMVector3Normalize(deltaChange*run);
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
@@ -1124,7 +1153,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//ROTATING WORLD
 
 				//upate rotation depending on time since last update
-				rotation += delta.count()*rotationValue;
+				//rotation += delta.count()*rotationValue;
 
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values

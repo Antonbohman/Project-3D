@@ -54,34 +54,6 @@ private:
 	float pitch=0.0f;
 	float yaw=0.0f;
 
-	//http://www.lighthouse3d.com/tutorials/view-frustum-culling/geometric-approach-extracting-the-planes/
-	//Frustum data
-	float frustumNearDist=10;
-	float frustumFarDist=200;
-
-	float frustumHightNear;
-	float frustumWidthNear;
-
-	float frustumHightFar;
-	float frustumWidthFar;
-	
-	//Frustum points
-	Vector4 frustumNearCenter;
-	Vector4 frustumFarCenter;
-
-	Vector4 frustNbr; //bottomright
-	Vector4 frustNtr; //topright
-	Vector4 frustNtl; //topleft
-	Vector4 frustNbl; //bottomleft
-
-	Vector4 frustFbr;
-	Vector4 frustFtr;
-	Vector4 frustFtl;
-	Vector4 frustFbl;
-
-
-	
-
 public:
 	Camera();
 	Camera(Vector4 camPos,Vector4 camFocus);
@@ -101,11 +73,11 @@ public:
 
 	XMVECTOR GetCameraNormal() const;
 
-	void calculateFrustum(float FOV,float W_WIDTH, float W_HEIGHT);
-
 	float GetYaw()const;
 	float GetPitch()const;
 	void UpdateCameraNormal();
+
+	void SetCameraHight(float newY);
 
 	void SetCamPos(Vector4 position);
 	void SetCamTarget(Vector4 focusPoint);
@@ -113,7 +85,7 @@ public:
 	void MoveCamPos(Vector4 move);
 	void MoveCamTarget(Vector4 move);
 	
-	void UpdateCamera(Vector3 movement,double time);
+	void UpdateCamera(Vector3 movement, float speedMultiplier,double time);
 
 	void AddYaw(float rotationY);
 
