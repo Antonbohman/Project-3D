@@ -418,11 +418,12 @@ void LoadObjectFile(char* filename)
 
 void loadTexture()
 {
-	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Water.dds", &gTexture2D[0], &gTextureSRV[0]);
-	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gTexture2D[1], &gTextureSRV[1]);
-	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Cliffs.dds", &gTexture2D[2], &gTextureSRV[2]);
-	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Snow.dds", &gTexture2D[3], &gTextureSRV[3]);
-	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[4], &gTextureSRV[4]);
+	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Water.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
+	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Snow.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
+	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
+	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Cliffs.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
+
+	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
 }
 
 void loadHeightMap(char* filename) //24 bit colour depth
@@ -494,10 +495,10 @@ void loadHeightMap(char* filename) //24 bit colour depth
 		counter += padding; //Skip padding info at the end of each row.
 	}
 
-	gnrOfVert[nrOfVertexBuffers] = 4 + ((g_heightmap.imageWidth - 2) * 4 * 2) + ((g_heightmap.imageHeight - 2) * 4 * 2) + ((g_heightmap.imageHeight - 1) * (g_heightmap.imageWidth - 1) * 6);
+	nrOfHMVert = 4 + ((g_heightmap.imageWidth - 2) * 4 * 2) + ((g_heightmap.imageHeight - 2) * 4 * 2) + ((g_heightmap.imageHeight - 1) * (g_heightmap.imageWidth - 1) * 6);
 
 	//TriangleVertex* map = new TriangleVertex[gnrOfVert[nrOfVertexBuffers]];
-	g_map = new TriangleVertex[gnrOfVert[nrOfVertexBuffers]];
+	g_map = new TriangleVertex[nrOfHMVert];
 
 	int vertNr = 0;
 
@@ -739,7 +740,24 @@ void loadMultiTextureMap(char* filename)
 		}
 	}
 
-	createVertexBuffer(gnrOfVert[nrOfVertexBuffers], g_map);
+	// Describe the Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	// what type of buffer will this be?
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	// what type of usage (press F1, read the docs)
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	// how big in bytes each element in the buffer is.
+	bufferDesc.ByteWidth = sizeof(TriangleVertex) * nrOfHMVert;
+
+	// this struct is created just to set a pointer to the
+	// data containing the vertices.
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = (void*)g_map;
+
+	// create a Vertex Buffer
+	HRESULT error;
+	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
 }
 
 void updateWorldViewProjection() {
@@ -830,7 +848,7 @@ void setSpecularValues(XMVECTOR specular) {
 
 void Render() {
 	// clear the back buffer to a deep blue
-	float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
 
 	// Clear the render target buffers.
 	for (int i = 0; i < G_BUFFER; i++) {
@@ -850,16 +868,22 @@ void Render() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
-	//Texturing
-	for (int i = 0; i < 5; i++)
+	//Render heightmap
+	for (int i = 0; i < 4; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
+		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
+	}
+	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
+	gDeviceContext->Draw(nrOfHMVert, 0);
+	for (int i = 0; i < 4; i++)
+	{
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
 	}
 	//bind our texture to pixelshader
-	//gDeviceContext->PSSetShaderResources(0, 1, &gResource);
 
 	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
+		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 	}

@@ -107,6 +107,8 @@ extern ID3D11SamplerState* gSampling;
 // a resource to store Vertices in the GPU
 extern int gnrOfVert[5];
 extern ID3D11Buffer*ppVertexBuffers[5];
+extern ID3D11Buffer *heightmapBuffer;
+extern int nrOfHMVert;
 extern int nrOfVertexBuffers;
 extern char* textureName;
 
@@ -165,3 +167,6 @@ extern ID3D11Buffer* nullCB;
 
 extern ID3D11ShaderResourceView* gTextureSRV[5];
 extern ID3D11Resource* gTexture2D[5];
+
+extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
+extern ID3D11Resource* gMapTextureResource[4];

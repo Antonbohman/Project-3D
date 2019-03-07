@@ -20,6 +20,8 @@ ID3D11SamplerState* gSampling = nullptr;
 //TriangleVertex* gObject = nullptr;
 int gnrOfVert[5];
 ID3D11Buffer *ppVertexBuffers[5];
+ID3D11Buffer *heightmapBuffer;
+int nrOfHMVert;
 int nrOfVertexBuffers;
 //int gTotalNrOfVert = 0;
 char* textureName = nullptr;
@@ -79,3 +81,6 @@ ID3D11Buffer* nullCB = nullptr;
 
 ID3D11ShaderResourceView* gTextureSRV[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+
+ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
+ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
