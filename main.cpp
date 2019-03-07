@@ -805,7 +805,7 @@ void updateWorldViewProjection() {
 		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
 		0.1f,
-		200.0f
+		25.0f
 	);
 	Projection = XMMatrixTranspose(Projection);
 
