@@ -480,7 +480,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
 
-	int heightfactor = int(25.50f * 0.6f); //mountain smoothing
+	int heightfactor = int(25.50f * 0.3f); //mountain smoothing
 
 	//read and put vertex position
 	for (int i = 0; i < g_heightmap.imageHeight; i++)
@@ -957,9 +957,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		loadHeightMap("Objects/Heightmaps/island.bmp");
+		loadHeightMap("Objects/Heightmaps/halv_island.bmp");
 
-		loadMultiTextureMap("Objects/Heightmaps/islandMT.bmp");
+		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
