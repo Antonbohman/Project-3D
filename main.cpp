@@ -988,6 +988,23 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//FREE FLIGHT WITH O key
 				//HORIZONTAL movement with P 
 
+
+			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+				{//IN FREEFLIGHT				O key
+				//INTO CAMERA FORWARD		W
+				//INTO CAMERA BACKWARDS		S
+				//CAMERA RIGHT				D
+				//CAMERA LEFT				A
+				//CAMERA UP					Q
+				//CAMERA DOWN				E
+
+				//IN HORIZONTAL				P key
+				//CAMERA FORWARD			W
+				//CAMERA BACKWARDS			S
+				//CAMERA RIGHT				D
+				//CAMERA LEFT				A
+				}
+			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
