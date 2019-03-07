@@ -28,7 +28,7 @@ cbuffer VS_CB_LIGHT : register(b1)
     float4 LightDir;
     float4 LightColour;
     float LightIntensity;
-    float2 Angles;
+    float LightFocus;
 };
 
 float4 PS_light(PS_IN input) : SV_TARGET
@@ -48,27 +48,28 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //calculate angles and attenuation
     float3 lightVector = 0;
     float attenuation = 1.0f;
+    
     if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT) 
     {
-        lightVector = LightPos.xyz - position;
+        lightVector = LightPos.xyz - position.xyz;
 
         float ligthDist = length(lightVector);
-        attenuation = clamp(1.0f - (lightVector / LightIntensity), 0, 1.0f);
+        attenuation = clamp(1.0f - (ligthDist / LightIntensity), 0, 1.0f);
         
         if (LightType.x == TYPE_SPOT)
         {
-            attenuation *= clamp((dot(-lightVector, LightDir.xyz) - Angles.y) / (Angles.x - Angles.y), 0, 1.0f);
+            attenuation *= pow(max(dot(normalize(-lightVector), normalize(LightDir.xyz - LightPos.xyz)), 0.0f), LightFocus);
         }
     }
     else if (LightType.x == TYPE_DIRECTIONAL)
     {
-        lightVector = -LightDir.xyz;
+        lightVector = (LightPos.xyz - LightDir.xyz);
     }
     
     //calculate angle between light source direction and normal 
     float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
 
-    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
+    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.10f, 1.0f); //F ökade ambiance för han såg inget
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
@@ -78,10 +79,18 @@ float4 PS_light(PS_IN input) : SV_TARGET
     
     //clamp so only positive dot product is acceptable
     float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
-    float4 specular = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
+    //change diffuse albedo to specular albedo when added!
+    float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    //return clamp((diffuseColour + specular) * attenuation, 0.0f, 1.0f);
+    return clamp(ambientColour + (diffuseColour + specularColour) * attenuation, 0.0f, 1.0f);
 
-    return ambientColour + diffuseColour;
+    //Renders normals
+    //return float4(normal.rgb, 1);
+
+    //Render positions
+    //return float4(position.rgb, 1);
+
+    //Render diffuse albedo
+    //return float4(diffuseAlbedo.rgb, 1);
 }
