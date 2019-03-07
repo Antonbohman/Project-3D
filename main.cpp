@@ -1010,6 +1010,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				
 				//KEYBOARD 
 				{
 					auto kb = m_keyboard->GetState();
