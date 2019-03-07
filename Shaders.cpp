@@ -7,6 +7,8 @@ HRESULT CreateShaders() {
 	if (FAILED(CreateDeferredVS())) return S_FALSE;
 	if (FAILED(CreateDeferredGS())) return S_FALSE;
 	if (FAILED(CreateDeferredPS())) return S_FALSE;
+	if (FAILED(CreateDeferredMTPS())) return S_FALSE;
+
 	//if (FAILED(CreateDeferredCS())) return S_FALSE;
 
 	//create light shaders
@@ -22,6 +24,7 @@ void DestroyShaders() {
 	gVertexShader->Release();
 	gGeometryShader->Release();
 	gPixelShader->Release();
+	gBlendShader->Release();
 	//gComputeShader->Release();
 
 	gLightVertexShader->Release();
@@ -234,6 +237,46 @@ HRESULT CreateDeferredPS() {
 	return S_OK;
 }
 
+HRESULT CreateDeferredMTPS()
+{
+	ID3DBlob* errorBlob = nullptr;
+	ID3DBlob* pPS = nullptr;
+
+	HRESULT result = D3DCompileFromFile(
+		L"shaders/FragmentTexBlend.hlsl",   // filename
+		nullptr,		    // optional macros
+		nullptr,		    // optional include files
+		"PS_blend",		    // entry point
+		"ps_5_0",		    // shader model (target)
+		D3DCOMPILE_DEBUG,	// shader compile options
+		0,				    // effect compile options
+		&pPS,			    // double pointer to ID3DBlob		
+		&errorBlob			// pointer for Error Blob messages.
+	);
+
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+		if (pPS)
+			pPS->Release();
+		return result;
+	}
+
+	gDevice->CreatePixelShader(
+		pPS->GetBufferPointer(),
+		pPS->GetBufferSize(),
+		nullptr,
+		&gBlendShader
+	);
+
+	if (errorBlob) errorBlob->Release();
+	pPS->Release();
+
+	return S_OK;
+}
+
 HRESULT CreateDeferredCS() {
 	ID3DBlob* errorBlob = nullptr;
 	ID3DBlob* pCS = nullptr;
@@ -388,6 +431,23 @@ void SetDeferredShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gPixelShader, nullptr, 0);
+	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+
+	// specify the topology to use when drawing
+	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// specify the IA Layout (how is data passed)
+	gDeviceContext->IASetInputLayout(gVertexLayout);
+}
+
+void SetBlendShaders() {
+	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
+
+	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
+	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
+	gDeviceContext->PSSetShader(gBlendShader, nullptr, 0);
 	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 
 	// specify the topology to use when drawing

@@ -133,6 +133,7 @@ extern ID3D11VertexShader* gShadowVertexShader;
 extern ID3D11VertexShader* gVertexShader;
 extern ID3D11GeometryShader* gGeometryShader;
 extern ID3D11PixelShader* gPixelShader;
+extern ID3D11PixelShader* gBlendShader;
 extern ID3D11ComputeShader* gComputeShader;
 extern ID3D11VertexShader* gLightVertexShader;
 extern ID3D11PixelShader* gLightPixelShader;

@@ -47,6 +47,7 @@ ID3D11VertexShader* gShadowVertexShader = nullptr;
 ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
+ID3D11PixelShader* gBlendShader = nullptr;
 ID3D11ComputeShader* gComputeShader = nullptr;
 ID3D11VertexShader* gLightVertexShader = nullptr;
 ID3D11PixelShader* gLightPixelShader = nullptr;

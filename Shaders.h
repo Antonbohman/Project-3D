@@ -18,11 +18,13 @@ HRESULT CreateShadowVS();
 HRESULT CreateDeferredVS();
 HRESULT CreateDeferredGS();
 HRESULT CreateDeferredPS();
+HRESULT CreateDeferredMTPS();
 HRESULT CreateDeferredCS();
 HRESULT CreateLightVS();
 HRESULT CreateLightPS();
 
 void setShadowShaders();
 void SetDeferredShaders();
+void SetBlendShaders();
 void SetLightShaders();
 void setVertexBuffer(ID3D11Buffer* buffer, UINT32 size, UINT32 offset);

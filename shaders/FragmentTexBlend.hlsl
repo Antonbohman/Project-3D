@@ -15,7 +15,11 @@ struct PS_OUT
     float4 Position : SV_Target3;
 };
 
-//Texture2D Texture : register(t0);
+Texture2D Water_tex : register(t0);
+Texture2D Road_tex : register(t1);
+Texture2D Grass_tex : register(t2);
+Texture2D Rock_tex : register(t3);
+
 
 SamplerState Sampling : register(s0);
 
@@ -31,14 +35,19 @@ PS_OUT PS_blend(PS_IN input)
 
     float4 pixelColour;
 
+
     //add normal map
     output.Normal = float4(normalize(input.Normal), 1.0f);
     
     //get texture colour for the given uv coordinate with selected sampling format
-    //pixelColour = Texture.Sample(Sampling, input.UV);
+    float3 texture_r = input.Color.r * Road_tex.Sample(Sampling, input.UV);
+    float3 texture_g = input.Color.g * Grass_tex.Sample(Sampling, input.UV);
+    float3 texture_b = input.Color.b * Rock_tex.Sample(Sampling, input.UV);
+    float3 texture_x = (1 - (input.Color.r + input.Color.g + input.Color.b)) * Water_tex.Sample(Sampling, input.UV);
+
+    pixelColour = float4(texture_r + texture_g + texture_b + texture_x, 1.0f);
     
     //alternative get a given colour
-    pixelColour = float4(input.Color, 1.0f);
 
     //add ambient lightning
     output.Diffuse = pixelColour;

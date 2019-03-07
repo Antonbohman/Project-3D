@@ -421,10 +421,10 @@ void LoadObjectFile(char* filename)
 
 void loadTexture()
 {
-	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Water.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
-	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Snow.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
-	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
-	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Cliffs.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
+	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Lava16x16.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
+	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Sand16x16.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
+	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass16x16.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
+	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Stone16x16.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
 
 	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
 }
@@ -864,7 +864,6 @@ void Render() {
 	// Set the sampler state in the pixel shader.
 	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
 
-	SetDeferredShaders();
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
@@ -872,6 +871,7 @@ void Render() {
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
 	//Render heightmap
+	SetBlendShaders();
 	for (int i = 0; i < 4; i++)
 	{
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
@@ -883,6 +883,8 @@ void Render() {
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
 	}
 	//bind our texture to pixelshader
+	
+	SetDeferredShaders();
 
 	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
