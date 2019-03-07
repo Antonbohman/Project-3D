@@ -804,8 +804,9 @@ void updateWorldViewProjection() {
 	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
 		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
-		0.1f,
-		200.0f
+		PROJECTION_NEAR_Z,
+		PROJECTION_FAR_Z
+		
 	);
 	Projection = XMMatrixTranspose(Projection);
 
@@ -996,13 +997,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.SetYawAndPitch(0, 0);
 					}
 
-					//if (kb.LeftControl && rotationValue > 0) {
-					//	rotationValue = 0.0f;
-					//}
-					//else if (kb.LeftShift) {
-					//	rotationValue = 0.01;
-					//}
-
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
 					float run = 1.0f;
@@ -1056,7 +1050,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange += moveInDepthCameraClass;
 
 						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z },run, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD

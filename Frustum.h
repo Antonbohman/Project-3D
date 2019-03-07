@@ -56,6 +56,8 @@ public:
 
 	Frustum();
 
+	~Frustum();
+
 	Frustum(Camera* camera);
 
 	Frustum(const Frustum &original);

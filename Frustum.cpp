@@ -6,6 +6,11 @@ Frustum::Frustum()
 	cameraReference = nullptr;
 }
 
+Frustum::~Frustum()
+{
+	//Nothing dynamic
+}
+
 Frustum::Frustum(Camera * camera)
 {
 	cameraReference = camera;
