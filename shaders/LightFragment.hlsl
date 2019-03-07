@@ -69,7 +69,7 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //calculate angle between light source direction and normal 
     float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
 
-    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
+    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.10f, 1.0f); //F ökade ambiance för han såg inget
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
