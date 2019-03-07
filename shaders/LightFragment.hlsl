@@ -45,10 +45,10 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float3 specularAlbedo = specularData.xyz;
     float specularPower = specularData.w;
 
-
     //calculate angles and attenuation
     float3 lightVector = 0;
     float attenuation = 1.0f;
+    
     if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT) 
     {
         lightVector = LightPos.xyz - position.xyz;
@@ -83,7 +83,7 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp((ambientColour + diffuseColour + specularColour) * attenuation, 0.0f, 1.0f);
+    return clamp(ambientColour + (diffuseColour + specularColour) * attenuation, 0.0f, 1.0f);
 
     //Renders normals
     //return float4(normal.rgb, 1);

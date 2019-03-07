@@ -1,6 +1,8 @@
 #include "Shaders.h"
 
 HRESULT CreateShaders() {
+	if (FAILED(CreateShadowVS())) return S_FALSE;
+
 	//create deferred shaders 
 	if (FAILED(CreateDeferredVS())) return S_FALSE;
 	if (FAILED(CreateDeferredGS())) return S_FALSE;
@@ -15,6 +17,8 @@ HRESULT CreateShaders() {
 }
 
 void DestroyShaders() {
+	gShadowVertexShader->Release();
+
 	gVertexShader->Release();
 	gGeometryShader->Release();
 	gPixelShader->Release();
@@ -23,8 +27,62 @@ void DestroyShaders() {
 	gLightVertexShader->Release();
 	gLightPixelShader->Release();
 
+	gShadowVertexLayout->Release();
 	gVertexLayout->Release();
 	gLightVertexLayout->Release();
+}
+
+HRESULT CreateShadowVS() {
+	ID3DBlob* errorBlob = nullptr;
+	ID3DBlob* pVS = nullptr;
+
+	HRESULT result = D3DCompileFromFile(
+		L"shaders/ShadowVertex.hlsl",   // filename
+		nullptr,		  // optional macros
+		nullptr,		  // optional include files
+		"VS_shadow",		  // entry point
+		"vs_5_0",		  // shader model (target)
+		D3DCOMPILE_DEBUG, // shader compile options (DEBUGGING)
+		0,				  // IGNORE...DEPRECATED.
+		&pVS,			  // double pointer to ID3DBlob		
+		&errorBlob		  // pointer for Error Blob messages.
+	);
+
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+		if (pVS)
+			pVS->Release();
+		return result;
+	}
+
+	gDevice->CreateVertexShader(
+		pVS->GetBufferPointer(),
+		pVS->GetBufferSize(),
+		nullptr,
+		&gShadowVertexShader
+	);
+
+	D3D11_INPUT_ELEMENT_DESC inputDesc[] = {
+		{
+			"POSITION",					 // "semantic" name in shader
+			0,							 // "semantic" index (not used)
+			DXGI_FORMAT_R32G32B32_FLOAT, // size of ONE element (3 floats)
+			0,							 // input slot
+			0,							 // offset of first element
+			D3D11_INPUT_PER_VERTEX_DATA, // specify data PER vertex
+			0							 // used for INSTANCING (ignore)
+		},
+	};
+
+	gDevice->CreateInputLayout(inputDesc, ARRAYSIZE(inputDesc), pVS->GetBufferPointer(), pVS->GetBufferSize(), &gShadowVertexLayout);
+
+	if (errorBlob) errorBlob->Release();
+	pVS->Release();
+
+	return S_OK;
 }
 
 HRESULT CreateDeferredVS() {
@@ -305,6 +363,21 @@ HRESULT CreateLightPS() {
 	pPS->Release();
 
 	return S_OK;
+}
+
+void setShadowShaders() {
+	gDeviceContext->VSSetShader(gShadowVertexShader, nullptr, 0);
+	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+
+	// specify the topology to use when drawing
+	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// specify the IA Layout (how is data passed)
+	gDeviceContext->IASetInputLayout(gShadowVertexLayout);
 }
 
 void SetDeferredShaders() {

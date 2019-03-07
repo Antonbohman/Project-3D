@@ -21,7 +21,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-	<ClCompile Include="LightSource.cpp">
+    <ClCompile Include="LightSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Shaders.cpp">
@@ -56,12 +56,18 @@
     <FxCompile Include="shaders\Compute.hlsl">
       <Filter>Source Files\shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\ShadowVertex.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\FragmentTexBlend.hlsl">
+      <Filter>Source Files\shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-	<ClInclude Include="LightSource.h">
+    <ClInclude Include="LightSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.h">

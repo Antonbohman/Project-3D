@@ -62,7 +62,7 @@ struct WorldMatrix {
 	XMMATRIX ViewProjection;
 };
 
-// basic vertex struct
+// basic vertex struct µ
 struct TriangleVertex {
 	float x, y, z;
 	float r, g, b;
@@ -118,6 +118,7 @@ extern char* textureName;
 extern ID3D11Buffer* gDeferredQuadBuffer;
 
 // input layouts
+extern ID3D11InputLayout* gShadowVertexLayout;
 extern ID3D11InputLayout* gVertexLayout;
 extern ID3D11InputLayout* gLightVertexLayout;
 
@@ -131,6 +132,7 @@ extern ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
+extern ID3D11VertexShader* gShadowVertexShader;
 extern ID3D11VertexShader* gVertexShader;
 extern ID3D11GeometryShader* gGeometryShader;
 extern ID3D11PixelShader* gPixelShader;

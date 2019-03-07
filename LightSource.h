@@ -9,6 +9,11 @@
 
 using namespace DirectX;
 
+#define S_WIDTH 640.0f
+#define S_HEIGHT 480.0f
+
+#define SHADOW_MAPS 6
+
 class LightSource {
 private:
 	struct LightData {
@@ -23,6 +28,10 @@ private:
 
 	LightData data;
 
+	ID3D11Texture2D* shadowRenderTargetTexture[6];
+	ID3D11RenderTargetView* shadowRenderTargetView[6];
+	ID3D11ShaderResourceView* shadowShaderResourceView[6];
+
 public:
 	LightSource(const int type = 0, const int ambient = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
 				const XMVECTOR direction = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
@@ -32,6 +41,12 @@ public:
 	LightSource& operator=(const LightSource& origObj);
 	virtual ~LightSource();
 
-	bool Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
+	HRESULT createShadowBuffer(ID3D11Device* device);
+
+	HRESULT Prepare(ID3D11DeviceContext* deviceContext, int index) const;
+	HRESULT Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
+
+	int LightType() const;
+	ID3D11RenderTargetView* ShadowMap(int index) const;
 };
 

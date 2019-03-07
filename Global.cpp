@@ -27,6 +27,7 @@ char* textureName = nullptr;
 ID3D11Buffer* gDeferredQuadBuffer = nullptr;
 
 // input layouts
+ID3D11InputLayout* gShadowVertexLayout = nullptr;
 ID3D11InputLayout* gVertexLayout = nullptr;
 ID3D11InputLayout* gLightVertexLayout = nullptr;
 
@@ -40,6 +41,7 @@ ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
+ID3D11VertexShader* gShadowVertexShader = nullptr;
 ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;

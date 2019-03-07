@@ -196,10 +196,13 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 1;
+	nrOfLights = 2;
 	Lights = new LightSource[nrOfLights];
 
 	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(0.0f, 10.0f, 50.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
+	Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
+
+	Lights[0].createShadowBuffer(gDevice);
 }
 
 void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
@@ -1092,6 +1095,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 		}
 
+		delete[] Lights;
+
 		//make sure there are no leaks by releasing stored pointers
 		//gVertexBuffer->Release();
 		gDeferredQuadBuffer->Release();
@@ -1302,8 +1307,6 @@ HRESULT CreateRenderTargets() {
 			return S_FALSE;
 		}
 	}
-
-	//gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
 
 	return S_OK;
 }

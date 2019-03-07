@@ -96,7 +96,7 @@
   <ItemGroup>
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="LightSource.cpp" />
-	<ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="KeyInput.cpp" />
     <ClCompile Include="main.cpp" />
@@ -110,6 +110,11 @@
     </FxCompile>
     <FxCompile Include="shaders\Fragment.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PS_main</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="shaders\FragmentTexBlend.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PS_blend</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
     </FxCompile>
@@ -130,6 +135,11 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="shaders\ShadowVertex.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">VS_shadow</EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="shaders\Vertex.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">VS_main</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
@@ -142,7 +152,7 @@
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="KeyInput.h" />
-	<ClInclude Include="Global.h" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="LightSource.h" />
   </ItemGroup>

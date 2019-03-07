@@ -19,9 +19,6 @@ cbuffer VS_CB_SPACE : register(b0)
     float4x4 ViewProjection;
 };
 
-//-----------------------------------------------------------------------------------------
-// VertexShader: VSScene
-//-----------------------------------------------------------------------------------------
 VS_OUT VS_main(VS_IN input)
 {
     VS_OUT output = (VS_OUT)0;
