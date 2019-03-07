@@ -1034,7 +1034,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						run = 3.0f;
 					}
 
-
+					//pineapple in a green pie
 					if (kb.W) {//FORWARD IN
 						moveInDepthCameraClass += camera.GetCameraNormal();
 

@@ -126,6 +126,17 @@ void Camera::UpdateCameraNormal()
 	this->cameraNormal = XMVector4Normalize(this->cameraTarget - this->cameraPosition);
 }
 
+void Camera::SetCameraHight(float newY)
+{
+	Vector4 tempCam = cameraPosition;
+	tempCam.y = newY;
+	Vector4 tempFocus = cameraTarget;
+	tempFocus.y = newY;
+
+	this->cameraPosition = tempCam;
+	this->cameraTarget = tempFocus;
+}
+
 void Camera::SetCamPos(Vector4 position)
 {
 	this->cameraPosition = position;
@@ -146,7 +157,7 @@ void Camera::MoveCamTarget(Vector4 move)
 	cameraTarget += move;
 }
 
-void Camera::UpdateCamera(Vector3 movement, double time)
+void Camera::UpdateCamera(Vector3 movement,float speedMultiplier, double time)
 {
 
 	//ROTATION OF CAMERA
@@ -172,7 +183,7 @@ void Camera::UpdateCamera(Vector3 movement, double time)
 	camForward = XMVector3TransformCoord(defaultForward, RotateYTempMatrix);
 
 	Vector4 timeMovement = XMVector3Normalize(movement);
-	timeMovement = timeMovement* time;
+	timeMovement = timeMovement* time*speedMultiplier;
 
 	MoveCamTarget(timeMovement);
 	MoveCamPos(timeMovement);

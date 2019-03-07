@@ -77,13 +77,15 @@ public:
 	float GetPitch()const;
 	void UpdateCameraNormal();
 
+	void SetCameraHight(float newY);
+
 	void SetCamPos(Vector4 position);
 	void SetCamTarget(Vector4 focusPoint);
 
 	void MoveCamPos(Vector4 move);
 	void MoveCamTarget(Vector4 move);
 	
-	void UpdateCamera(Vector3 movement,double time);
+	void UpdateCamera(Vector3 movement, float speedMultiplier,double time);
 
 	void AddYaw(float rotationY);
 
