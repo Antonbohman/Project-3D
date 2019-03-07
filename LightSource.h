@@ -47,6 +47,9 @@ public:
 	HRESULT Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
 
 	int LightType() const;
-	ID3D11RenderTargetView* ShadowMap(int index) const;
+	ID3D11ShaderResourceView* ShadowMap(int index) const;
+
+	XMMATRIX getView() const;
+	XMMATRIX getProjection() const;
 };
 

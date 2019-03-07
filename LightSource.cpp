@@ -157,10 +157,27 @@ int LightSource::LightType() const {
 	return data.type;
 }
 
-ID3D11RenderTargetView* LightSource::ShadowMap(int index) const {
+ID3D11ShaderResourceView* LightSource::ShadowMap(int index) const {
 	if (index < SHADOW_MAPS)
-		return shadowRenderTargetView[index];
+		return shadowShaderResourceView[index];
 	else
 		return nullptr;
+}
+
+XMMATRIX LightSource::getView() const {
+	return XMMatrixLookAtLH(
+		data.position,
+		data.direction,
+		XMVectorSet(0,0,1,0)
+	);
+}
+
+XMMATRIX LightSource::getProjection() const {
+	return XMMatrixPerspectiveFovLH(
+		(float)XM_PI*2,
+		(float)S_WIDTH / (float)S_HEIGHT,
+		0.1f,
+		200.0f
+	);
 }
 

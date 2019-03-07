@@ -149,29 +149,53 @@ void CreateConstantBuffer() {
 	//create buffer for light subresource
 	gDevice->CreateBuffer(&lightDesc, nullptr, &gLightDataBuffer);
 
-	///////////////////////////
-	// World/View/Projection //
-	///////////////////////////
+	//////////////////////////////////////
+	// World/View/Projection For Lights //
+	//////////////////////////////////////
 
 	//allocate space in memory aligned to a multitude of 16
-	gWorldMatrix = (WorldMatrix*)_aligned_malloc(sizeof(WorldMatrix), 16);
+	gLightMatrix = (LightWVP*)_aligned_malloc(sizeof(LightWVP), 16);
 
 	// Describe the Constant Buffer
 	D3D11_BUFFER_DESC bufferDesc;
 	memset(&bufferDesc, 0, sizeof(bufferDesc));
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth = sizeof(WorldMatrix);
+	bufferDesc.ByteWidth = sizeof(LightWVP);
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	//bind matrix data to a subresource
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = gWorldMatrix;
-	data.SysMemPitch = 0;
-	data.SysMemSlicePitch = 0;
+	D3D11_SUBRESOURCE_DATA lightData;
+	lightData.pSysMem = gLightMatrix;
+	lightData.SysMemPitch = 0;
+	lightData.SysMemSlicePitch = 0;
 
 	//create buffer for our world,view and projection matrix
-	gDevice->CreateBuffer(&bufferDesc, &data, &gWorldMatrixBuffer);
+	gDevice->CreateBuffer(&bufferDesc, &lightData, &gLightMatrixBuffer);
+
+	//////////////////////////////////////
+	// World/View/Projection For Lights //
+	//////////////////////////////////////
+
+	//allocate space in memory aligned to a multitude of 16
+	gWorldMatrix = (CameraWVP*)_aligned_malloc(sizeof(CameraWVP), 16);
+
+	// Describe the Constant Buffer
+	D3D11_BUFFER_DESC worldDesc;
+	memset(&worldDesc, 0, sizeof(worldDesc));
+	worldDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	worldDesc.Usage = D3D11_USAGE_DYNAMIC;
+	worldDesc.ByteWidth = sizeof(CameraWVP);
+	worldDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	//bind matrix data to a subresource
+	D3D11_SUBRESOURCE_DATA worldData;
+	worldData.pSysMem = gWorldMatrix;
+	worldData.SysMemPitch = 0;
+	worldData.SysMemSlicePitch = 0;
+
+	//create buffer for our world,view and projection matrix
+	gDevice->CreateBuffer(&worldDesc, &worldData, &gWorldMatrixBuffer);
 }
 
 HRESULT CreateSampling() {
@@ -202,7 +226,9 @@ void CreateLigths() {
 	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(0.0f, 10.0f, 50.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 	Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 
-	Lights[0].createShadowBuffer(gDevice);
+	for (int i = 0; i < nrOfLights; i++) {
+		Lights[i].createShadowBuffer(gDevice);
+	}
 }
 
 void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
@@ -763,15 +789,13 @@ void loadMultiTextureMap(char* filename)
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
 }
 
-void updateWorldViewProjection() {
-	XMMATRIX World;
-
+void setWorldSpace() {
 	//alternativly use XMMatrixRotationX(rotation);
 	/*XMMATRIX WorldX = XMMatrixSet(
-		1.0, 0.0, 0.0, 0.0,
-		0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
-		0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
-		0.0, 0.0, 0.0, 1.0
+	1.0, 0.0, 0.0, 0.0,
+	0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
+	0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
+	0.0, 0.0, 0.0, 1.0
 	);*/
 
 	//alternativly use XMMatrixRotationY(rotation);
@@ -784,33 +808,41 @@ void updateWorldViewProjection() {
 
 	//alternativly use XMMatrixRotationZ(rotation); 
 	/*XMMATRIX WorldZ = XMMatrixSet(
-		(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
-		(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		0.0, 0.0, 0.0, 1.0
+	(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
+	(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0, 1.0
 	);*/
 
 	World = WorldY;
 	//World = XMMatrixMultiply(WorldX, World);
-	//World = XMMatrixMultiply(World, WorldZ);
+	//World = XMMatrixMultiply(World, WorldZ);	
+}
 
-	XMMATRIX View = XMMatrixLookAtLH(
+void setCameraViewProjectionSpace() {
+	View = XMMatrixLookAtLH(
 		camera.GetCamPos(),
 		camera.GetCamTarget(),
 		camera.GetCamUp()
 	);
 	View = XMMatrixTranspose(View);
 
-	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
+	Projection = XMMatrixPerspectiveFovLH(
 		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
 		0.1f,
 		200.0f
 	);
 	Projection = XMMatrixTranspose(Projection);
+}
 
-	//set each matrix to our cpu side memory
+void setLightViewProjectionSpace(LightSource* light) {
+	View = light->getView();
 
+	Projection = light->getProjection();
+}
+
+void updateCameraWorldViewProjection() {
 	gWorldMatrix->World = World;
 	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
 
@@ -819,7 +851,19 @@ void updateWorldViewProjection() {
 
 	//copy and map our cpu memory to our gpu buffert
 	gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gWorldMatrix, sizeof(WorldMatrix));
+	memcpy(mappedMemory.pData, gWorldMatrix, sizeof(CameraWVP));
+	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
+}
+
+void updateLightWorldViewProjection() {
+	gLightMatrix->WorldViewProjection = XMMatrixMultiply(Projection, XMMatrixMultiply(View, World));
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gLightMatrix, sizeof(LightWVP));
 	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 }
 
@@ -849,9 +893,30 @@ void setSpecularValues(XMVECTOR specular) {
 	gDeviceContext->Unmap(gAmbientSpecularBuffer, 0);
 };
 
-void Render() {
+void RenderShadowsMaps() {
+	//set for each object
+	setWorldSpace();
+	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+	for (int i = 0; i < nrOfLights; i++) {
+		setLightViewProjectionSpace(&Lights[i]);
+	}
+	
+	//updateWorldViewProjection();	
+}
+
+void RenderBuffers() {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+
+	updateCameraValues();
+
+	setCameraViewProjectionSpace();
+
+	//set for each object
+	setWorldSpace();
+	updateCameraWorldViewProjection();
+	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 	// Clear the render target buffers.
 	for (int i = 0; i < G_BUFFER; i++) {
@@ -864,7 +929,6 @@ void Render() {
 	// Set the sampler state in the pixel shader.
 	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
 
-
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
@@ -872,18 +936,22 @@ void Render() {
 
 	//Render heightmap
 	SetBlendShaders();
+
 	for (int i = 0; i < 4; i++)
 	{
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
 	}
+
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(nrOfHMVert, 0);
+
+	//Release
 	for (int i = 0; i < 4; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
-	//bind our texture to pixelshader
 	
+	//Render objects
 	SetDeferredShaders();
 
 	for (int i = 0; i < nrOfVertexBuffers; i++)
@@ -894,15 +962,18 @@ void Render() {
 	}
 
 	//Release
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
+}
+
+void RenderLights() {
 	SetLightShaders();
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
@@ -916,8 +987,8 @@ void Render() {
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
 
 	// render each light source
-	for (int j = 0; j < nrOfLights; j++) {
-		Lights[j].Load(gDeviceContext, gLightDataBuffer);
+	for (int i = 0; i < nrOfLights; i++) {
+		Lights[i].Load(gDeviceContext, gLightDataBuffer);
 		gDeviceContext->Draw(6, 0);
 	}
 
@@ -1060,13 +1131,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				if (rotation > 2 * XM_PI)
 					rotation -= 2 * XM_PI;
 
-				updateWorldViewProjection();
-
-				updateCameraValues();
-
-				setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-				Render(); //10. Rendera
+				//RenderShadowsMaps();
+				RenderBuffers();
+				RenderLights();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}

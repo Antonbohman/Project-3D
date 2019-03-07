@@ -56,8 +56,13 @@ struct CameraMatrix {
 	XMVECTOR Focus;
 };
 
+// a resource to store world,view,porojection matrix for lights in the GPU
+struct LightWVP {
+	XMMATRIX WorldViewProjection;
+};
+
 // a resource to store world,view,porojection matrix for object in the GPU
-struct WorldMatrix {
+struct CameraWVP {
 	XMMATRIX World;
 	XMMATRIX ViewProjection;
 };
@@ -144,13 +149,21 @@ extern ID3D11Buffer* gAmbientSpecularBuffer;
 extern CameraMatrix* gCameraMatrix;
 extern ID3D11Buffer* gCameraMatrixBuffer;
 
-extern WorldMatrix* gWorldMatrix;
+extern CameraWVP* gWorldMatrix;
 extern ID3D11Buffer* gWorldMatrixBuffer;
+
+extern LightWVP* gLightMatrix;
+extern ID3D11Buffer* gLightMatrixBuffer;
 
 extern ID3D11Buffer* gLightDataBuffer;
 
 extern LightSource* Lights;
 extern int nrOfLights;
+
+//World/View/Projection
+extern XMMATRIX World;
+extern XMMATRIX View;
+extern XMMATRIX Projection;
 
 // CAMERAVIEW
 extern Camera camera;
