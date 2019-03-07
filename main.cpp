@@ -83,97 +83,6 @@ void CreateDeferredQuad() {
 	gDevice->CreateBuffer(&bufferDesc, &data, &gDeferredQuadBuffer);
 }
 
-void CreateConstantBuffer() {
-	/////////////////
-	// Camera	   //
-	///////////////// 
-
-	//allocate space in memory aligned to a multitude of 16
-	gCameraMatrix = (CameraMatrix*)_aligned_malloc(sizeof(CameraMatrix), 16);
-
-	//create a description objekt defining how the buffer should be handled
-	D3D11_BUFFER_DESC cameraDesc;
-	ZeroMemory(&cameraDesc, sizeof(cameraDesc));
-	cameraDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cameraDesc.ByteWidth = sizeof(CameraMatrix);
-	cameraDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cameraDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	//bind light data to a subresource
-	D3D11_SUBRESOURCE_DATA cameraData;
-	ZeroMemory(&cameraData, sizeof(cameraData));
-	cameraData.pSysMem = gCameraMatrix;
-	cameraData.SysMemPitch = 0;
-	cameraData.SysMemSlicePitch = 0;
-
-	//create buffer for light subresource
-	gDevice->CreateBuffer(&cameraDesc, &cameraData, &gCameraMatrixBuffer);
-
-	/////////////////
-	// Ambient	   //
-	///////////////// 
-
-	//allocate space in memory aligned to a multitude of 16
-	gAmbientSpecularData = (AmbientSpecular*)_aligned_malloc(sizeof(AmbientSpecular), 16);
-
-	//create a description objekt defining how the buffer should be handled
-	D3D11_BUFFER_DESC ambientDesc;
-	ZeroMemory(&ambientDesc, sizeof(ambientDesc));
-	ambientDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	ambientDesc.ByteWidth = sizeof(AmbientSpecular);
-	ambientDesc.Usage = D3D11_USAGE_DYNAMIC;
-	ambientDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	//bind light data to a subresource
-	D3D11_SUBRESOURCE_DATA ambientData;
-	ZeroMemory(&ambientData, sizeof(ambientData));
-	ambientData.pSysMem = gAmbientSpecularData;
-	ambientData.SysMemPitch = 0;
-	ambientData.SysMemSlicePitch = 0;
-
-	//create buffer for light subresource
-	gDevice->CreateBuffer(&ambientDesc, &ambientData, &gAmbientSpecularBuffer);
-
-	/////////////////
-	// Light	   //
-	///////////////// 
-
-	//create a description objekt defining how the buffer should be handled
-	D3D11_BUFFER_DESC lightDesc;
-	ZeroMemory(&lightDesc, sizeof(lightDesc));
-	lightDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	lightDesc.ByteWidth = sizeof(LightData);
-	lightDesc.Usage = D3D11_USAGE_DYNAMIC;
-	lightDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	//create buffer for light subresource
-	gDevice->CreateBuffer(&lightDesc, nullptr, &gLightDataBuffer);
-
-	///////////////////////////
-	// World/View/Projection //
-	///////////////////////////
-
-	//allocate space in memory aligned to a multitude of 16
-	gWorldMatrix = (WorldMatrix*)_aligned_malloc(sizeof(WorldMatrix), 16);
-
-	// Describe the Constant Buffer
-	D3D11_BUFFER_DESC bufferDesc;
-	memset(&bufferDesc, 0, sizeof(bufferDesc));
-	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth = sizeof(WorldMatrix);
-	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	//bind matrix data to a subresource
-	D3D11_SUBRESOURCE_DATA data;
-	data.pSysMem = gWorldMatrix;
-	data.SysMemPitch = 0;
-	data.SysMemSlicePitch = 0;
-
-	//create buffer for our world,view and projection matrix
-	gDevice->CreateBuffer(&bufferDesc, &data, &gWorldMatrixBuffer);
-}
-
 HRESULT CreateSampling() {
 	D3D11_SAMPLER_DESC samplingDesc;
 	// Create a texture sampler state description.
@@ -202,7 +111,9 @@ void CreateLigths() {
 	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(0.0f, 10.0f, 50.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 	Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 
-	Lights[0].createShadowBuffer(gDevice);
+	for (int i = 0; i < nrOfLights; i++) {
+		Lights[i].createShadowBuffer(gDevice);
+	}
 }
 
 void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
@@ -408,6 +319,11 @@ void LoadObjectFile(char* filename)
 	for (int i = 0; i < nrOfVertices; i++)
 	{
 		objectArray[i] = object[i];
+	}
+
+	for (int i = 0; i < nrOfVertices; i++)
+	{
+		objectArray[i].y += 10;
 	}
 
 	createVertexBuffer(nrOfVertices, objectArray);
@@ -763,96 +679,30 @@ void loadMultiTextureMap(char* filename)
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
 }
 
-void updateWorldViewProjection() {
-	XMMATRIX World;
+void RenderShadowsMaps() {
+	//set for each object
+	setWorldSpace();
+	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
-	//alternativly use XMMatrixRotationX(rotation);
-	/*XMMATRIX WorldX = XMMatrixSet(
-		1.0, 0.0, 0.0, 0.0,
-		0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
-		0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
-		0.0, 0.0, 0.0, 1.0
-	);*/
-
-	//alternativly use XMMatrixRotationY(rotation);
-	XMMATRIX WorldY = XMMatrixSet(
-		(float)cos(rotation), 0.0, (float)-sin(rotation), 0.0,
-		0.0, 1.0, 0.0, 0.0,
-		(float)sin(rotation), 0.0, (float)cos(rotation), 0.0,
-		0.0, 0.0, 0.0, 1.0
-	);
-
-	//alternativly use XMMatrixRotationZ(rotation); 
-	/*XMMATRIX WorldZ = XMMatrixSet(
-		(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
-		(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		0.0, 0.0, 0.0, 1.0
-	);*/
-
-	World = WorldY;
-	//World = XMMatrixMultiply(WorldX, World);
-	//World = XMMatrixMultiply(World, WorldZ);
-
-	XMMATRIX View = XMMatrixLookAtLH(
-		camera.GetCamPos(),
-		camera.GetCamTarget(),
-		camera.GetCamUp()
-	);
-	View = XMMatrixTranspose(View);
-
-	XMMATRIX Projection = XMMatrixPerspectiveFovLH(
-		(float)XM_PI*FOV,
-		(float)W_WIDTH / (float)W_HEIGHT,
-		PROJECTION_NEAR_Z,
-		PROJECTION_FAR_Z
-		
-	);
-	Projection = XMMatrixTranspose(Projection);
-
-	//set each matrix to our cpu side memory
-
-	gWorldMatrix->World = World;
-	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
-
-	//create a subresource to hold our data while we copy between cpu and gpu memory
-	D3D11_MAPPED_SUBRESOURCE mappedMemory;
-
-	//copy and map our cpu memory to our gpu buffert
-	gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gWorldMatrix, sizeof(WorldMatrix));
-	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
+	for (int i = 0; i < nrOfLights; i++) {
+		setLightViewProjectionSpace(&Lights[i]);
+	}
+	
+	//updateWorldViewProjection();	
 }
 
-void updateCameraValues() {
-	//temmp static camera
-	gCameraMatrix->Origin = camera.GetCamPos();
-	gCameraMatrix->Focus = camera.GetCamTarget();
-
-	//create a subresource to hold our data while we copy between cpu and gpu memory
-	D3D11_MAPPED_SUBRESOURCE mappedMemory;
-
-	//copy and map our cpu memory to our gpu buffert
-	gDeviceContext->Map(gCameraMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gCameraMatrix, sizeof(CameraMatrix));
-	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
-};
-
-void setSpecularValues(XMVECTOR specular) {
-	gAmbientSpecularData->Specular = specular;
-
-	//create a subresource to hold our data while we copy between cpu and gpu memory
-	D3D11_MAPPED_SUBRESOURCE mappedMemory;
-
-	//copy and map our cpu memory to our gpu buffert
-	gDeviceContext->Map(gAmbientSpecularBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gAmbientSpecularData, sizeof(AmbientSpecular));
-	gDeviceContext->Unmap(gAmbientSpecularBuffer, 0);
-};
-
-void Render() {
+void RenderBuffers() {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+
+	updateCameraValues();
+
+	setCameraViewProjectionSpace();
+
+	//set for each object
+	setWorldSpace();
+	updateCameraWorldViewProjection();
+	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 	// Clear the render target buffers.
 	for (int i = 0; i < G_BUFFER; i++) {
@@ -865,7 +715,6 @@ void Render() {
 	// Set the sampler state in the pixel shader.
 	gDeviceContext->PSSetSamplers(0, 1, &gSampling);
 
-
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
@@ -873,18 +722,22 @@ void Render() {
 
 	//Render heightmap
 	SetBlendShaders();
+
 	for (int i = 0; i < 4; i++)
 	{
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
 	}
+
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(nrOfHMVert, 0);
+
+	//Release
 	for (int i = 0; i < 4; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
-	//bind our texture to pixelshader
 	
+	//Render objects
 	SetDeferredShaders();
 
 	for (int i = 0; i < nrOfVertexBuffers; i++)
@@ -895,15 +748,18 @@ void Render() {
 	}
 
 	//Release
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[i]);
+		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 
+}
+
+void RenderLights() {
 	SetLightShaders();
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
@@ -917,8 +773,8 @@ void Render() {
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
 
 	// render each light source
-	for (int j = 0; j < nrOfLights; j++) {
-		Lights[j].Load(gDeviceContext, gLightDataBuffer);
+	for (int i = 0; i < nrOfLights; i++) {
+		Lights[i].Load(gDeviceContext, gLightDataBuffer);
 		gDeviceContext->Draw(6, 0);
 	}
 
@@ -1113,13 +969,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				if (rotation > 2 * XM_PI)
 					rotation -= 2 * XM_PI;
 
-				updateWorldViewProjection();
-
-				updateCameraValues();
-
-				setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-				Render(); //10. Rendera
+				//RenderShadowsMaps();
+				RenderBuffers();
+				RenderLights();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
