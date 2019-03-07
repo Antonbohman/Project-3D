@@ -1005,10 +1005,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
+					float run = 1.0f;
 
 					//UPDATE VECTOR
 
-					if(kb.LeftShift)
+					if (kb.LeftShift)
+					{
+						run = 3.0f;
+					}
+
+
 					if (kb.W) {//FORWARD IN
 						moveInDepthCameraClass += camera.GetCameraNormal();
 
@@ -1044,7 +1050,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE CAMERA
 					{
-						deltaChange = XMVector3Normalize(deltaChange);
+						deltaChange = XMVector3Normalize(deltaChange*run);
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
