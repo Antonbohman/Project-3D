@@ -11,7 +11,7 @@
 
 //TOOL KIT
 //#include "CommonStates.h"
-//#include "DDSTextureLoader.h"
+#include "DDSTextureLoader.h"
 //#include "DirectXHelpers.h"
 //#include "Effects.h"
 //#include "GamePad.h"
@@ -965,7 +965,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 	//Control values
-	float rotationValue = 0.01f;
+	//float rotationValue = 0.01f;
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -1016,16 +1016,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.SetYawAndPitch(0, 0);
 					}
 
-					if (kb.LeftControl && rotationValue > 0) {
-						rotationValue = 0.0f;
-					}
-					else if (kb.LeftShift) {
-						rotationValue = 0.01;
-					}
+					//if (kb.LeftControl && rotationValue > 0) {
+					//	rotationValue = 0.0f;
+					//}
+					//else if (kb.LeftShift) {
+					//	rotationValue = 0.01;
+					//}
+
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
 
 					//UPDATE VECTOR
+
+					if(kb.LeftShift)
 					if (kb.W) {//FORWARD IN
 						moveInDepthCameraClass += camera.GetCameraNormal();
 
@@ -1073,7 +1076,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//ROTATING WORLD
 
 				//upate rotation depending on time since last update
-				rotation += delta.count()*rotationValue;
+				//rotation += delta.count()*rotationValue;
 
 				//make sure it never goes past 2PI, 
 				//sin and cos gets less precise when calculated with higher values

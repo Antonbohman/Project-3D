@@ -94,11 +94,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="LightSource.cpp" />
-	<ClCompile Include="Shaders.cpp" />
+    <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="KeyInput.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -141,8 +141,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="KeyInput.h" />
-	<ClInclude Include="Global.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="Global.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="LightSource.h" />
   </ItemGroup>
