@@ -77,7 +77,7 @@ public:
 	float GetPitch()const;
 	void UpdateCameraNormal();
 
-	void SetCameraHight(float newY);
+	void SetCameraHeight(float newY);
 
 	void SetCamPos(Vector4 position);
 	void SetCamTarget(Vector4 focusPoint);

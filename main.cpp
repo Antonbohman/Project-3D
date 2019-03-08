@@ -243,7 +243,7 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, &vp);
 }
 
-void LoadObjectFile(char* filename)
+void LoadObjectFile(char* filename, XMINT3 offset)
 {
 	TriangleVertex* object = nullptr;
 	FILE* fileptr;
@@ -268,6 +268,8 @@ void LoadObjectFile(char* filename)
 	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
 	int nrOfNormals = 0;
 	int normArrSize = 0;
+
+	int nrOfFaces = 0;
 
 	bool indexStart = false;
 	XMINT3* arrOfIndex = nullptr;
@@ -369,10 +371,10 @@ void LoadObjectFile(char* filename)
 					object = new TriangleVertex[objArrSize];
 					indexStart = true;
 				}
-				if (nrOfVertices + 3 >= objArrSize)
+				if (nrOfFaces + 3 >= objArrSize)
 				{
 					TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
-					for (int i = 0; i < nrOfVertices; i++)
+					for (int i = 0; i < nrOfFaces; i++)
 					{
 						tempArr[i] = object[i];
 					}
@@ -383,39 +385,39 @@ void LoadObjectFile(char* filename)
 				}
 				for (int i = 0; i < 3; i++)
 				{
-					object[nrOfVertices + i].x = arrOfVertices[vertex[i].x - 1].x;
-					object[nrOfVertices + i].y = arrOfVertices[vertex[i].x - 1].y + 10;
-					object[nrOfVertices + i].z = arrOfVertices[vertex[i].x - 1].z;
+					object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
+					object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
+					object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
 
 					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
 					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
 					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
 
-					object[nrOfVertices + i].u = arrOfTxtCord[vertex[i].y - 1].x;
-					object[nrOfVertices + i].v = arrOfTxtCord[vertex[i].y - 1].y;
+					object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+					object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
-					object[nrOfVertices + i].r = 0.5f;
-					object[nrOfVertices + i].g = 0.0f;
-					object[nrOfVertices + i].b = 0.5f;
+					object[nrOfFaces + i].r = 0.5f;
+					object[nrOfFaces + i].g = 0.0f;
+					object[nrOfFaces + i].b = 0.5f;
 				}
-				nrOfVertices += 3;
+				nrOfFaces += 3;
 			}
 		}
 	}
 	fclose(fileptr);
 
-	TriangleVertex* objectArray = new TriangleVertex[nrOfVertices];
-	for (int i = 0; i < nrOfVertices; i++)
+	TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
+	for (int i = 0; i < nrOfFaces; i++)
 	{
 		objectArray[i] = object[i];
 	}
 
-	for (int i = 0; i < nrOfVertices; i++)
+	for (int i = 0; i < nrOfFaces; i++)
 	{
 		objectArray[i].y += 10;
 	}
 
-	createVertexBuffer(nrOfVertices, objectArray);
+	createVertexBuffer(nrOfFaces, objectArray);
 
 	delete[] objectArray;
 	delete[] arrOfVertices;
@@ -432,6 +434,7 @@ void loadTexture()
 	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Stone16x16.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
 
 	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
+	HRESULT hr5 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Mars.dds", &gTexture2D[1], &gTextureSRV[1]);
 }
 
 void loadHeightMap(char* filename) //24 bit colour depth
@@ -830,19 +833,48 @@ void updateWorldViewProjection() {
 
 void updateCameraValues() {
 	//Walking in Memphis
-	Vector4 CameraPos = camera.GetCamPos();
-	XMINT2 roundedPos;
-	roundedPos.x = CameraPos.x;
-	roundedPos.y = CameraPos.y;
+	//Vector4 CameraPos = camera.GetCamPos();
+	//XMINT2 roundedPos;
+	//roundedPos.x = CameraPos.z;
+	//roundedPos.y = CameraPos.x;
 
-	if (float(roundedPos.x) + 0.5f > CameraPos.x) roundedPos.x++;
-	if (float(roundedPos.y) + 0.5f > CameraPos.y) roundedPos.y++;
+	//if (roundedPos.x < 0)
+	//{
+	//	if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
+	//}
+	//else
+	//{
+	//	if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
+	//}
+	//if (roundedPos.y < 0)
+	//{
+	//	if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
+	//}
+	//else
+	//{
+	//	if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
+	//}
 
-	int index = (g_heightmap.imageWidth * (roundedPos.y + (g_heightmap.imageHeight / 2)) +
-		(roundedPos.x + (g_heightmap.imageWidth / 2)));
+	//roundedPos.x += (g_heightmap.imageWidth / 2);
+	//roundedPos.y += (g_heightmap.imageHeight /2);
+	//
+	//if (roundedPos.x < 0) roundedPos.x = 0;
+	//if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
 
-	float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+	//if (roundedPos.y < 0) roundedPos.y = 0;
+	//if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
 
+	////roundedPos.x = (g_heightmap.imageWidth / 2) + roundedPos.x;
+	////roundedPos.y += (g_heightmap.imageHeight / 2);
+
+	//int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
+
+	////if (index < 0) index = 0;
+	////if (index > (g_heightmap.imageHeight * g_heightmap.imageWidth)) index = (g_heightmap.imageHeight * g_heightmap.imageWidth);
+
+	//float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+
+	//camera.SetCameraHeight(newHeight);
 
 	//temmp static camera
 	gCameraMatrix->Origin = camera.GetCamPos();
@@ -908,7 +940,7 @@ void Render() {
 
 	for (int i = 0; i < nrOfVertexBuffers; i++)
 	{
-		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
+		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 	}
@@ -983,7 +1015,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		LoadObjectFile("Objects/OBJs/fish.obj");
+		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
+
+		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
+
+		/*LoadObjectFile("Objects/OBJs/Moon 2K.obj");
+
+		LoadObjectFile("Objects/OBJs/globe.obj");
+
+		LoadObjectFile("Objects/OBJs/T-Rex Model.obj");*/
 
 		loadTexture();
 
@@ -1076,7 +1116,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange += moveInDepthCameraClass;
 
 						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD
