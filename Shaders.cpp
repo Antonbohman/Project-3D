@@ -25,7 +25,7 @@ void DestroyShaders() {
 	gGeometryShader->Release();
 	gPixelShader->Release();
 	gBlendShader->Release();
-	//gComputeShader->Release();
+	//gComputeShader->Release();	
 
 	gLightVertexShader->Release();
 	gLightPixelShader->Release();

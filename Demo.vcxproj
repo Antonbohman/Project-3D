@@ -94,6 +94,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConstantBuffers.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="LightSource.cpp" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ConstantBuffers.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="Shaders.h" />

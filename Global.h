@@ -20,6 +20,9 @@ using namespace DirectX;
 #define W_WIDTH 640.0f
 #define W_HEIGHT 480.0f
 #define FOV 0.45f
+// PROJECTION RANGE
+#define PROJECTION_NEAR_Z 0.1f
+#define PROJECTION_FAR_Z 500.0f
 
 // define number of vertices used in rendering
 #define VERTICES 6
@@ -56,8 +59,13 @@ struct CameraMatrix {
 	XMVECTOR Focus;
 };
 
+// a resource to store world,view,porojection matrix for lights in the GPU
+struct LightWVP {
+	XMMATRIX WorldViewProjection;
+};
+
 // a resource to store world,view,porojection matrix for object in the GPU
-struct WorldMatrix {
+struct CameraWVP {
 	XMMATRIX World;
 	XMMATRIX ViewProjection;
 };
@@ -144,13 +152,21 @@ extern ID3D11Buffer* gAmbientSpecularBuffer;
 extern CameraMatrix* gCameraMatrix;
 extern ID3D11Buffer* gCameraMatrixBuffer;
 
-extern WorldMatrix* gWorldMatrix;
+extern CameraWVP* gWorldMatrix;
 extern ID3D11Buffer* gWorldMatrixBuffer;
+
+extern LightWVP* gLightMatrix;
+extern ID3D11Buffer* gLightMatrixBuffer;
 
 extern ID3D11Buffer* gLightDataBuffer;
 
 extern LightSource* Lights;
 extern int nrOfLights;
+
+//World/View/Projection
+extern XMMATRIX World;
+extern XMMATRIX View;
+extern XMMATRIX Projection;
 
 // CAMERAVIEW
 extern Camera camera;

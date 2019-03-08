@@ -6,6 +6,11 @@ Frustum::Frustum()
 	cameraReference = nullptr;
 }
 
+Frustum::~Frustum()
+{
+	//Nothing dynamic
+}
+
 Frustum::Frustum(Camera * camera)
 {
 	cameraReference = camera;
@@ -89,10 +94,11 @@ Frustum & Frustum::operator=(const Frustum & originalObj)
 	return *this;
 }
 
-void Frustum::giveCameraReference(Camera * theCamera)
+void Frustum::GiveCameraReference(Camera * theCamera)
 {
 	cameraReference = theCamera;
 }
+
 
 void Frustum::calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT)
 {
@@ -130,24 +136,25 @@ void Frustum::calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT)
 	//PLANE DEFFINITION
 
 	this->Planes[NEARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbl, frustNtl, frustNbr));
-	this->Planes[NEARPLANE].point = &this->frustumNearCenter;
+	this->Planes[NEARPLANE].pointInPlane = &this->frustumNearCenter;
 
 	this->Planes[FARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbr, frustFtr, frustFbl));
-	this->Planes[FARPLANE].point = &this->frustumFarCenter;
+	this->Planes[FARPLANE].pointInPlane = &this->frustumFarCenter;
 
 	this->Planes[RIGHTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustNtr, frustFbr));
-	this->Planes[RIGHTPLANE].point = &this->frustNbr;
+	this->Planes[RIGHTPLANE].pointInPlane = &this->frustNbr;
 
 	this->Planes[TOPPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFtr, frustNtr, frustFtl));
-	this->Planes[TOPPLANE].point = &this->frustFtr;
+	this->Planes[TOPPLANE].pointInPlane = &this->frustFtr;
 
 	this->Planes[LEFTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbl, frustFtl, frustNbl));
-	this->Planes[LEFTPLANE].point = &this->frustFbl;
+	this->Planes[LEFTPLANE].pointInPlane = &this->frustFbl;
 
 	this->Planes[BOTTOMPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustFbr, frustNbl));
-	this->Planes[BOTTOMPLANE].point = &this->frustNbr;
+	this->Planes[BOTTOMPLANE].pointInPlane = &this->frustNbr;
 
 }
+
 
 int Frustum::pointInFrustum(Vector3 point)
 {
@@ -160,3 +167,16 @@ int Frustum::pointInFrustum(Vector3 point)
 	return 0;
 }
 
+int Frustum::FrustumPlanes::distance(Vector4 objectPoint)
+{
+	Vector4 vektorToPoint = objectPoint - *pointInPlane;
+
+	int distance;/* (normal, vektorToPoint);*/
+
+
+
+
+
+	
+	return 0;
+}

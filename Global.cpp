@@ -1,5 +1,10 @@
 #include "Global.h"
 
+
+//Viewspace
+//WorldSpace
+//ProjectionSpace
+
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
 IDXGISwapChain* gSwapChain = nullptr;
@@ -58,8 +63,11 @@ ID3D11Buffer* gAmbientSpecularBuffer = nullptr;
 CameraMatrix* gCameraMatrix = nullptr;
 ID3D11Buffer* gCameraMatrixBuffer = nullptr;
 
-WorldMatrix* gWorldMatrix = nullptr;
+CameraWVP* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
+
+LightWVP* gLightMatrix = nullptr;
+ID3D11Buffer* gLightMatrixBuffer = nullptr;
 
 ID3D11Buffer* gLightDataBuffer = nullptr;
 
@@ -68,6 +76,11 @@ int nrOfLights = 0;
 
 // CAMERAVIEW
 Camera camera({ 0.0f, 10.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
+
+//World/View/Projection
+XMMATRIX World;
+XMMATRIX View;
+XMMATRIX Projection;
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
