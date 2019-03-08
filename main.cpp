@@ -36,6 +36,7 @@
 #include "Camera.h"
 #include "LightSource.h"
 #include "Global.h"
+#include "ConstantBuffers.h"
 #include "Shaders.h"
 
 using namespace DirectX;
@@ -913,7 +914,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange += moveInDepthCameraClass;
 
 						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, float(delta.count()));
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD
