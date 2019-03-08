@@ -47,8 +47,11 @@ private:
 
 	struct FrustumPlanes
 	{
+	public:
 		Vector4 normal;
-		Vector4* point;
+		Vector4* pointInPlane;
+
+		int distance(Vector4 objectPoint);
 	};
 	FrustumPlanes Planes[6];
 	
@@ -56,13 +59,17 @@ public:
 
 	Frustum();
 
+	~Frustum();
+
 	Frustum(Camera* camera);
 
 	Frustum(const Frustum &original);
 
 	Frustum &operator= (const Frustum &originalObj);
 
-	void giveCameraReference(Camera * theCamera);
+	void GiveCameraReference(Camera * theCamera);
+
+	int Distance(const Vector4 &p);
 
 	//int isInFront(Vector3 point);
 

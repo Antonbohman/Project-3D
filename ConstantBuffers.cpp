@@ -156,8 +156,8 @@ void setCameraViewProjectionSpace() {
 	Projection = XMMatrixPerspectiveFovLH(
 		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
-		0.1f,
-		200.0f
+		PROJECTION_NEAR_Z,
+		PROJECTION_FAR_Z
 	);
 	Projection = XMMatrixTranspose(Projection);
 }

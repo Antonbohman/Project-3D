@@ -833,6 +833,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		ShowWindow(wndHandle, nCmdShow);
 
+		bool freeFlight = false;
+
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
@@ -840,11 +842,32 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 			else {
 
+				//FREE FLIGHT WITH O key
+				//HORIZONTAL movement with P 
+
+
+			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+				{//IN FREEFLIGHT				O key
+				//INTO CAMERA FORWARD		W
+				//INTO CAMERA BACKWARDS		S
+				//CAMERA RIGHT				D
+				//CAMERA LEFT				A
+				//CAMERA UP					Q
+				//CAMERA DOWN				E
+
+				//IN HORIZONTAL				P key
+				//CAMERA FORWARD			W
+				//CAMERA BACKWARDS			S
+				//CAMERA RIGHT				D
+				//CAMERA LEFT				A
+				}
+			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 				//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				
 				//KEYBOARD 
 				{
 					auto kb = m_keyboard->GetState();
@@ -854,12 +877,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.SetYawAndPitch(0, 0);
 					}
 
-					//if (kb.LeftControl && rotationValue > 0) {
-					//	rotationValue = 0.0f;
-					//}
-					//else if (kb.LeftShift) {
-					//	rotationValue = 0.01;
-					//}
+					if (kb.O)
+					{
+						freeFlight = true;
+					}
+					if (kb.P)
+					{
+						freeFlight = false;
+					}
 
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
@@ -873,12 +898,28 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 
 					//pineapple in a green pie
-					if (kb.W) {//FORWARD IN
-						moveInDepthCameraClass += camera.GetCameraNormal();
+					if (kb.W ) {//FORWARD IN
+
+						if (freeFlight)
+						{
+							moveInDepthCameraClass += camera.GetCameraNormal();
+						}
+						else
+						{
+							moveInDepthCameraClass += camera.GetCamForward();
+						}
 
 					}
 					if (kb.S) { //BACK
-						moveInDepthCameraClass -= camera.GetCameraNormal()/*camera.GetCamTarget() - camera.GetCamPos()*/;
+						if (freeFlight)
+						{
+							moveInDepthCameraClass -= camera.GetCameraNormal();
+						}
+						else
+						{
+							moveInDepthCameraClass -= camera.GetCamForward();
+						}
+						
 					}
 					if (kb.D) { //RIGHT
 						deltaChange.x += 1.0f;
@@ -888,9 +929,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange.x -= 1.0f;
 					}
 					if (kb.Q) { //UP
+						if(freeFlight)
 						deltaChange.y += 1.0f;
 					}
 					if (kb.E) { //DOWN
+						if(freeFlight)
 						deltaChange.y -= 1.0f;
 					}
 					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
@@ -914,7 +957,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange += moveInDepthCameraClass;
 
 						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z },run, float(delta.count()));
 					}
 				}
 				//ROTATING WORLD

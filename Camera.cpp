@@ -126,7 +126,7 @@ void Camera::UpdateCameraNormal()
 	this->cameraNormal = XMVector4Normalize(this->cameraTarget - this->cameraPosition);
 }
 
-void Camera::SetCameraHight(float newY)
+void Camera::SetCameraHeight(float newY)
 {
 	Vector4 tempCam = cameraPosition;
 	tempCam.y = newY;
