@@ -691,7 +691,7 @@ void RenderShadowsMaps() {
 	for (int i = 0; i < nrOfLights; i++) {
 		setLightViewProjectionSpace(&Lights[i]);
 	}
-	
+
 	//updateWorldViewProjection();	
 }
 
@@ -740,7 +740,7 @@ void RenderBuffers() {
 	{
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
-	
+
 	//Render objects
 	SetDeferredShaders();
 
@@ -872,13 +872,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//CAMERA RIGHT				D
 				//CAMERA LEFT				A
 				}
-			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-				//set timestamps and calculate delta between start end end time
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+					//set timestamps and calculate delta between start end end time
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				
+
 				//KEYBOARD 
 				{
 					auto kb = m_keyboard->GetState();
@@ -909,7 +909,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 
 					//pineapple in a green pie
-					if (kb.W ) {//FORWARD IN
+					if (kb.W) {//FORWARD IN
 
 						if (freeFlight)
 						{
@@ -930,7 +930,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						{
 							moveInDepthCameraClass -= camera.GetCamForward();
 						}
-						
+
 					}
 					if (kb.D) { //RIGHT
 						deltaChange.x += 1.0f;
@@ -940,12 +940,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange.x -= 1.0f;
 					}
 					if (kb.Q) { //UP
-						if(freeFlight)
-						deltaChange.y += 1.0f;
+						if (freeFlight)
+							deltaChange.y += 1.0f;
 					}
 					if (kb.E) { //DOWN
-						if(freeFlight)
-						deltaChange.y -= 1.0f;
+						if (freeFlight)
+							deltaChange.y -= 1.0f;
 					}
 					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
 					auto mouse = m_mouse->GetState();
@@ -968,7 +968,46 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						deltaChange += moveInDepthCameraClass;
 
 						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z },run, float(delta.count()));
+						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
+
+
+						//Walking in Memphis
+						Vector4 CameraPos = camera.GetCamPos();
+						XMINT2 roundedPos;
+						roundedPos.x = CameraPos.z;
+						roundedPos.y = CameraPos.x;
+						roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
+
+						if (roundedPos.x < 0)
+						{
+							if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
+						}
+						else
+						{
+							if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
+						}
+						if (roundedPos.y < 0)
+						{
+							if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
+						}
+						else
+						{
+							if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
+						}
+
+						roundedPos.x += (g_heightmap.imageWidth / 2);
+						roundedPos.y -= (g_heightmap.imageHeight / 2);
+
+						if (roundedPos.x < 0) roundedPos.x = 0;
+						if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
+
+						if (roundedPos.y < 0) roundedPos.y = 0;
+						if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
+
+						int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
+						float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+
+						camera.SetCameraHeight(newHeight);
 					}
 				}
 				//ROTATING WORLD
