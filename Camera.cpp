@@ -28,8 +28,8 @@ Camera::~Camera()
 Camera::Camera(const Camera & originalObj)
 {
 	//CAM DATA
-	this->cameraPosition=originalObj.cameraPosition;
-	this->cameraOriginalPosition =originalObj.cameraOriginalPosition;
+	this->cameraPosition = originalObj.cameraPosition;
+	this->cameraOriginalPosition = originalObj.cameraOriginalPosition;
 	this->cameraTarget = originalObj.cameraTarget;
 	this->cameraNormal = originalObj.cameraNormal;
 	this->cameraOriginalTarget = originalObj.cameraOriginalTarget;
@@ -41,8 +41,8 @@ Camera::Camera(const Camera & originalObj)
 	this->camRight = originalObj.camRight;
 	this->camUp = originalObj.camUp;
 
-	this->pitch=originalObj.pitch;
-	this->yaw=originalObj.yaw;
+	this->pitch = originalObj.pitch;
+	this->yaw = originalObj.yaw;
 }
 
 Camera & Camera::operator=(const Camera & originalObj)
@@ -98,7 +98,7 @@ XMVECTOR Camera::GetCamForward()const
 
 XMVECTOR Camera::GetCamRight()const
 {
-	return camRight ;
+	return camRight;
 }
 
 XMVECTOR Camera::GetCamUp() const
@@ -157,7 +157,7 @@ void Camera::MoveCamTarget(Vector4 move)
 	cameraTarget += move;
 }
 
-void Camera::UpdateCamera(Vector3 movement,float speedMultiplier, double time)
+void Camera::UpdateCamera(Vector3 movement, float speedMultiplier, double time)
 {
 
 	//ROTATION OF CAMERA
@@ -183,7 +183,7 @@ void Camera::UpdateCamera(Vector3 movement,float speedMultiplier, double time)
 	camForward = XMVector3TransformCoord(defaultForward, RotateYTempMatrix);
 
 	Vector4 timeMovement = XMVector3Normalize(movement);
-	timeMovement = timeMovement* time*speedMultiplier;
+	timeMovement = timeMovement * time*speedMultiplier;
 
 	MoveCamTarget(timeMovement);
 	MoveCamPos(timeMovement);
@@ -217,7 +217,7 @@ void Camera::UpdateYawAndPitch(float addYaw, float addPitch)
 {
 	this->pitch -= addPitch;
 	this->yaw -= addYaw;
-	
+
 
 	if (yaw > XM_PI)
 	{

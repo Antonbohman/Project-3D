@@ -347,6 +347,9 @@ void loadTexture()
 
 	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
 	HRESULT hr5 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Mars.dds", &gTexture2D[1], &gTextureSRV[1]);
+	HRESULT hr6 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Moon.dds", &gTexture2D[2], &gTextureSRV[2]);
+	HRESULT hr7 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gTexture2D[3], &gTextureSRV[3]);
+	HRESULT hr8 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/trex.dds", &gTexture2D[4], &gTextureSRV[4]);
 }
 
 void loadHeightMap(char* filename) //24 bit colour depth
@@ -828,11 +831,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
 
-		/*LoadObjectFile("Objects/OBJs/Moon 2K.obj");
+		LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
 
-		LoadObjectFile("Objects/OBJs/globe.obj");
+		LoadObjectFile("Objects/OBJs/globe.obj", XMINT3(2, 45, 2));
 
-		LoadObjectFile("Objects/OBJs/T-Rex Model.obj");*/
+		LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 
 		loadTexture();
 
