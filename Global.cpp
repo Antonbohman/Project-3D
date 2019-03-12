@@ -75,7 +75,7 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ -239.0f, 10.0f, 332.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
 
 //World/View/Projection
 XMMATRIX World;
