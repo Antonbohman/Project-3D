@@ -194,9 +194,6 @@ void updateLightWorldViewProjection() {
 }
 
 void updateCameraValues() {
-	//Walking in Memphis
-	Vector4 CameraPos = camera.GetCamPos();
-	
 	//temmp static camera
 	gCameraMatrix->Origin = camera.GetCamPos();
 	gCameraMatrix->Focus = camera.GetCamTarget();

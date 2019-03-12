@@ -131,12 +131,9 @@ void Camera::SetCameraHeight(float newY)
 	Vector4 tempCam = cameraPosition;
 	tempCam.y = newY;
 
-	/*Vector4 tempFocus = cameraTarget;
-	tempFocus.y = newY;*/
-
 	this->cameraPosition = tempCam;
-	//this->cameraTarget = tempFocus;
-	UpdateCamera({ 0.0f,0.0f,0.0f }, 0, 0); //make simpler
+
+	UpdateCamera({ 0.0f,0.0f,0.0f }, 0, 0);
 }
 
 void Camera::SetCamPos(Vector4 position)
