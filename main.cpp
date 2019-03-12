@@ -823,6 +823,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		LoadObjectFile("Objects/OBJs/fish.obj");
 
+		//LoadObjectFile("Objects/OBJs/monkeyPilar.obj");
+
 		loadTexture();
 
 		CreateConstantBuffer(); //8. Create constant buffers
