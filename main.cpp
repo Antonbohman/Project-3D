@@ -976,7 +976,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
 
 
-						//Walking in Memphis
+						//Walking on terrain
 						if (!freeFlight)
 						{
 							Vector4 CameraPos = camera.GetCamPos();
