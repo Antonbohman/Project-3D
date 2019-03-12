@@ -158,164 +158,164 @@ void SetViewport() {
 	gDeviceContext->RSSetViewports(1, vp);
 }
 
-//void LoadObjectFile(char* filename, XMINT3 offset) {
-//	TriangleVertex* object = nullptr;
-//	FILE* fileptr;
-//	fileptr = fopen(filename, "r");
-//	if (fileptr == NULL) {
-//		return;
-//	}
-//	int loopControl = 1;
-//	char line[128];
-//
-//	XMFLOAT3* arrOfVertices = new XMFLOAT3[100]; //positionVertices
-//	int arrSize = 100;
-//	int nrOfVert = 0;
-//
-//	bool textureCordStart = false;
-//	XMFLOAT2* arrOfTxtCord = nullptr; //TextureCoordinates
-//	int nrOfTxtCord = 0;
-//	int txtCoordArrSize = 0;
-//
-//	bool normalStart = false;
-//	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
-//	int nrOfNormals = 0;
-//	int normArrSize = 0;
-//
-//	int nrOfFaces = 0;
-//
-//	bool indexStart = false;
-//	XMINT3* arrOfIndex = nullptr;
-//	int objArrSize = 0;
-//
-//	while (loopControl != EOF) {
-//		loopControl = fscanf(fileptr, "%s", line);
-//		if (loopControl == EOF) {} else {
-//			if (strcmp(line, "v") == 0) {
-//				XMFLOAT3 vertex;
-//				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-//				if (nrOfVert == arrSize) {
-//					XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
-//					for (int i = 0; i < arrSize; i++) {
-//						tempArr[i] = arrOfVertices[i];
-//					}
-//					delete arrOfVertices;
-//					arrOfVertices = tempArr;
-//
-//					arrSize += 50;
-//				}
-//				arrOfVertices[nrOfVert] = vertex;
-//				nrOfVert++;
-//			} else if (strcmp(line, "vt") == 0) {
-//				if (textureCordStart == false) {
-//					txtCoordArrSize = nrOfVert;
-//					arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
-//					textureCordStart = true;
-//				}
-//				if (nrOfTxtCord == txtCoordArrSize) {
-//					XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
-//					for (int i = 0; i < txtCoordArrSize; i++) {
-//						tempArr[i] = arrOfTxtCord[i];
-//					}
-//					delete arrOfTxtCord;
-//					arrOfTxtCord = tempArr;
-//
-//					txtCoordArrSize += 50;
-//				}
-//				XMFLOAT2 vertex;
-//				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
-//
-//				arrOfTxtCord[nrOfTxtCord] = vertex;
-//				arrOfTxtCord[nrOfTxtCord].y = 1 - arrOfTxtCord[nrOfTxtCord].y;
-//				nrOfTxtCord++;
-//			} else if (strcmp(line, "vn") == 0) {
-//				if (normalStart == false) {
-//					normArrSize = nrOfVert;
-//					arrOfNormals = new XMFLOAT3[normArrSize];
-//					normalStart = true;
-//				}
-//				if (nrOfNormals == normArrSize) {
-//					XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
-//					for (int i = 0; i < normArrSize; i++) {
-//						tempArr[i] = arrOfNormals[i];
-//					}
-//					delete arrOfNormals;
-//					arrOfNormals = tempArr;
-//
-//					normArrSize += 50;
-//				}
-//
-//				XMFLOAT3 vertex;
-//				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-//
-//				arrOfNormals[nrOfNormals] = vertex;
-//				nrOfNormals++;
-//			} else if (strcmp(line, "usemtl") == 0) {
-//				textureName = new char[30];
-//				fscanf(fileptr, "%s", textureName);
-//				int okok = 2;
-//			} else if (strcmp(line, "f") == 0) {
-//				XMINT3 vertex[3];
-//				fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
-//				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
-//				if (indexStart == false) {
-//					objArrSize = int(nrOfVert * 1.5);
-//					object = new TriangleVertex[objArrSize];
-//					indexStart = true;
-//				}
-//				if (nrOfVertices + 3 >= objArrSize) {
-//					if (nrOfFaces + 3 >= objArrSize) {
-//						TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
-//						for (int i = 0; i < nrOfVertices; i++) {
-//							for (int i = 0; i < nrOfFaces; i++) {
-//								tempArr[i] = object[i];
-//							}
-//							delete object;
-//							object = tempArr;
-//
-//							objArrSize += 50;
-//						}
-//						for (int i = 0; i < 3; i++) {
-//							object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
-//							object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
-//							object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
-//
-//							//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
-//							//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
-//							//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
-//
-//							object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
-//							object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
-//
-//							object[nrOfFaces + i].r = 0.5f;
-//							object[nrOfFaces + i].g = 0.0f;
-//							object[nrOfFaces + i].b = 0.5f;
-//						}
-//						nrOfFaces += 3;
-//					}
-//				}
-//			}
-//		}
-//		fclose(fileptr);
-//
-//		TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
-//		for (int i = 0; i < nrOfFaces; i++) {
-//			objectArray[i] = object[i];
-//		}
-//
-//		for (int i = 0; i < nrOfFaces; i++) {
-//			objectArray[i].y += 10;
-//		}
-//
-//		createVertexBuffer(nrOfFaces, objectArray);
-//
-//		delete[] objectArray;
-//		delete[] arrOfVertices;
-//		delete[] arrOfTxtCord;
-//		delete[] arrOfNormals;
-//		delete[] arrOfIndex;
-//	}
-//}
+void LoadObjectFile(char* filename, XMINT3 offset) {
+	TriangleVertex* object = nullptr;
+	FILE* fileptr;
+	fileptr = fopen(filename, "r");
+	if (fileptr == NULL) {
+		return;
+	}
+	int loopControl = 1;
+	char line[128];
+
+	XMFLOAT3* arrOfVertices = new XMFLOAT3[100]; //positionVertices
+	int arrSize = 100;
+	int nrOfVert = 0;
+
+	bool textureCordStart = false;
+	XMFLOAT2* arrOfTxtCord = nullptr; //TextureCoordinates
+	int nrOfTxtCord = 0;
+	int txtCoordArrSize = 0;
+
+	bool normalStart = false;
+	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
+	int nrOfNormals = 0;
+	int normArrSize = 0;
+
+	int nrOfFaces = 0;
+
+	bool indexStart = false;
+	XMINT3* arrOfIndex = nullptr;
+	int objArrSize = 0;
+
+	while (loopControl != EOF) {
+		loopControl = fscanf(fileptr, "%s", line);
+		if (loopControl == EOF) {} else {
+			if (strcmp(line, "v") == 0) {
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				if (nrOfVert == arrSize) {
+					XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
+					for (int i = 0; i < arrSize; i++) {
+						tempArr[i] = arrOfVertices[i];
+					}
+					delete arrOfVertices;
+					arrOfVertices = tempArr;
+
+					arrSize += 50;
+				}
+				arrOfVertices[nrOfVert] = vertex;
+				nrOfVert++;
+			} else if (strcmp(line, "vt") == 0) {
+				if (textureCordStart == false) {
+					txtCoordArrSize = nrOfVert;
+					arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
+					textureCordStart = true;
+				}
+				if (nrOfTxtCord == txtCoordArrSize) {
+					XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
+					for (int i = 0; i < txtCoordArrSize; i++) {
+						tempArr[i] = arrOfTxtCord[i];
+					}
+					delete arrOfTxtCord;
+					arrOfTxtCord = tempArr;
+
+					txtCoordArrSize += 50;
+				}
+				XMFLOAT2 vertex;
+				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
+
+				arrOfTxtCord[nrOfTxtCord] = vertex;
+				arrOfTxtCord[nrOfTxtCord].y = 1 - arrOfTxtCord[nrOfTxtCord].y;
+				nrOfTxtCord++;
+			} else if (strcmp(line, "vn") == 0) {
+				if (normalStart == false) {
+					normArrSize = nrOfVert;
+					arrOfNormals = new XMFLOAT3[normArrSize];
+					normalStart = true;
+				}
+				if (nrOfNormals == normArrSize) {
+					XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
+					for (int i = 0; i < normArrSize; i++) {
+						tempArr[i] = arrOfNormals[i];
+					}
+					delete arrOfNormals;
+					arrOfNormals = tempArr;
+
+					normArrSize += 50;
+				}
+
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+
+				arrOfNormals[nrOfNormals] = vertex;
+				nrOfNormals++;
+			} else if (strcmp(line, "usemtl") == 0) {
+				textureName = new char[30];
+				fscanf(fileptr, "%s", textureName);
+				int okok = 2;
+			} else if (strcmp(line, "f") == 0) {
+				XMINT3 vertex[3];
+				fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
+				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
+				if (indexStart == false) {
+					objArrSize = int(nrOfVert * 1.5);
+					object = new TriangleVertex[objArrSize];
+					indexStart = true;
+				}
+				if (nrOfVertices + 3 >= objArrSize) {
+					if (nrOfFaces + 3 >= objArrSize) {
+						TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
+						for (int i = 0; i < nrOfVertices; i++) {
+							for (int i = 0; i < nrOfFaces; i++) {
+								tempArr[i] = object[i];
+							}
+							delete object;
+							object = tempArr;
+
+							objArrSize += 50;
+						}
+						for (int i = 0; i < 3; i++) {
+							object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
+							object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
+							object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
+
+							//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
+							//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
+							//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
+
+							object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+							object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
+
+							object[nrOfFaces + i].r = 0.5f;
+							object[nrOfFaces + i].g = 0.0f;
+							object[nrOfFaces + i].b = 0.5f;
+						}
+						nrOfFaces += 3;
+					}
+				}
+			}
+		}
+		fclose(fileptr);
+
+		TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
+		for (int i = 0; i < nrOfFaces; i++) {
+			objectArray[i] = object[i];
+		}
+
+		for (int i = 0; i < nrOfFaces; i++) {
+			objectArray[i].y += 10;
+		}
+
+		createVertexBuffer(nrOfFaces, objectArray);
+
+		delete[] objectArray;
+		delete[] arrOfVertices;
+		delete[] arrOfTxtCord;
+		delete[] arrOfNormals;
+		delete[] arrOfIndex;
+	}
+}
 
 void loadTexture() {
 	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Lava16x16.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
