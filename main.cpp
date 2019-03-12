@@ -1,3 +1,4 @@
+/*SAFE VERSION! 2019-03-12 17:16 Filip*/
 #pragma once
 #include <windows.h>
 #include <chrono>
