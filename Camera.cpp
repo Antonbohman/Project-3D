@@ -136,7 +136,7 @@ void Camera::SetCameraHeight(float newY)
 
 	this->cameraPosition = tempCam;
 	//this->cameraTarget = tempFocus;
-	UpdateCamera({ 0.0f,0.0f,0.0f }, 0, 0);
+	UpdateCamera({ 0.0f,0.0f,0.0f }, 0, 0); //make simpler
 }
 
 void Camera::SetCamPos(Vector4 position)
@@ -161,7 +161,6 @@ void Camera::MoveCamTarget(Vector4 move)
 
 void Camera::UpdateCamera(Vector3 movement, float speedMultiplier, double time)
 {
-
 	//ROTATION OF CAMERA
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->pitch, this->yaw, 0);
 	//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);

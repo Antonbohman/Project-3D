@@ -809,8 +809,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_keyboard = std::make_unique<Keyboard>();
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
-	//Control values
-	//float rotationValue = 0.01f;
+	
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -825,6 +824,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
+		LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
@@ -836,8 +836,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		//LoadObjectFile("Objects/OBJs/globe.obj", XMINT3(2, 45, 2));
 
 		//LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
-
-		//LoadObjectFile("Objects/OBJs/monkeyPilar.obj");
 
 		loadTexture();
 
@@ -1018,16 +1016,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						}
 					}
 				}
-				//ROTATING WORLD
-
-				//upate rotation depending on time since last update
-				//rotation += delta.count()*rotationValue;
-
-				//make sure it never goes past 2PI, 
-				//sin and cos gets less precise when calculated with higher values
-				if (rotation > 2 * XM_PI)
-					rotation -= 2 * XM_PI;
-
 				//RenderShadowsMaps();
 				RenderBuffers();
 				RenderLights();
