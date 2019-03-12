@@ -15,7 +15,7 @@ struct PS_INOUT
     float3 Norm : NORMAL;
 };
 
-cbuffer VS_CB_CAMERA : register(b0)
+cbuffer GS_CB_CAMERA : register(b0)
 {
     float4 CameraOrigin;
     float4 CameraFocus;

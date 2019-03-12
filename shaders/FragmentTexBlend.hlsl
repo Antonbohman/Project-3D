@@ -20,7 +20,6 @@ Texture2D Road_tex : register(t1);
 Texture2D Grass_tex : register(t2);
 Texture2D Rock_tex : register(t3);
 
-
 SamplerState Sampling : register(s0);
 
 cbuffer PS_CB_AMBIENT_SPECULAR : register(b0)

@@ -1,8 +1,8 @@
 #include "LightSource.h"
 
 LightSource::LightSource(const int type, const int ambient, const XMVECTOR position,
-						const XMVECTOR direction, const XMVECTOR colour, 
-						const float intensity, const float lightFocus) {
+	const XMVECTOR direction, const XMVECTOR colour,
+	const float intensity, const float lightFocus) {
 	data.type = type;
 	data.ambient = ambient;
 	data.position = position;
@@ -11,11 +11,9 @@ LightSource::LightSource(const int type, const int ambient, const XMVECTOR posit
 	data.intensity = intensity;
 	data.lightFocus = lightFocus;
 
-	for (int i = 0; i < SHADOW_MAPS; i++) {
-		shadowRenderTargetTexture[i] = nullptr;
-		shadowRenderTargetView[i] = nullptr;
-		shadowShaderResourceView[i] = nullptr;
-	}
+	shadowRenderTargetTexture = nullptr;
+	shadowDepthStencilView = nullptr;
+	shadowShaderResourceView = nullptr;
 }
 
 LightSource::LightSource(const LightSource& origObj) {
@@ -27,11 +25,9 @@ LightSource::LightSource(const LightSource& origObj) {
 	this->data.intensity = origObj.data.intensity;
 	this->data.lightFocus = origObj.data.lightFocus;
 
-	for (int i = 0; i < SHADOW_MAPS; i++) {
-		shadowRenderTargetTexture[i] = nullptr;
-		shadowRenderTargetView[i] = nullptr;
-		shadowShaderResourceView[i] = nullptr;
-	}
+	shadowRenderTargetTexture = nullptr;
+	shadowDepthStencilView = nullptr;
+	shadowShaderResourceView = nullptr;
 }
 
 LightSource& LightSource::operator=(const LightSource& origObj) {
@@ -49,98 +45,115 @@ LightSource& LightSource::operator=(const LightSource& origObj) {
 }
 
 LightSource::~LightSource() {
-	for (int i = 0; i < SHADOW_MAPS; i++) {
-		if (shadowRenderTargetTexture[i]) {
-			shadowRenderTargetTexture[i]->Release();
-		}
-
-		if (shadowRenderTargetView[i]) {
-			shadowRenderTargetView[i]->Release();
-		}
-
-		if (shadowShaderResourceView[i]) {
-			shadowShaderResourceView[i]->Release();
-		}
+	if (shadowRenderTargetTexture) {
+		shadowRenderTargetTexture->Release();
+	}
+	if (shadowDepthStencilView) {
+		shadowDepthStencilView->Release();
+	}
+	if (shadowShaderResourceView) {
+		shadowShaderResourceView->Release();
 	}
 }
 
 HRESULT LightSource::createShadowBuffer(ID3D11Device* device) {
+	HRESULT result;
+
 	D3D11_TEXTURE2D_DESC textureDesc;
-	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
 
-	// Initialize the render target texture description.
-	ZeroMemory(&textureDesc, sizeof(textureDesc));
+	createViewport();
 
-	// Setup the render target texture description.
-	textureDesc.Width = S_WIDTH/4;
-	textureDesc.Height = S_HEIGHT/4;
-	textureDesc.MipLevels = 1;
-	textureDesc.ArraySize = 1;
-	textureDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.MiscFlags = 0;
+	if (data.type == L_POINT) {
+		// Initialize the render target texture description.
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
 
-	// Create the render target textures.
-	for (int i = 0; i < SHADOW_MAPS; i++) {
-		if (FAILED(device->CreateTexture2D(&textureDesc, NULL, &shadowRenderTargetTexture[i]))) {
-			return S_FALSE;
-		}
+		// Setup the render target texture description.
+		textureDesc.Width = S_WIDTH;
+		textureDesc.Height = S_HEIGHT;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 6;
+		textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+	} else {
+		// Initialize the render target texture description.
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		// Setup the render target texture description.
+		textureDesc.Width = S_WIDTH;
+		textureDesc.Height = S_HEIGHT;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
 	}
 
-	ZeroMemory(&renderTargetViewDesc, sizeof(renderTargetViewDesc));
-
-	// Setup the description of the render target view.
-	renderTargetViewDesc.Format = textureDesc.Format;
-	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-	// Create the render target views.
-	for (int j = 0; j < SHADOW_MAPS; j++) {
-		if (FAILED(device->CreateRenderTargetView(shadowRenderTargetTexture[j], &renderTargetViewDesc, &shadowRenderTargetView[j]))) {
-			return S_FALSE;
-		}
-	}
-
-	ZeroMemory(&shaderResourceViewDesc, sizeof(shaderResourceViewDesc));
-
-	// Setup the description of the shader resource view.
-	shaderResourceViewDesc.Format = textureDesc.Format;
-	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-	shaderResourceViewDesc.Texture2D.MipLevels = 1;
-
-	// Create the shader resource views.
-	for (int k = 0; k < SHADOW_MAPS; k++) {
-		if (FAILED(device->CreateShaderResourceView(shadowRenderTargetTexture[k], &shaderResourceViewDesc, &shadowShaderResourceView[k]))) {
-			return S_FALSE;
-		}
-	}
-
-	return S_OK;
-}
-
-HRESULT LightSource::Prepare(ID3D11DeviceContext* deviceContext, int index) const {
-	if (index > SHADOW_MAPS-1)
+	result = device->CreateTexture2D(&textureDesc, NULL, &shadowRenderTargetTexture);
+	if (FAILED(result)) {
 		return S_FALSE;
-	
-	float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	
-	deviceContext->ClearRenderTargetView(shadowRenderTargetView[index], clearColor);
+	}
 
-	deviceContext->OMSetRenderTargets(1, &shadowRenderTargetView[index], nullptr);
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+	depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+	depthStencilViewDesc.Texture2DArray.MipSlice = 0;
+	depthStencilViewDesc.Texture2DArray.ArraySize = textureDesc.ArraySize;
+	depthStencilViewDesc.Texture2DArray.FirstArraySlice = 0;
+
+	result = device->CreateDepthStencilView(shadowRenderTargetTexture, &depthStencilViewDesc, &shadowDepthStencilView);
+	if (FAILED(result)) {
+		return S_FALSE;
+	}
+
+	ZeroMemory(&ShaderResourceViewDesc, sizeof(ShaderResourceViewDesc));
+
+	ShaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	ShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	ShaderResourceViewDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+	ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+	result = device->CreateShaderResourceView(shadowRenderTargetTexture, &ShaderResourceViewDesc, &shadowShaderResourceView);
+	if (FAILED(result)) {
+		return S_FALSE;
+	}
 
 	return S_OK;
 }
 
-HRESULT LightSource::Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const {
+void LightSource::createViewport() {
+	vp.Width = (float)S_WIDTH;
+	vp.Height = (float)S_HEIGHT;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+}
+
+void LightSource::prepareShadowRender(ID3D11DeviceContext* deviceContext) const {
+	deviceContext->RSSetViewports(1, &this->vp);
+
+	deviceContext->ClearDepthStencilView(shadowDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	deviceContext->OMSetRenderTargets(0, nullptr, shadowDepthStencilView);
+}
+
+HRESULT LightSource::loadShadowBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* buffer) const {
 	D3D11_MAPPED_SUBRESOURCE mappedMemory;
 
 	// Lock the light constant buffer so it can be written to
-	HRESULT result = deviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	HRESULT result = deviceContext->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
 	if (FAILED(result)) {
 		return S_FALSE;
 	}
@@ -148,36 +161,135 @@ HRESULT LightSource::Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuf
 	memcpy(mappedMemory.pData, (void*)&data, sizeof(LightData));
 
 	// Unlock the constant buffer.
-	deviceContext->Unmap(pBuffer, 0);
+	deviceContext->Unmap(buffer, 0);
 
 	return S_OK;
 }
 
-int LightSource::LightType() const {
+HRESULT LightSource::loadLightBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* buffer) const {
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	// Lock the light constant buffer so it can be written to
+	HRESULT result = deviceContext->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	if (FAILED(result)) {
+		return S_FALSE;
+	}
+	//Write data to constant buffer
+	memcpy(mappedMemory.pData, (void*)&data, sizeof(LightData));
+
+	// Unlock the constant buffer.
+	deviceContext->Unmap(buffer, 0);
+
+	return S_OK;
+}
+
+int LightSource::getLightType() const {
 	return data.type;
 }
 
-ID3D11ShaderResourceView* LightSource::ShadowMap(int index) const {
-	if (index < SHADOW_MAPS)
-		return shadowShaderResourceView[index];
-	else
-		return nullptr;
+XMVECTOR LightSource::getOrigin() const {
+	return data.position;
 }
 
-XMMATRIX LightSource::getView() const {
-	return XMMatrixLookAtLH(
-		data.position,
-		data.direction,
-		XMVectorSet(0,0,1,0)
-	);
+ID3D11ShaderResourceView* LightSource::getShadowMap() const {
+	return shadowShaderResourceView;
+}
+
+XMMATRIX LightSource::getView(int index) const {
+	XMMATRIX view;
+
+	if (data.type == L_SPOT) {
+		view = XMMatrixLookAtLH(
+			data.position,
+			data.direction,
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+	} else {
+		XMFLOAT3* direction = new XMFLOAT3;
+		XMStoreFloat3(direction, data.position);
+
+		switch (index) {
+		case 0:
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x+1, direction->y, direction->z, 0.0f),
+				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			);
+			break;
+		case 1:
+
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x-1, direction->y, direction->z, 0.0f),
+				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			);
+			break;
+		case 2:
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x, direction->y+1, direction->z, 0.0f),
+				XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f)
+			);
+			break;
+		case 3:
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x, direction->y-1, direction->z, 0.0f),
+				XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)
+			);
+			break;
+		case 4:
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x, direction->y, direction->z+1, 0.0f),
+				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			);
+			break;
+		case 5:
+			view = XMMatrixLookAtLH(
+				data.position,
+				XMVectorSet(direction->x, direction->y, direction->z-1, 0.0f),
+				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			);
+			break;
+		}
+	}
+	view = XMMatrixTranspose(view);
+
+	return view;
 }
 
 XMMATRIX LightSource::getProjection() const {
-	return XMMatrixPerspectiveFovLH(
-		(float)XM_PI*2,
-		(float)S_WIDTH / (float)S_HEIGHT,
-		0.1f,
-		200.0f
-	);
+	XMMATRIX proj;
+
+	switch (data.type) {
+	case L_SPOT:
+		proj = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 0.5,
+			(float)S_WIDTH*2 / (float)S_HEIGHT*2,
+			0.1f,
+			data.intensity * 1.1
+		);
+		break;
+	case L_DIRECTIONAL:
+		proj = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 1,
+			(float)S_WIDTH / (float)S_HEIGHT,
+			0.1f,
+			data.intensity * 1.1
+		);
+		break;
+	case L_POINT:
+		proj = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 0.5,
+			(float)S_WIDTH*2 / (float)S_HEIGHT*2,
+			0.1f,
+			data.intensity * 1.1
+		);
+		break;
+	}
+	proj = XMMatrixTranspose(proj);
+
+	return proj;
 }
 

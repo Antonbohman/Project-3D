@@ -2,6 +2,8 @@
 
 HRESULT CreateShaders() {
 	if (FAILED(CreateShadowVS())) return S_FALSE;
+	if (FAILED(CreateShadowGS())) return S_FALSE;
+	if (FAILED(CreateShadowPS())) return S_FALSE;
 
 	//create deferred shaders 
 	if (FAILED(CreateDeferredVS())) return S_FALSE;
@@ -20,6 +22,8 @@ HRESULT CreateShaders() {
 
 void DestroyShaders() {
 	gShadowVertexShader->Release();
+	gShadowGeometryShader->Release();
+	gShadowPixelShader->Release();
 
 	gVertexShader->Release();
 	gGeometryShader->Release();
@@ -84,6 +88,84 @@ HRESULT CreateShadowVS() {
 
 	if (errorBlob) errorBlob->Release();
 	pVS->Release();
+
+	return S_OK;
+}
+
+HRESULT CreateShadowGS() {
+	ID3DBlob* errorBlob = nullptr;
+	ID3DBlob* pGS = nullptr;
+
+	HRESULT result = D3DCompileFromFile(
+		L"shaders/ShadowGeometry.hlsl",	// filename
+		nullptr,			// optional macros
+		nullptr,			// optional include files
+		"GS_shadow",		// entry point
+		"gs_5_0",			// shader model (target)
+		D3DCOMPILE_DEBUG,	// shader compile options
+		0,					// effect compile options
+		&pGS,				// double pointer to ID3DBlob		
+		&errorBlob			// pointer for Error Blob messages.
+	);
+
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+		if (pGS)
+			pGS->Release();
+		return result;
+	}
+
+	gDevice->CreateGeometryShader(
+		pGS->GetBufferPointer(),
+		pGS->GetBufferSize(),
+		nullptr,
+		&gShadowGeometryShader
+	);
+
+	if (errorBlob) errorBlob->Release();
+	pGS->Release();
+
+	return S_OK;
+}
+
+HRESULT CreateShadowPS() {
+	ID3DBlob* errorBlob = nullptr;
+	ID3DBlob* pPS = nullptr;
+
+	HRESULT result = D3DCompileFromFile(
+		L"shaders/ShadowFragment.hlsl",   // filename
+		nullptr,		    // optional macros
+		nullptr,		    // optional include files
+		"PS_shadow",		// entry point
+		"ps_5_0",		    // shader model (target)
+		D3DCOMPILE_DEBUG,	// shader compile options
+		0,				    // effect compile options
+		&pPS,			    // double pointer to ID3DBlob		
+		&errorBlob			// pointer for Error Blob messages.
+	);
+
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+		if (pPS)
+			pPS->Release();
+		return result;
+	}
+
+	gDevice->CreatePixelShader(
+		pPS->GetBufferPointer(),
+		pPS->GetBufferSize(),
+		nullptr,
+		&gShadowPixelShader
+	);
+
+	if (errorBlob) errorBlob->Release();
+	pPS->Release();
 
 	return S_OK;
 }
@@ -412,8 +494,8 @@ void setShadowShaders() {
 	gDeviceContext->VSSetShader(gShadowVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
-	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->GSSetShader(gShadowGeometryShader, nullptr, 0);
+	gDeviceContext->PSSetShader(gShadowPixelShader, nullptr, 0);
 	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 
 	// specify the topology to use when drawing

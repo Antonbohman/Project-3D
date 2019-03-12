@@ -66,19 +66,44 @@ void CreateConstantBuffer() {
 	//create buffer for light subresource
 	gDevice->CreateBuffer(&lightDesc, nullptr, &gLightDataBuffer);
 
-	//////////////////////////////////////
-	// World/View/Projection For Lights //
-	//////////////////////////////////////
+
+	/////////////////////////////
+	// World Space For Objects //
+	/////////////////////////////
 
 	//allocate space in memory aligned to a multitude of 16
-	gLightMatrix = (LightWVP*)_aligned_malloc(sizeof(LightWVP), 16);
+	gObjectMatrix = (ObjectW*)_aligned_malloc(sizeof(ObjectW), 16);
+
+	// Describe the Constant Buffer
+	D3D11_BUFFER_DESC objectDesc;
+	memset(&objectDesc, 0, sizeof(objectDesc));
+	objectDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	objectDesc.Usage = D3D11_USAGE_DYNAMIC;
+	objectDesc.ByteWidth = sizeof(ObjectW);
+	objectDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	//bind matrix data to a subresource
+	D3D11_SUBRESOURCE_DATA objectData;
+	objectData.pSysMem = gObjectMatrix;
+	objectData.SysMemPitch = 0;
+	objectData.SysMemSlicePitch = 0;
+
+	//create buffer for our world,view and projection matrix
+	gDevice->CreateBuffer(&objectDesc, &objectData, &gObjectMatrixBuffer);
+
+	////////////////////////////////
+	// View/Projection For Lights //
+	////////////////////////////////
+
+	//allocate space in memory aligned to a multitude of 16
+	gLightMatrix = (LightVP*)_aligned_malloc(sizeof(LightVP), 16);
 
 	// Describe the Constant Buffer
 	D3D11_BUFFER_DESC bufferDesc;
 	memset(&bufferDesc, 0, sizeof(bufferDesc));
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.ByteWidth = sizeof(LightWVP);
+	bufferDesc.ByteWidth = sizeof(LightVP);
 	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	//bind matrix data to a subresource
@@ -115,34 +140,16 @@ void CreateConstantBuffer() {
 	gDevice->CreateBuffer(&worldDesc, &worldData, &gWorldMatrixBuffer);
 }
 
-void setWorldSpace() {
-	//alternativly use XMMatrixRotationX(rotation);
-	/*XMMATRIX WorldX = XMMatrixSet(
-	1.0, 0.0, 0.0, 0.0,
-	0.0, (float)cos(rotation), (float)sin(rotation), 0.0,
-	0.0, (float)-sin(rotation), (float)cos(rotation), 0.0,
-	0.0, 0.0, 0.0, 1.0
-	);*/
+void setWorldSpace(WorldSpace world) {
+	XMMATRIX rotationX = XMMatrixRotationX(world.rotation_x);
+	XMMATRIX rotationY = XMMatrixRotationX(world.rotation_y);
+	XMMATRIX rotationZ = XMMatrixRotationX(world.rotation_z);
 
-	//alternativly use XMMatrixRotationY(rotation);
-	XMMATRIX WorldY = XMMatrixSet(
-		(float)cos(rotation), 0.0, (float)-sin(rotation), 0.0,
-		0.0, 1.0, 0.0, 0.0,
-		(float)sin(rotation), 0.0, (float)cos(rotation), 0.0,
-		0.0, 0.0, 0.0, 1.0
-	);
+	XMMATRIX offset = XMMatrixTranslation(world.offset_x, world.offset_y, world.offset_z);
 
-	//alternativly use XMMatrixRotationZ(rotation); 
-	/*XMMATRIX WorldZ = XMMatrixSet(
-	(float)cos(rotation), (float)sin(rotation), 0.0, 0.0,
-	(float)-sin(rotation), (float)cos(rotation), 0.0, 0.0,
-	0.0, 0.0, 1.0, 0.0,
-	0.0, 0.0, 0.0, 1.0
-	);*/
+	XMMATRIX scale = XMMatrixScaling(world.scale_x, world.scale_y, world.scale_z);
 
-	World = WorldY;
-	//World = XMMatrixMultiply(WorldX, World);
-	//World = XMMatrixMultiply(World, WorldZ);	
+	World = XMMatrixMultiply(rotationX, XMMatrixMultiply(rotationY, rotationZ));
 }
 
 void setCameraViewProjectionSpace() {
@@ -163,7 +170,15 @@ void setCameraViewProjectionSpace() {
 }
 
 void setLightViewProjectionSpace(LightSource* light) {
-	View = light->getView();
+	View = light->getView(0);
+
+	if (light->getLightType() == L_POINT) {
+		ViewRotated[0] = light->getView(1);
+		ViewRotated[1] = light->getView(2);
+		ViewRotated[2] = light->getView(3);
+		ViewRotated[3] = light->getView(4);
+		ViewRotated[4] = light->getView(5);
+	}
 
 	Projection = light->getProjection();
 }
@@ -181,16 +196,38 @@ void updateCameraWorldViewProjection() {
 	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
 }
 
-void updateLightWorldViewProjection() {
-	gLightMatrix->WorldViewProjection = XMMatrixMultiply(Projection, XMMatrixMultiply(View, World));
+void updateObjectWorldSpace() {
+	gObjectMatrix->World = World;
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory
 	D3D11_MAPPED_SUBRESOURCE mappedMemory;
 
 	//copy and map our cpu memory to our gpu buffert
-	gDeviceContext->Map(gWorldMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
-	memcpy(mappedMemory.pData, gLightMatrix, sizeof(LightWVP));
-	gDeviceContext->Unmap(gWorldMatrixBuffer, 0);
+	gDeviceContext->Map(gObjectMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gObjectMatrix, sizeof(ObjectW));
+	gDeviceContext->Unmap(gObjectMatrixBuffer, 0);
+}
+
+void updateLightViewProjection(LightSource* light) {
+	gLightMatrix->LightType = light->getLightType();
+	XMStoreFloat3(&gLightMatrix->Origin, light->getOrigin());
+	gLightMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
+	
+	if (gLightMatrix->LightType == L_POINT) {
+		gLightMatrix->RotatedViewProjection[0] = XMMatrixMultiply(Projection, ViewRotated[0]);
+		gLightMatrix->RotatedViewProjection[1] = XMMatrixMultiply(Projection, ViewRotated[1]);
+		gLightMatrix->RotatedViewProjection[2] = XMMatrixMultiply(Projection, ViewRotated[2]);
+		gLightMatrix->RotatedViewProjection[3] = XMMatrixMultiply(Projection, ViewRotated[3]);
+		gLightMatrix->RotatedViewProjection[4] = XMMatrixMultiply(Projection, ViewRotated[4]);
+	}
+
+	//create a subresource to hold our data while we copy between cpu and gpu memory
+	D3D11_MAPPED_SUBRESOURCE mappedMemory;
+
+	//copy and map our cpu memory to our gpu buffert
+	gDeviceContext->Map(gLightMatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedMemory);
+	memcpy(mappedMemory.pData, gLightMatrix, sizeof(LightVP));
+	gDeviceContext->Unmap(gLightMatrixBuffer, 0);
 }
 
 void updateCameraValues() {

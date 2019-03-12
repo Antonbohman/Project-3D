@@ -1,5 +1,7 @@
 #include "Global.h"
 
+// viewport
+D3D11_VIEWPORT* vp = nullptr;
 
 //Viewspace
 //WorldSpace
@@ -49,6 +51,8 @@ ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
 ID3D11VertexShader* gShadowVertexShader = nullptr;
+ID3D11GeometryShader* gShadowGeometryShader = nullptr;
+ID3D11PixelShader* gShadowPixelShader = nullptr;
 ID3D11VertexShader* gVertexShader = nullptr;
 ID3D11GeometryShader* gGeometryShader = nullptr;
 ID3D11PixelShader* gPixelShader = nullptr;
@@ -66,7 +70,10 @@ ID3D11Buffer* gCameraMatrixBuffer = nullptr;
 CameraWVP* gWorldMatrix = nullptr;
 ID3D11Buffer* gWorldMatrixBuffer = nullptr;
 
-LightWVP* gLightMatrix = nullptr;
+ObjectW* gObjectMatrix = nullptr;
+ID3D11Buffer* gObjectMatrixBuffer = nullptr;
+
+LightVP* gLightMatrix = nullptr;
 ID3D11Buffer* gLightMatrixBuffer = nullptr;
 
 ID3D11Buffer* gLightDataBuffer = nullptr;
@@ -75,11 +82,12 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ 0.0f,10.0f,-20.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 
 //World/View/Projection
 XMMATRIX World;
 XMMATRIX View;
+XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
 
 // keeping track of current rotation
