@@ -158,7 +158,6 @@ void Camera::MoveCamTarget(Vector4 move)
 
 void Camera::UpdateCamera(Vector3 movement, float speedMultiplier, double time)
 {
-
 	//ROTATION OF CAMERA
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->pitch, this->yaw, 0);
 	//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);

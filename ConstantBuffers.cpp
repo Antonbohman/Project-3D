@@ -94,7 +94,7 @@ void CreateConstantBuffer() {
 	// World/View/Projection For Objects //
 	///////////////////////////////////////
 
-	//allocate space in memory aligned to a multitude of 16
+	//allocate space in memory aligned to a multitude oAf 16
 	gWorldMatrix = (CameraWVP*)_aligned_malloc(sizeof(CameraWVP), 16);
 
 	// Describe the Constant Buffer
