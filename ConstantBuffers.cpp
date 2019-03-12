@@ -119,7 +119,7 @@ void CreateConstantBuffer() {
 	// World/View/Projection For Objects //
 	///////////////////////////////////////
 
-	//allocate space in memory aligned to a multitude of 16
+	//allocate space in memory aligned to a multitude oAf 16
 	gWorldMatrix = (CameraWVP*)_aligned_malloc(sizeof(CameraWVP), 16);
 
 	// Describe the Constant Buffer
@@ -231,21 +231,6 @@ void updateLightViewProjection(LightSource* light) {
 }
 
 void updateCameraValues() {
-	//Walking in Memphis
-	Vector4 CameraPos = camera.GetCamPos();
-	XMINT2 roundedPos;
-	roundedPos.x = CameraPos.x;
-	roundedPos.y = CameraPos.y;
-
-	if (float(roundedPos.x) + 0.5f > CameraPos.x) roundedPos.x++;
-	if (float(roundedPos.y) + 0.5f > CameraPos.y) roundedPos.y++;
-
-	int index = (g_heightmap.imageWidth * (roundedPos.y + (g_heightmap.imageHeight / 2)) +
-		(roundedPos.x + (g_heightmap.imageWidth / 2)));
-
-	float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
-
-
 	//temmp static camera
 	gCameraMatrix->Origin = camera.GetCamPos();
 	gCameraMatrix->Focus = camera.GetCamTarget();

@@ -48,7 +48,7 @@ Frustum::Frustum(const Frustum & original)
 	//Frustum Normals pointed inwards of frustum
 	for (int i = 0; i < 6; i++)
 	{
-		this->Planes[i] = original.Planes[i];
+		this->planes[i] = original.planes[i];
 	}
 
 }
@@ -87,7 +87,7 @@ Frustum & Frustum::operator=(const Frustum & originalObj)
 		//Frustum Normals pointed inwards of frustum
 		for (int i = 0; i < 6; i++)
 		{
-			this->Planes[i] = originalObj.Planes[i];
+			this->planes[i] = originalObj.planes[i];
 		}
 
 	}
@@ -135,48 +135,67 @@ void Frustum::calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT)
 
 	//PLANE DEFFINITION
 
-	this->Planes[NEARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbl, frustNtl, frustNbr));
-	this->Planes[NEARPLANE].pointInPlane = &this->frustumNearCenter;
+	this->planes[NEARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbl, frustNtl, frustNbr));
+	this->planes[NEARPLANE].pointInPlane = &this->frustumNearCenter;
 
-	this->Planes[FARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbr, frustFtr, frustFbl));
-	this->Planes[FARPLANE].pointInPlane = &this->frustumFarCenter;
+	this->planes[FARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbr, frustFtr, frustFbl));
+	this->planes[FARPLANE].pointInPlane = &this->frustumFarCenter;
 
-	this->Planes[RIGHTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustNtr, frustFbr));
-	this->Planes[RIGHTPLANE].pointInPlane = &this->frustNbr;
+	this->planes[RIGHTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustNtr, frustFbr));
+	this->planes[RIGHTPLANE].pointInPlane = &this->frustNbr;
 
-	this->Planes[TOPPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFtr, frustNtr, frustFtl));
-	this->Planes[TOPPLANE].pointInPlane = &this->frustFtr;
+	this->planes[TOPPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFtr, frustNtr, frustFtl));
+	this->planes[TOPPLANE].pointInPlane = &this->frustFtr;
 
-	this->Planes[LEFTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbl, frustFtl, frustNbl));
-	this->Planes[LEFTPLANE].pointInPlane = &this->frustFbl;
+	this->planes[LEFTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbl, frustFtl, frustNbl));
+	this->planes[LEFTPLANE].pointInPlane = &this->frustFbl;
 
-	this->Planes[BOTTOMPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustFbr, frustNbl));
-	this->Planes[BOTTOMPLANE].pointInPlane = &this->frustNbr;
+	this->planes[BOTTOMPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustFbr, frustNbl));
+	this->planes[BOTTOMPLANE].pointInPlane = &this->frustNbr;
 
 }
 
 
-int Frustum::pointInFrustum(Vector3 point)
+int Frustum::pointInFrustum(Vector4 point)
 {
 	int result = INSIDE;
 
 	for (int i = 0; i < 6; i++)
 	{
-		
+		if (this->planes[i].distance(point) < 0)
+			result = OUTSIDE;
+		i = 6;
 	}
-	return 0;
+	return result;
+}
+
+int Frustum::sphereInFrustum(Vector4 & point, float radius)
+{
+	float distance;
+	int result = INSIDE;
+
+	for (int i = 0; i < 6; i++)
+	{
+		distance = planes[i].distance(point);
+		if (distance < -radius)
+		{
+			result = OUTSIDE;
+			i = 6;
+		}
+			
+		else if (distance < radius)
+			result = INTERSECT;
+	}
+
+	return result;
 }
 
 int Frustum::FrustumPlanes::distance(Vector4 objectPoint)
 {
-	Vector4 vektorToPoint = objectPoint - *pointInPlane;
+	Vector4 vectorToPoint = objectPoint - *pointInPlane;
 
-	int distance;/* (normal, vektorToPoint);*/
+	Vector4 output = DirectX::XMVector4Dot(normal, vectorToPoint);
 
+	return output.x;
 
-
-
-
-	
-	return 0;
 }

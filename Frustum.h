@@ -53,7 +53,7 @@ private:
 
 		int distance(Vector4 objectPoint);
 	};
-	FrustumPlanes Planes[6];
+	FrustumPlanes planes[6];
 	
 public:
 
@@ -69,11 +69,13 @@ public:
 
 	void GiveCameraReference(Camera * theCamera);
 
-	int Distance(const Vector4 &p);
-
 	//int isInFront(Vector3 point);
 
 	void calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT);
 
-	int pointInFrustum(Vector3 point);
+	int pointInFrustum(Vector4 point);
+	//SPHERE FOR NOW 
+	int sphereInFrustum(Vector4 &point, float radius);
+
+	/*int boxInFrustum()*/
 };

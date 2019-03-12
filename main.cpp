@@ -181,6 +181,8 @@ void LoadObjectFile(char* filename) {
 	int nrOfNormals = 0;
 	int normArrSize = 0;
 
+	int nrOfFaces = 0;
+
 	bool indexStart = false;
 	XMINT3* arrOfIndex = nullptr;
 	int objArrSize = 0;
@@ -261,8 +263,12 @@ void LoadObjectFile(char* filename) {
 					indexStart = true;
 				}
 				if (nrOfVertices + 3 >= objArrSize) {
+				if (nrOfFaces + 3 >= objArrSize)
+				{
 					TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
 					for (int i = 0; i < nrOfVertices; i++) {
+					for (int i = 0; i < nrOfFaces; i++)
+					{
 						tempArr[i] = object[i];
 					}
 					delete object;
@@ -270,38 +276,41 @@ void LoadObjectFile(char* filename) {
 
 					objArrSize += 50;
 				}
-				for (int i = 0; i < 3; i++) {
-					object[nrOfVertices + i].x = arrOfVertices[vertex[i].x - 1].x;
-					object[nrOfVertices + i].y = arrOfVertices[vertex[i].x - 1].y + 10;
-					object[nrOfVertices + i].z = arrOfVertices[vertex[i].x - 1].z;
+				for (int i = 0; i < 3; i++)
+				{
+					object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
+					object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
+					object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
 
 					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
 					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
 					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
 
-					object[nrOfVertices + i].u = arrOfTxtCord[vertex[i].y - 1].x;
-					object[nrOfVertices + i].v = arrOfTxtCord[vertex[i].y - 1].y;
+					object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+					object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
-					object[nrOfVertices + i].r = 0.5f;
-					object[nrOfVertices + i].g = 0.0f;
-					object[nrOfVertices + i].b = 0.5f;
+					object[nrOfFaces + i].r = 0.5f;
+					object[nrOfFaces + i].g = 0.0f;
+					object[nrOfFaces + i].b = 0.5f;
 				}
-				nrOfVertices += 3;
+				nrOfFaces += 3;
 			}
 		}
 	}
 	fclose(fileptr);
 
-	TriangleVertex* objectArray = new TriangleVertex[nrOfVertices];
-	for (int i = 0; i < nrOfVertices; i++) {
+	TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
+	for (int i = 0; i < nrOfFaces; i++)
+	{
 		objectArray[i] = object[i];
 	}
 
-	for (int i = 0; i < nrOfVertices; i++) {
+	for (int i = 0; i < nrOfFaces; i++)
+	{
 		objectArray[i].y += 10;
 	}
 
-	createVertexBuffer(nrOfVertices, objectArray);
+	createVertexBuffer(nrOfFaces, objectArray);
 
 	delete[] objectArray;
 	delete[] arrOfVertices;
@@ -317,6 +326,10 @@ void loadTexture() {
 	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Stone16x16.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
 
 	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
+	HRESULT hr5 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Mars.dds", &gTexture2D[1], &gTextureSRV[1]);
+	HRESULT hr6 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Moon.dds", &gTexture2D[2], &gTextureSRV[2]);
+	HRESULT hr7 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gTexture2D[3], &gTextureSRV[3]);
+	HRESULT hr8 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/trex.dds", &gTexture2D[4], &gTextureSRV[4]);
 }
 
 void loadHeightMap(char* filename) //24 bit colour depth
@@ -798,8 +811,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_keyboard = std::make_unique<Keyboard>();
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
-	//Control values
-	//float rotationValue = 0.01f;
+	
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
@@ -812,9 +824,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
+		LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		LoadObjectFile("Objects/OBJs/fish.obj");
+		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
+
+		//LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
+
+		//LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
+
+		//LoadObjectFile("Objects/OBJs/globe.obj", XMINT3(2, 45, 2));
+
+		//LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 
 		loadTexture();
 
@@ -939,23 +960,57 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 						deltaChange = deltaChange;
 						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
+
+
+						//Walking on terrain
+						if (!freeFlight)
+						{
+							Vector4 CameraPos = camera.GetCamPos();
+							XMINT2 roundedPos;
+							roundedPos.x = CameraPos.z;
+							roundedPos.y = CameraPos.x;
+							roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
+
+							if (roundedPos.x < 0)
+							{
+								if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
+							}
+							else
+							{
+								if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
+							}
+							if (roundedPos.y < 0)
+							{
+								if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
+							}
+							else
+							{
+								if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
+							}
+
+							roundedPos.x += (g_heightmap.imageWidth / 2);
+							roundedPos.y -= (g_heightmap.imageHeight / 2);
+
+							if (roundedPos.x < 0) roundedPos.x = 0;
+							if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
+
+							if (roundedPos.y < 0) roundedPos.y = 0;
+							if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
+
+							int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
+							float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+
+							camera.SetCameraHeight(newHeight);
+						}
 					}
 				}
-				//ROTATING WORLD
-
-				//upate rotation depending on time since last update
-				//rotation += delta.count()*rotationValue;
-
-				//make sure it never goes past 2PI, 
-				//sin and cos gets less precise when calculated with higher values
-				if (rotation > 2 * XM_PI)
-					rotation -= 2 * XM_PI;
 
 				RenderShadowMaps();
 
 				SetViewport();
-
+				
 				RenderBuffers();
+
 				RenderLights();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
