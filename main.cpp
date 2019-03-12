@@ -837,6 +837,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 
+		//LoadObjectFile("Objects/OBJs/monkeyPilar.obj");
+
 		loadTexture();
 
 		CreateConstantBuffer(); //8. Create constant buffers
