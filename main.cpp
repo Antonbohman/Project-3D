@@ -1,3 +1,4 @@
+/*SAFE VERSION! 2019-03-12 17:16 Filip*/
 #pragma once
 #include <windows.h>
 #include <chrono>
@@ -826,7 +827,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
 
-		//LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
+		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
 
 		//LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
 
