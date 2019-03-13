@@ -300,12 +300,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateDeferredQuad();
 
-		loadHeightMap("Objects/Heightmaps/axis.bmp");
-
-		g_heightmap.verticesPos[0] = XMFLOAT3(0, 0, 0);
+		loadHeightMap("Objects/Heightmaps/halv_island.bmp");
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
-
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
