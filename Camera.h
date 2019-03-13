@@ -6,7 +6,7 @@
 
 #define ROTATION_GAIN 0.004f
 #define MOVEMENT_GAIN 0.07f
-
+#define RUN 5.0f
 
 //std::unique_ptr<DirectX::Keyboard>m_keyboard; //NOT IMPLEMENTED
 //TOOL KIT
@@ -86,7 +86,7 @@ public:
 	void MoveCamPos(Vector4 move);
 	void MoveCamTarget(Vector4 move);
 	
-	void UpdateCamera(Vector3 movement, float speedMultiplier,double time);
+	void UpdateCamera(Vector3 movement, bool speedMultiplier,double time);
 
 	void AddYaw(float rotationY);
 
