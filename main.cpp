@@ -824,7 +824,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
-		LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
+
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));

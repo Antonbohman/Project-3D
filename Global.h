@@ -17,8 +17,8 @@ using namespace DirectX;
 ///////////////////
 
 // window size
-#define W_WIDTH 640.0f
-#define W_HEIGHT 480.0f
+#define W_WIDTH 640.0f //640
+#define W_HEIGHT 480.0f //480
 #define FOV 0.45f
 // PROJECTION RANGE
 #define PROJECTION_NEAR_Z 0.1f
