@@ -1010,7 +1010,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE CAMERA
 					{
-						deltaChange = XMVector3Normalize(deltaChange*run);
+						deltaChange = XMVector3Normalize(deltaChange);
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
