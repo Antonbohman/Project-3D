@@ -921,7 +921,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 					if (kb.F1) {
 						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(XM_PI*0.0f, 0);
+						camera.SetYawAndPitch(XM_PI*0.75f, 0);
 						camera.SetCamTarget(camera.GetCamOriginalTarget());
 						
 					}
