@@ -921,27 +921,39 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						
 					}
 					if (kb.F1) {
-						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(XM_PI*0.75f, 0);
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
-						
+						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+
+						float hyp = sqrt((pow(g_heightmap.imageWidth /2,2)+ pow(g_heightmap.imageHeight / 2, 2)) );
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp);
+						camera.SetYawAndPitch(XM_PI*angel, 0);
 					}
 					if (kb.F2) {
-						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(XM_PI*1.25f, 0);
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
 						
+
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp)+0.5;
+						//angel = 0.0f;
+						camera.SetYawAndPitch(XM_PI*angel, 0);
 					}
 					if (kb.F3) {
-						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),0.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(XM_PI*1.75f, 0);
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
-						
+						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+					
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+
+						camera.SetYawAndPitch(XM_PI*angel, 0);
 					}
 					if (kb.F4) {
-						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),0.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(XM_PI*0.25, 0);
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+						
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
+						camera.SetYawAndPitch(XM_PI*angel, 0);
 					}
 
 					if (kb.O) {
