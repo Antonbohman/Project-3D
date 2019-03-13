@@ -921,25 +921,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 					if (kb.F1) {
 						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(0, 0);
+						camera.SetYawAndPitch(XM_PI*0.0f, 0);
 						camera.SetCamTarget(camera.GetCamOriginalTarget());
 						
 					}
 					if (kb.F2) {
 						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(0, 0);
+						camera.SetYawAndPitch(XM_PI*1.25f, 0);
 						camera.SetCamTarget(camera.GetCamOriginalTarget());
 						
 					}
 					if (kb.F3) {
 						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),0.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(0, 0);
+						camera.SetYawAndPitch(XM_PI*1.75f, 0);
 						camera.SetCamTarget(camera.GetCamOriginalTarget());
 						
 					}
 					if (kb.F4) {
-						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),0.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						camera.SetYawAndPitch(0, 0);
+						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),0.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+						camera.SetYawAndPitch(XM_PI*0.25, 0);
 						camera.SetCamTarget(camera.GetCamOriginalTarget());
 					}
 
@@ -1062,7 +1062,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 							camera.SetCameraHeight(newHeight);
 
 							{
-								
 								//FÖLJD FEL för många tillägg av height ser det ut som 
 
 								//XMINT2 roundedPos;
