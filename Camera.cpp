@@ -156,7 +156,7 @@ void Camera::MoveCamTarget(Vector4 move)
 	cameraTarget += move;
 }
 
-void Camera::UpdateCamera(Vector3 movement, float speedMultiplier, double time)
+void Camera::UpdateCamera(Vector3 movement, bool speedMultiplier, double time)
 {
 	//ROTATION OF CAMERA
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->pitch, this->yaw, 0);
@@ -181,7 +181,12 @@ void Camera::UpdateCamera(Vector3 movement, float speedMultiplier, double time)
 	camForward = XMVector3TransformCoord(defaultForward, RotateYTempMatrix);
 
 	Vector4 timeMovement = XMVector3Normalize(movement);
-	timeMovement = timeMovement * time*speedMultiplier;
+	int speed = 1.0f;
+	if (speedMultiplier)
+	{
+		speed = RUN;
+	}
+	timeMovement = timeMovement * time*speed;
 
 	MoveCamTarget(timeMovement);
 	MoveCamPos(timeMovement);

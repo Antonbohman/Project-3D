@@ -306,6 +306,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
+
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
@@ -360,16 +361,62 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//CAMERA BACKWARDS			S
 				//CAMERA RIGHT				D
 				//CAMERA LEFT				A
+
+				//OTHER
+					//NV corner				F1				
+					//NE corner				F2
+					//SE corner				F3
+					//SV corner				F4
 				}
 				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 
 				//KEYBOARD 
 				{
 					auto kb = m_keyboard->GetState();
+					//SHORT COMMANDS
+					{
+
+					
 					if (kb.Escape) {
 						camera.SetCamPos(camera.GetCamOriginalPos());
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
 						camera.SetYawAndPitch(0, 0);
+						camera.SetCamTarget(camera.GetCamOriginalTarget());
+						
+					}
+					if (kb.F1) {
+						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+
+						float hyp = sqrt((pow(g_heightmap.imageWidth /2,2)+ pow(g_heightmap.imageHeight / 2, 2)) );
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp);
+						camera.SetYawAndPitch(XM_PI*angel, 0);
+					}
+					if (kb.F2) {
+						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+						
+
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp)+0.5;
+						//angel = 0.0f;
+						camera.SetYawAndPitch(XM_PI*angel, 0);
+					}
+					if (kb.F3) {
+						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+					
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+
+						camera.SetYawAndPitch(XM_PI*angel, 0);
+					}
+					if (kb.F4) {
+						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+						
+						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
+						camera.SetYawAndPitch(XM_PI*angel, 0);
 					}
 
 					if (kb.O) {
@@ -379,14 +426,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						freeFlight = false;
 					}
 
+					}
+
 					Vector3 moveInDepthCameraClass = Vector3::Zero;
 					Vector3 deltaChange = Vector3::Zero;
-					float run = 1.0f;
+					bool run = false;
 
 					//UPDATE VECTOR
 
 					if (kb.LeftShift) {
-						run = 3.0f;
+						run = true;
 					}
 
 					//pineapple in a green pie
@@ -439,7 +488,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE CAMERA
 					{
-						deltaChange = XMVector3Normalize(deltaChange*run);
+						deltaChange = XMVector3Normalize(deltaChange);
 						//ROTATION OF CAMERA
 						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
 						deltaChange += moveInDepthCameraClass;
@@ -451,43 +500,79 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						//Walking on terrain
 						if (!freeFlight) {
 							Vector4 CameraPos = camera.GetCamPos();
-							XMINT2 roundedPos;
-							roundedPos.x = CameraPos.x;
-							roundedPos.y = CameraPos.z;
-							//roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
+							
 
-							if (roundedPos.x < 0)
-							{
-								if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
+							//TEST byte ordningen så det liknar en graf.
+
+							XMINT2 nRoundedPos;
+							nRoundedPos.x = CameraPos.x;
+							nRoundedPos.y = CameraPos.z;
+
+							//avrundar till närmsta heltal
+							if (nRoundedPos.x < 0) {
+								if (float(nRoundedPos.x) - 0.5f > CameraPos.x) nRoundedPos.x--;
 							}
-							else
-							{
-								if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
+							else {
+								if (float(nRoundedPos.x) + 0.5f < CameraPos.x) nRoundedPos.x++;
 							}
-							if (roundedPos.y < 0)
-							{
-								if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
+							if (nRoundedPos.y < 0) {
+								if (float(nRoundedPos.y) - 0.5f > CameraPos.z) nRoundedPos.y--;
 							}
-							else
-							{
-								if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
+							else {
+								if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
 							}
 
-							roundedPos.x += (g_heightmap.imageWidth / 2);
-							roundedPos.y += (g_heightmap.imageHeight / 2);
-							roundedPos.y += g_heightmap.imageHeight;
+							nRoundedPos.x += g_heightmap.imageWidth/2; 
+							nRoundedPos.y += g_heightmap.imageHeight/2;
 
-							if (roundedPos.x < 0) roundedPos.x = 0;
-							if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
+							//Avrundar så ingen ogiltig arrayplats nåss
+							if (nRoundedPos.x < 0) nRoundedPos.x = 0;
+								if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
 
-							if (roundedPos.y < 0) roundedPos.y = 0;
-							if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
+								if (nRoundedPos.y < 0) nRoundedPos.y = 0;
+								if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
+							
 
-							int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
-
+							int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
 							float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
 
+							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
+
+							{
+								//FÖLJD FEL för många tillägg av height ser det ut som 
+
+								//XMINT2 roundedPos;
+								//roundedPos.x = CameraPos.z;
+								//roundedPos.y = CameraPos.x;
+								//roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
+
+
+								//if (roundedPos.x < 0) {
+								//	if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
+								//} else {
+								//	if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
+								//}
+								//if (roundedPos.y < 0) {
+								//	if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
+								//} else {
+								//	if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
+								//}
+
+								//roundedPos.x += (g_heightmap.imageWidth / 2);
+								//roundedPos.y -= (g_heightmap.imageHeight / 2);
+
+								//if (roundedPos.x < 0) roundedPos.x = 0;
+								//if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
+
+								//if (roundedPos.y < 0) roundedPos.y = 0;
+								//if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
+
+								//int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
+								//float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+
+								//camera.SetCameraHeight(newHeight);
+							}
 						}
 					}
 				}
