@@ -13,7 +13,7 @@ using namespace DirectX;
 
 void CreateConstantBuffer();
 
-void setWorldSpace();
+void setWorldSpace(WorldSpace world);
 
 void setCameraViewProjectionSpace();
 
@@ -21,7 +21,9 @@ void setLightViewProjectionSpace(LightSource* light);
 
 void updateCameraWorldViewProjection();
 
-void updateLightWorldViewProjection(); 
+void updateObjectWorldSpace();
+
+void updateLightViewProjection(LightSource* light);
 
 void updateCameraValues();
 

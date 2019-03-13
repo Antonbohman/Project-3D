@@ -9,10 +9,14 @@
 
 using namespace DirectX;
 
-#define S_WIDTH 640.0f
-#define S_HEIGHT 480.0f
+//shadow map render size
+#define S_WIDTH 640.0f/2
+#define S_HEIGHT 480.0f/2
 
-#define SHADOW_MAPS 6
+// light types
+#define L_POINT 0
+#define L_SPOT 1
+#define L_DIRECTIONAL 2
 
 class LightSource {
 private:
@@ -28,9 +32,13 @@ private:
 
 	LightData data;
 
-	ID3D11Texture2D* shadowRenderTargetTexture[6];
-	ID3D11RenderTargetView* shadowRenderTargetView[6];
-	ID3D11ShaderResourceView* shadowShaderResourceView[6];
+	ID3D11Texture2D* shadowRenderTargetTexture;
+	ID3D11DepthStencilView* shadowDepthStencilView;
+	ID3D11ShaderResourceView* shadowShaderResourceView;
+
+	D3D11_VIEWPORT vp;
+
+	void createViewport();
 
 public:
 	LightSource(const int type = 0, const int ambient = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
@@ -43,13 +51,15 @@ public:
 
 	HRESULT createShadowBuffer(ID3D11Device* device);
 
-	HRESULT Prepare(ID3D11DeviceContext* deviceContext, int index) const;
-	HRESULT Load(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
+	void prepareShadowRender(ID3D11DeviceContext* deviceContext) const;
+	HRESULT loadShadowBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
+	HRESULT loadLightBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
 
-	int LightType() const;
-	ID3D11ShaderResourceView* ShadowMap(int index) const;
+	int getLightType() const;
+	XMVECTOR getOrigin() const;
+	ID3D11ShaderResourceView* getShadowMap() const;
 
-	XMMATRIX getView() const;
+	XMMATRIX getView(int index) const;
 	XMMATRIX getProjection() const;
 };
 

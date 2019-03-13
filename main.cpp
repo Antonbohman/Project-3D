@@ -1,3 +1,4 @@
+/*SAFE VERSION! 2019-03-12 17:16 Filip*/
 #pragma once
 #include <windows.h>
 #include <chrono>
@@ -106,19 +107,18 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 2;
+	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(0.0f, 10.0f, 50.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
-	Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
+	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
 	}
 }
 
-void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
-{
+void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[]) {
 	gnrOfVert[nrOfVertexBuffers] = nrOfVertices;
 
 	// Describe the Vertex Buffer
@@ -145,201 +145,202 @@ void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[])
 }
 
 void SetViewport() {
-	D3D11_VIEWPORT vp;
-	vp.Width = (float)W_WIDTH;
-	vp.Height = (float)W_HEIGHT;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	gDeviceContext->RSSetViewports(1, &vp);
-}
+	if (!vp) {
+		vp = new D3D11_VIEWPORT;
+		vp->Width = (float)W_WIDTH;
+		vp->Height = (float)W_HEIGHT;
+		vp->MinDepth = 0.0f;
+		vp->MaxDepth = 1.0f;
+		vp->TopLeftX = 0;
+		vp->TopLeftY = 0;
+	}
 
+	gDeviceContext->RSSetViewports(1, vp);
+}
 void LoadObjectFile(char* filename, XMINT3 offset)
 {
-	TriangleVertex* object = nullptr;
-	FILE* fileptr;
-	fileptr = fopen(filename, "r");
-	if (fileptr == NULL)
-	{
-		return;
-	}
-	int loopControl = 1;
-	char line[128];
+	//TriangleVertex* object = nullptr;
+	//FILE* fileptr;
+	//fileptr = fopen(filename, "r");
+	//if (fileptr == NULL)
+	//{
+	//	return;
+	//}
+	//int loopControl = 1;
+	//char line[128];
 
-	XMFLOAT3* arrOfVertices = new XMFLOAT3[100]; //positionVertices
-	int arrSize = 100;
-	int nrOfVert = 0;
+	//XMFLOAT3* arrOfVertices = new XMFLOAT3[100]; //positionVertices
+	//int arrSize = 100;
+	//int nrOfVert = 0;
 
-	bool textureCordStart = false;
-	XMFLOAT2* arrOfTxtCord = nullptr; //TextureCoordinates
-	int nrOfTxtCord = 0;
-	int txtCoordArrSize = 0;
+	//bool textureCordStart = false;
+	//XMFLOAT2* arrOfTxtCord = nullptr; //TextureCoordinates
+	//int nrOfTxtCord = 0;
+	//int txtCoordArrSize = 0;
 
-	bool normalStart = false;
-	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
-	int nrOfNormals = 0;
-	int normArrSize = 0;
+	//bool normalStart = false;
+	//XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
+	//int nrOfNormals = 0;
+	//int normArrSize = 0;
 
-	int nrOfFaces = 0;
+	//int nrOfFaces = 0;
 
-	bool indexStart = false;
-	XMINT3* arrOfIndex = nullptr;
-	int objArrSize = 0;
+	//bool indexStart = false;
+	//XMINT3* arrOfIndex = nullptr;
+	//int objArrSize = 0;
 
-	while (loopControl != EOF)
-	{
-		loopControl = fscanf(fileptr, "%s", line);
-		if (loopControl == EOF) {}
-		else
-		{
-			if (strcmp(line, "v") == 0)
-			{
-				XMFLOAT3 vertex;
-				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				if (nrOfVert == arrSize)
-				{
-					XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
-					for (int i = 0; i < arrSize; i++)
-					{
-						tempArr[i] = arrOfVertices[i];
-					}
-					delete arrOfVertices;
-					arrOfVertices = tempArr;
+	//while (loopControl != EOF)
+	//{
+	//	loopControl = fscanf(fileptr, "%s", line);
+	//	if (loopControl == EOF) {}
+	//	else
+	//	{
+	//		if (strcmp(line, "v") == 0)
+	//		{
+	//			XMFLOAT3 vertex;
+	//			fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+	//			if (nrOfVert == arrSize)
+	//			{
+	//				XMFLOAT3* tempArr = new XMFLOAT3[arrSize + 50];
+	//				for (int i = 0; i < arrSize; i++)
+	//				{
+	//					tempArr[i] = arrOfVertices[i];
+	//				}
+	//				delete arrOfVertices;
+	//				arrOfVertices = tempArr;
 
-					arrSize += 50;
-				}
-				arrOfVertices[nrOfVert] = vertex;
-				nrOfVert++;
-			}
-			else if (strcmp(line, "vt") == 0)
-			{
-				if (textureCordStart == false)
-				{
-					txtCoordArrSize = nrOfVert;
-					arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
-					textureCordStart = true;
-				}
-				if (nrOfTxtCord == txtCoordArrSize)
-				{
-					XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
-					for (int i = 0; i < txtCoordArrSize; i++)
-					{
-						tempArr[i] = arrOfTxtCord[i];
-					}
-					delete arrOfTxtCord;
-					arrOfTxtCord = tempArr;
+	//				arrSize += 50;
+	//			}
+	//			arrOfVertices[nrOfVert] = vertex;
+	//			nrOfVert++;
+	//		}
+	//		else if (strcmp(line, "vt") == 0)
+	//		{
+	//			if (textureCordStart == false)
+	//			{
+	//				txtCoordArrSize = nrOfVert;
+	//				arrOfTxtCord = new XMFLOAT2[txtCoordArrSize];
+	//				textureCordStart = true;
+	//			}
+	//			if (nrOfTxtCord == txtCoordArrSize)
+	//			{
+	//				XMFLOAT2* tempArr = new XMFLOAT2[txtCoordArrSize + 50];
+	//				for (int i = 0; i < txtCoordArrSize; i++)
+	//				{
+	//					tempArr[i] = arrOfTxtCord[i];
+	//				}
+	//				delete arrOfTxtCord;
+	//				arrOfTxtCord = tempArr;
 
-					txtCoordArrSize += 50;
-				}
-				XMFLOAT2 vertex;
-				fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
+	//				txtCoordArrSize += 50;
+	//			}
+	//			XMFLOAT2 vertex;
+	//			fscanf(fileptr, "%f %f\n", &vertex.x, &vertex.y);
 
-				arrOfTxtCord[nrOfTxtCord] = vertex;
-				arrOfTxtCord[nrOfTxtCord].y = 1 - arrOfTxtCord[nrOfTxtCord].y;
-				nrOfTxtCord++;
-			}
-			else if (strcmp(line, "vn") == 0)
-			{
-				if (normalStart == false)
-				{
-					normArrSize = nrOfVert;
-					arrOfNormals = new XMFLOAT3[normArrSize];
-					normalStart = true;
-				}
-				if (nrOfNormals == normArrSize)
-				{
-					XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
-					for (int i = 0; i < normArrSize; i++)
-					{
-						tempArr[i] = arrOfNormals[i];
-					}
-					delete arrOfNormals;
-					arrOfNormals = tempArr;
+	//			arrOfTxtCord[nrOfTxtCord] = vertex;
+	//			arrOfTxtCord[nrOfTxtCord].y = 1 - arrOfTxtCord[nrOfTxtCord].y;
+	//			nrOfTxtCord++;
+	//		}
+	//		else if (strcmp(line, "vn") == 0)
+	//		{
+	//			if (normalStart == false)
+	//			{
+	//				normArrSize = nrOfVert;
+	//				arrOfNormals = new XMFLOAT3[normArrSize];
+	//				normalStart = true;
+	//			}
+	//			if (nrOfNormals == normArrSize)
+	//			{
+	//				XMFLOAT3* tempArr = new XMFLOAT3[normArrSize + 50];
+	//				for (int i = 0; i < normArrSize; i++)
+	//				{
+	//					tempArr[i] = arrOfNormals[i];
+	//				}
+	//				delete arrOfNormals;
+	//				arrOfNormals = tempArr;
 
-					normArrSize += 50;
-				}
+	//				normArrSize += 50;
+	//			}
 
-				XMFLOAT3 vertex;
-				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+	//			XMFLOAT3 vertex;
+	//			fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 
-				arrOfNormals[nrOfNormals] = vertex;
-				nrOfNormals++;
-			}
-			else if (strcmp(line, "usemtl") == 0)
-			{
-				textureName = new char[30];
-				fscanf(fileptr, "%s", textureName);
-				int okok = 2;
-			}
-			else if (strcmp(line, "f") == 0)
-			{
-				XMINT3 vertex[3];
-				fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
-				/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
-				if (indexStart == false)
-				{
-					objArrSize = int(nrOfVert * 1.5);
-					object = new TriangleVertex[objArrSize];
-					indexStart = true;
-				}
-				if (nrOfFaces + 3 >= objArrSize)
-				{
-					TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
-					for (int i = 0; i < nrOfFaces; i++)
-					{
-						tempArr[i] = object[i];
-					}
-					delete object;
-					object = tempArr;
+	//			arrOfNormals[nrOfNormals] = vertex;
+	//			nrOfNormals++;
+	//		}
+	//		else if (strcmp(line, "usemtl") == 0)
+	//		{
+	//			textureName = new char[30];
+	//			fscanf(fileptr, "%s", textureName);
+	//			int okok = 2;
+	//		}
+	//		else if (strcmp(line, "f") == 0)
+	//		{
+	//			XMINT3 vertex[3];
+	//			fscanf(fileptr, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertex[0].x, &vertex[0].y, &vertex[0].z, &vertex[1].x, &vertex[1].y, &vertex[1].z, &vertex[2].x, &vertex[2].y, &vertex[2].z);
+	//			/*x innehåller vertex positioner, y innehåller texture, z innehåller normaler*/
+	//			if (indexStart == false)
+	//			{
+	//				objArrSize = int(nrOfVert * 1.5);
+	//				object = new TriangleVertex[objArrSize];
+	//				indexStart = true;
+	//			}
+	//			if (nrOfFaces + 3 >= objArrSize)
+	//			{
+	//				TriangleVertex* tempArr = new TriangleVertex[objArrSize + 50];
+	//				for (int i = 0; i < nrOfFaces; i++)
+	//				{
+	//					tempArr[i] = object[i];
+	//				}
+	//				delete object;
+	//				object = tempArr;
 
-					objArrSize += 50;
-				}
-				for (int i = 0; i < 3; i++)
-				{
-					object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
-					object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
-					object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
+	//				objArrSize += 50;
+	//			}
+	//			for (int i = 0; i < 3; i++)
+	//			{
+	//				object[nrOfFaces + i].x = arrOfVertices[vertex[i].x - 1].x + offset.x;
+	//				object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
+	//				object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
 
-					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
-					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
-					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
+	//				//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
+	//				//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
+	//				//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
 
-					object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
-					object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
+	//				object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
+	//				object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
-					object[nrOfFaces + i].r = 0.5f;
-					object[nrOfFaces + i].g = 0.0f;
-					object[nrOfFaces + i].b = 0.5f;
-				}
-				nrOfFaces += 3;
-			}
-		}
-	}
-	fclose(fileptr);
+	//				object[nrOfFaces + i].r = 0.5f;
+	//				object[nrOfFaces + i].g = 0.0f;
+	//				object[nrOfFaces + i].b = 0.5f;
+	//			}
+	//			nrOfFaces += 3;
+	//		}
+	//	}
+	//}
+	//fclose(fileptr);
 
-	TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
-	for (int i = 0; i < nrOfFaces; i++)
-	{
-		objectArray[i] = object[i];
-	}
+	//TriangleVertex* objectArray = new TriangleVertex[nrOfFaces];
+	//for (int i = 0; i < nrOfFaces; i++)
+	//{
+	//	objectArray[i] = object[i];
+	//}
 
-	for (int i = 0; i < nrOfFaces; i++)
-	{
-		objectArray[i].y += 10;
-	}
+	//for (int i = 0; i < nrOfFaces; i++)
+	//{
+	//	objectArray[i].y += 10;
+	//}
 
-	createVertexBuffer(nrOfFaces, objectArray);
+	//createVertexBuffer(nrOfFaces, objectArray);
 
-	delete[] objectArray;
-	delete[] arrOfVertices;
-	delete[] arrOfTxtCord;
-	delete[] arrOfNormals;
-	delete[] arrOfIndex;
+	//delete[] objectArray;
+	//delete[] arrOfVertices;
+	//delete[] arrOfTxtCord;
+	//delete[] arrOfNormals;
+	//delete[] arrOfIndex;
 }
 
-void loadTexture()
-{
+void loadTexture() {
 	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Lava16x16.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
 	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Sand16x16.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
 	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass16x16.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
@@ -364,8 +365,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	//Open the file
 	fileptr = fopen(filename, "rb");
-	if (fileptr == 0)
-	{
+	if (fileptr == 0) {
 		return;
 	}
 
@@ -379,8 +379,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	//get size of image in bytes
 	int padding = g_heightmap.imageWidth * 3 % 4; //Ta det sen
-	if (padding > 0)
-	{
+	if (padding > 0) {
 		padding = 4 - padding;
 	}
 
@@ -406,10 +405,8 @@ void loadHeightMap(char* filename) //24 bit colour depth
 	int heightfactor = int(25.50f * 0.3f); //mountain smoothing
 
 	//read and put vertex position
-	for (int i = 0; i < g_heightmap.imageHeight; i++)
-	{
-		for (int j = 0; j < g_heightmap.imageWidth; j++)
-		{
+	for (int i = 0; i < g_heightmap.imageHeight; i++) {
+		for (int j = 0; j < g_heightmap.imageWidth; j++) {
 			height = bitmapImage[counter];
 			index = (g_heightmap.imageWidth * i) + j;
 
@@ -428,13 +425,11 @@ void loadHeightMap(char* filename) //24 bit colour depth
 
 	int vertNr = 0;
 
-	for (int i = 0; i < g_heightmap.imageHeight - 1; i++)
-	{
+	for (int i = 0; i < g_heightmap.imageHeight - 1; i++) {
 		int X = (i * g_heightmap.imageWidth);
 		int Y = ((i + 1) * g_heightmap.imageWidth);
 
-		for (int k = 0; k < g_heightmap.imageWidth - 1; k++)
-		{
+		for (int k = 0; k < g_heightmap.imageWidth - 1; k++) {
 			/*Position*/
 			g_map[vertNr].x = g_heightmap.verticesPos[Y].x - (g_heightmap.imageWidth / 2);
 			g_map[vertNr].y = g_heightmap.verticesPos[Y].y;
@@ -525,8 +520,7 @@ void loadHeightMap(char* filename) //24 bit colour depth
 	delete[] bitmapImage;
 }
 
-void loadMultiTextureMap(char* filename)
-{
+void loadMultiTextureMap(char* filename) {
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -535,8 +529,7 @@ void loadMultiTextureMap(char* filename)
 
 	//Open the file
 	fileptr = fopen(filename, "rb");
-	if (fileptr == 0)
-	{
+	if (fileptr == 0) {
 		return;
 	}
 
@@ -550,8 +543,7 @@ void loadMultiTextureMap(char* filename)
 
 	//get size of image in bytes
 	int padding = heightmap.x * 3 % 4; //Ta det sen
-	if (padding > 0)
-	{
+	if (padding > 0) {
 		padding = 4 - padding;
 	}
 
@@ -574,10 +566,8 @@ void loadMultiTextureMap(char* filename)
 	XMFLOAT3* RGB = new XMFLOAT3[heightmap.x * heightmap.y];
 
 	//read and put vertex position
-	for (int i = 0; i < heightmap.y; i++)
-	{
-		for (int j = 0; j < heightmap.x; j++)
-		{
+	for (int i = 0; i < heightmap.y; i++) {
+		for (int j = 0; j < heightmap.x; j++) {
 			index = (g_heightmap.imageWidth * i) + j;
 
 			float r = 0, g = 0, b = 0;
@@ -601,13 +591,11 @@ void loadMultiTextureMap(char* filename)
 
 	int vertNr = 0;
 
-	for (int i = 0; i < g_heightmap.imageHeight - 1; i++)
-	{
+	for (int i = 0; i < g_heightmap.imageHeight - 1; i++) {
 		int X = (i * g_heightmap.imageWidth);
 		int Y = ((i + 1) * g_heightmap.imageWidth);
 
-		for (int k = 0; k < g_heightmap.imageWidth - 1; k++)
-		{
+		for (int k = 0; k < g_heightmap.imageWidth - 1; k++) {
 			/*Position*/
 			g_map[vertNr].r = RGB[Y].x;
 			g_map[vertNr].g = RGB[Y].y;
@@ -686,16 +674,40 @@ void loadMultiTextureMap(char* filename)
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
 }
 
-void RenderShadowsMaps() {
-	//set for each object
-	setWorldSpace();
-	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+void RenderShadowMaps() {
+	setShadowShaders();
+
+	gDeviceContext->VSSetConstantBuffers(0, 1, &gObjectMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gLightMatrixBuffer);
 
 	for (int i = 0; i < nrOfLights; i++) {
+		Lights[i].prepareShadowRender(gDeviceContext);
+
 		setLightViewProjectionSpace(&Lights[i]);
+
+		//set world space for height map and update wvp
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		updateObjectWorldSpace();
+		updateLightViewProjection(&Lights[i]);
+
+		//Render heightmap
+		setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
+		gDeviceContext->Draw(nrOfHMVert, 0);
+
+		for (int i = 0; i < nrOfVertexBuffers; i++) {
+			//set world space for each object and update wvp
+			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+			updateObjectWorldSpace();
+			updateLightViewProjection(&Lights[i]);
+
+			//Render objects
+			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+			gDeviceContext->Draw(gnrOfVert[i], 0);
+		}
 	}
 
-	//updateWorldViewProjection();	
+	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
 void RenderBuffers() {
@@ -703,13 +715,7 @@ void RenderBuffers() {
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
 
 	updateCameraValues();
-
 	setCameraViewProjectionSpace();
-
-	//set for each object
-	setWorldSpace();
-	updateCameraWorldViewProjection();
-	setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 	// Clear the render target buffers.
 	for (int i = 0; i < G_BUFFER; i++) {
@@ -727,49 +733,65 @@ void RenderBuffers() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
-	//Render heightmap
+	//Set heightmap shader options
 	SetBlendShaders();
 
-	for (int i = 0; i < 4; i++)
-	{
+	//load map textures
+	for (int i = 0; i < 4; i++) {
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
 	}
 
+	//set world space for height map and update wvp matrix
+	//set specular for height map
+	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+	updateCameraWorldViewProjection();
+	setSpecularValues(XMVectorSet(1, 1, 1, 1));
+
+	//Render heightmap
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(nrOfHMVert, 0);
 
 	//Release
-	for (int i = 0; i < 4; i++)
-	{
+	for (int i = 0; i < 4; i++) {
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
-	//Render objects
+	//Set object shader options
 	SetDeferredShaders();
 
-	for (int i = 0; i < nrOfVertexBuffers; i++)
-	{
-		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+	for (int i = 0; i < nrOfVertexBuffers; i++) {
+		//set world space for object and update wvp matrix
+		//set specular for object
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		updateCameraWorldViewProjection();
+		setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+		//set object texture
+		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
+
+		//Render objects
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 	}
 
 	//Release
-	for (int i = 0; i < nrOfVertexBuffers; i++)
-	{
+	for (int i = 0; i < nrOfVertexBuffers; i++) {
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
-
 }
 
 void RenderLights() {
+	//set shaders for light calculation (final pass)
 	SetLightShaders();
+
+	//set our quad as fragment to render
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
+	//bind our constant buffers to shaders
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);
 
@@ -781,10 +803,11 @@ void RenderLights() {
 
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
-		Lights[i].Load(gDeviceContext, gLightDataBuffer);
+		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
 		gDeviceContext->Draw(6, 0);
 	}
 
+	//Release
 	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(1, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
@@ -809,12 +832,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_keyboard = std::make_unique<Keyboard>();
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
-	
+
 
 	if (wndHandle) {
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
-
-		SetViewport(); //3. Sätt viewport
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
 
@@ -829,7 +850,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
 
-		//LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
+		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
 
 		//LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
 
@@ -853,14 +874,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
-			}
-			else {
+			} else {
+				//set timestamps and calculate delta between start end end time
+				end = high_resolution_clock::now();
+				delta = end - start;
+				start = high_resolution_clock::now();
 
 				//FREE FLIGHT WITH O key
 				//HORIZONTAL movement with P 
 
-
-			/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 				{//IN FREEFLIGHT				O key
 				//INTO CAMERA FORWARD		W
 				//INTO CAMERA BACKWARDS		S
@@ -876,11 +899,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				//CAMERA LEFT				A
 				}
 				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-					//set timestamps and calculate delta between start end end time
-				end = high_resolution_clock::now();
-				delta = end - start;
-				start = high_resolution_clock::now();
-
 
 				//KEYBOARD 
 				{
@@ -891,12 +909,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						camera.SetYawAndPitch(0, 0);
 					}
 
-					if (kb.O)
-					{
+					if (kb.O) {
 						freeFlight = true;
 					}
-					if (kb.P)
-					{
+					if (kb.P) {
 						freeFlight = false;
 					}
 
@@ -906,31 +922,24 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					//UPDATE VECTOR
 
-					if (kb.LeftShift)
-					{
+					if (kb.LeftShift) {
 						run = 3.0f;
 					}
 
 					//pineapple in a green pie
 					if (kb.W) {//FORWARD IN
 
-						if (freeFlight)
-						{
+						if (freeFlight) {
 							moveInDepthCameraClass += camera.GetCameraNormal();
-						}
-						else
-						{
+						} else {
 							moveInDepthCameraClass += camera.GetCamForward();
 						}
 
 					}
 					if (kb.S) { //BACK
-						if (freeFlight)
-						{
+						if (freeFlight) {
 							moveInDepthCameraClass -= camera.GetCameraNormal();
-						}
-						else
-						{
+						} else {
 							moveInDepthCameraClass -= camera.GetCamForward();
 						}
 
@@ -975,28 +984,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 
 						//Walking on terrain
-						if (!freeFlight)
-						{
+						if (!freeFlight) {
 							Vector4 CameraPos = camera.GetCamPos();
 							XMINT2 roundedPos;
 							roundedPos.x = CameraPos.z;
 							roundedPos.y = CameraPos.x;
 							roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
 
-							if (roundedPos.x < 0)
-							{
+							if (roundedPos.x < 0) {
 								if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
-							}
-							else
-							{
+							} else {
 								if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
 							}
-							if (roundedPos.y < 0)
-							{
+							if (roundedPos.y < 0) {
 								if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
-							}
-							else
-							{
+							} else {
 								if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
 							}
 
@@ -1016,13 +1018,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						}
 					}
 				}
-				//RenderShadowsMaps();
+
+				RenderShadowMaps();
+
+				SetViewport();
+
 				RenderBuffers();
+
 				RenderLights();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
 		}
+
+		delete vp;
 
 		delete[] Lights;
 
@@ -1040,6 +1049,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		_aligned_free(gWorldMatrix);
 		gWorldMatrixBuffer->Release();
+
+		_aligned_free(gObjectMatrix);
+		gObjectMatrixBuffer->Release();
 
 		DestroyShaders();
 

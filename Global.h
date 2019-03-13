@@ -17,9 +17,12 @@ using namespace DirectX;
 ///////////////////
 
 // window size
-#define W_WIDTH 640.0f //640
-#define W_HEIGHT 480.0f //480
-#define FOV 0.45f
+#define W_WIDTH 640.0f
+#define W_HEIGHT 480.0f
+
+//Fov (radians)
+#define FOV 0.5f//0.45f
+
 // PROJECTION RANGE
 #define PROJECTION_NEAR_Z 0.1f
 #define PROJECTION_FAR_Z 500.0f
@@ -59,9 +62,17 @@ struct CameraMatrix {
 	XMVECTOR Focus;
 };
 
-// a resource to store world,view,porojection matrix for lights in the GPU
-struct LightWVP {
-	XMMATRIX WorldViewProjection;
+// a resource to store world matrix for objects in the GPU
+struct ObjectW {
+	XMMATRIX World;
+};
+
+// a resource to store type, origin and view,porojection matrix for lights in the GPU
+struct LightVP {
+	UINT LightType;
+	XMFLOAT3 Origin;
+	XMMATRIX ViewProjection;
+	XMMATRIX RotatedViewProjection[5];
 };
 
 // a resource to store world,view,porojection matrix for object in the GPU
@@ -93,11 +104,24 @@ struct LightData {
 	float lightFocus;
 };
 
-
+struct WorldSpace {
+	float rotation_x;
+	float rotation_y;
+	float rotation_z;
+	float offset_x;
+	float offset_y;
+	float offset_z;
+	float scale_x;
+	float scale_y;
+	float scale_z;
+};
 
 /////////////////////
 // Variables       //
 /////////////////////
+
+// viewport
+extern D3D11_VIEWPORT* vp;
 
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
@@ -138,6 +162,8 @@ extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
 extern ID3D11VertexShader* gShadowVertexShader;
+extern ID3D11GeometryShader* gShadowGeometryShader;
+extern ID3D11PixelShader* gShadowPixelShader;
 extern ID3D11VertexShader* gVertexShader;
 extern ID3D11GeometryShader* gGeometryShader;
 extern ID3D11PixelShader* gPixelShader;
@@ -155,7 +181,10 @@ extern ID3D11Buffer* gCameraMatrixBuffer;
 extern CameraWVP* gWorldMatrix;
 extern ID3D11Buffer* gWorldMatrixBuffer;
 
-extern LightWVP* gLightMatrix;
+extern ObjectW* gObjectMatrix;
+extern ID3D11Buffer* gObjectMatrixBuffer;
+
+extern LightVP* gLightMatrix;
 extern ID3D11Buffer* gLightMatrixBuffer;
 
 extern ID3D11Buffer* gLightDataBuffer;
@@ -166,6 +195,7 @@ extern int nrOfLights;
 //World/View/Projection
 extern XMMATRIX World;
 extern XMMATRIX View;
+extern XMMATRIX ViewRotated[5];
 extern XMMATRIX Projection;
 
 // CAMERAVIEW

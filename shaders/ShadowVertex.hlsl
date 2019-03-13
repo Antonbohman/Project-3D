@@ -1,9 +1,9 @@
-cbuffer VS_CB_SPACE : register(b0)
+cbuffer VS_CB_WORLD : register(b0)
 {
-    float4x4 WorldViewProjection;
+    float4x4 World;
 };
 
 float4 VS_shadow(float3 Pos : POSITION) : SV_Position
 {
-    return mul(WorldViewProjection, float4(Pos, 1.0f));
+    return mul(World, float4(Pos, 1.0f));
 }

@@ -1,0 +1,1 @@
+void PS_shadow(float4 pos : SV_POSITION) {}

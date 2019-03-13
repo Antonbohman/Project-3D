@@ -15,6 +15,8 @@ HRESULT CreateShaders();
 void DestroyShaders();
 
 HRESULT CreateShadowVS();
+HRESULT CreateShadowGS();
+HRESULT CreateShadowPS();
 HRESULT CreateDeferredVS();
 HRESULT CreateDeferredGS();
 HRESULT CreateDeferredPS();
