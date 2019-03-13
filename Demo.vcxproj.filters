@@ -39,6 +39,9 @@
     <ClCompile Include="ConstantBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\Fragment.hlsl">
@@ -93,6 +96,9 @@
     </ClInclude>
     <ClInclude Include="ConstantBuffers.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
