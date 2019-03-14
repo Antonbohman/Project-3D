@@ -3,6 +3,9 @@
 
 Frustum::Frustum()
 {
+	/*this->frustumNearDist = PROJECTION_NEAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z;*/
+	
 	cameraReference = nullptr;
 }
 
@@ -13,6 +16,8 @@ Frustum::~Frustum()
 
 Frustum::Frustum(Camera * camera)
 {
+	/*this->frustumNearDist = PROJECTION_NEAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z;*/
 	cameraReference = camera;
 }
 
@@ -53,7 +58,7 @@ Frustum::Frustum(const Frustum & original)
 
 }
 
-Frustum & Frustum::operator=(const Frustum & originalObj)
+Frustum &Frustum::operator=(const Frustum & originalObj)
 {
 	if (this != &originalObj)
 	{
@@ -99,8 +104,7 @@ void Frustum::GiveCameraReference(Camera * theCamera)
 	cameraReference = theCamera;
 }
 
-
-void Frustum::calculateFrustum(float FOV, float W_WIDTH, float W_HEIGHT)
+void Frustum::calculateFrustum(/*float FOV, float W_WIDTH, float W_HEIGHT*/)
 {
 	//NEAR H / W
 	int ratio = (W_WIDTH / W_HEIGHT);

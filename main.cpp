@@ -185,7 +185,7 @@ void RenderShadowMaps() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
-void RenderBuffers() {
+void RenderBuffers(float notToRender) {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
 
@@ -236,18 +236,22 @@ void RenderBuffers() {
 
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
-		//set world space for object and update wvp matrix
-		//set specular for object
-		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
-		updateCameraWorldViewProjection();
-		setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
-		//set object texture
-		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+		if (notToRender == i)
+		{
+			//set world space for object and update wvp matrix
+			//set specular for object
+			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+			updateCameraWorldViewProjection();
+			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
-		//Render objects
-		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
-		gDeviceContext->Draw(gnrOfVert[i], 0);
+			//set object texture
+			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+
+			//Render objects
+			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+			gDeviceContext->Draw(gnrOfVert[i], 0);
+		}
 	}
 
 	//Release
@@ -364,6 +368,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				end = high_resolution_clock::now();
 				delta = end - start;
 				start = high_resolution_clock::now();
+
+				float DontRender = -1;
 
 				//FREE FLIGHT WITH O key
 				//HORIZONTAL movement with P 
@@ -543,7 +549,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 								if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
 							}
 
-							nRoundedPos.x += g_heightmap.imageWidth/2; 
+							nRoundedPos.x += g_heightmap.imageWidth /2; 
 							nRoundedPos.y += g_heightmap.imageHeight/2;
 
 							//Avrundar så ingen ogiltig arrayplats nåss
@@ -559,6 +565,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
+
+							//frustumCamera.calculateFrustum();
+
+							/*if(frustumCamera.pointInFrustum({ 0.0f, 20.0f, 0.0f, 0.0f })!=0 )
+							{
+								DontRender = 0;
+							}*/
+						
 						}
 
 					}
@@ -568,7 +582,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				SetViewport();
 
-				RenderBuffers();
+				RenderBuffers(-1);
 
 				RenderLights();
 
