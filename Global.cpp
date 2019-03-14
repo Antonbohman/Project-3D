@@ -27,6 +27,7 @@ ID3D11SamplerState* gSampling = nullptr;
 //TriangleVertex* gObject = nullptr;
 int gnrOfVert[5];
 ID3D11Buffer *ppVertexBuffers[5];
+XMFLOAT3 ObjectReflection[5];
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
 int nrOfVertexBuffers;
