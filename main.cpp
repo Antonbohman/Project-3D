@@ -108,17 +108,33 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 1;
+	nrOfLights = 2;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
+	Lights[0] = LightSource(L_SPOT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[1] = LightSource(L_SPOT, 5, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
 	}
 }
 
+void createBlendState() {
+	D3D11_BLEND_DESC blendStateDesc;
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+	blendStateDesc.AlphaToCoverageEnable = false;
+	blendStateDesc.IndependentBlendEnable = false;
+	blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MAX;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
+}
 void SetViewport() {
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
@@ -218,6 +234,7 @@ void RenderBuffers() {
 	//Set object shader options
 	SetDeferredShaders();
 
+	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
 		//set world space for object and update wvp matrix
 		//set specular for object
@@ -226,7 +243,7 @@ void RenderBuffers() {
 		setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 		//set object texture
-		gDeviceContext->PSSetShaderResources(i, 1, &gTextureSRV[i]);
+		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
 
 		//Render objects
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
@@ -244,8 +261,12 @@ void RenderBuffers() {
 }
 
 void RenderLights() {
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	
 	//set shaders for light calculation (final pass)
 	SetLightShaders();
+
+	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
 
 	//set our quad as fragment to render
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
@@ -263,7 +284,7 @@ void RenderLights() {
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
-		gDeviceContext->Draw(6, 0);
+		gDeviceContext->Draw(6, 0); 
 	}
 
 	//Release
@@ -298,6 +319,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
 
+		createBlendState();
+
+
 		CreateDeferredQuad();
 
 		loadHeightMap("Objects/Heightmaps/halv_island.bmp");
@@ -306,19 +330,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
-		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 10, 0));
+		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 20, 0));
+
+		//CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
 
 		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
 
-		LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
+		//LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
 
-		//LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
+		LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
 
 		//LoadObjectFile("Objects/OBJs/globe.obj", XMINT3(2, 45, 2));
 
-		//LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
-
-		loadTexture();
+		LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 
 		CreateConstantBuffer(); //8. Create constant buffers
 

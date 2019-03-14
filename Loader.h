@@ -34,4 +34,4 @@ void loadMultiTextureMap(char* filename);
 
 void LoadObjectFile(char* filename, XMINT3 offset);
 
-void loadTexture();
+void loadTexture(const char* filePath);
