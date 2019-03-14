@@ -20,6 +20,9 @@ ID3D11DeviceContext* gDeviceContext = nullptr;
 // sampling resource
 ID3D11SamplerState* gSampling = nullptr;
 
+//blend resource
+ID3D11BlendState* gBlendStateLight = nullptr;
+
 // a resource to store Vertices in the GPU
 //ID3D11Buffer* gVertexBufferMap = nullptr;
 //ID3D11Buffer* gVertexBufferObj = nullptr;
