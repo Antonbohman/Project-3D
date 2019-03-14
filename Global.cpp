@@ -31,6 +31,7 @@ ID3D11BlendState* gBlendStateLight = nullptr;
 int gnrOfVert[5];
 ID3D11Buffer *ppVertexBuffers[5];
 XMFLOAT3 ObjectReflection[5];
+
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
 int nrOfVertexBuffers;
