@@ -85,11 +85,15 @@ int nrOfLights = 0;
 Camera camera({ +0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
+Frustum frustumCamera(&camera);
+
 //World/View/Projection
 XMMATRIX World;
 XMMATRIX View;
 XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
+
+
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;

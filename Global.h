@@ -9,6 +9,7 @@
 
 #include "LightSource.h"
 #include "Camera.h"
+#include "Frustum.h"
 
 using namespace DirectX;
 
@@ -17,8 +18,8 @@ using namespace DirectX;
 ///////////////////
 
 // window size
-#define W_WIDTH 1920.0f
-#define W_HEIGHT 1080.0f
+#define W_WIDTH 1280.0f
+#define W_HEIGHT 720.0f
 
 //Fov (radians)
 #define FOV 0.45f//0.45f
@@ -198,8 +199,11 @@ extern XMMATRIX View;
 extern XMMATRIX ViewRotated[5];
 extern XMMATRIX Projection;
 
-// CAMERAVIEW
+// CAMERAclass
 extern Camera camera;
+
+// FrustumOfCamera
+extern Frustum frustumCamera;
 
 // keeping track of current rotation
 extern float rotation;

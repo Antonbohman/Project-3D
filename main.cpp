@@ -536,6 +536,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
 						}
+
 					}
 				}
 
