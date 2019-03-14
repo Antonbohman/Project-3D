@@ -135,6 +135,7 @@ void createBlendState() {
 
 	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
 }
+
 void SetViewport() {
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
