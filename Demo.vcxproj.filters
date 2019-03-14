@@ -88,17 +88,17 @@
     <ClInclude Include="Global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Frustum.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ConstantBuffers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Loader.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
