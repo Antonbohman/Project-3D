@@ -1072,41 +1072,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
-
-							{
-								//FÖLJD FEL för många tillägg av height ser det ut som 
-
-								//XMINT2 roundedPos;
-								//roundedPos.x = CameraPos.z;
-								//roundedPos.y = CameraPos.x;
-								//roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
-
-
-								//if (roundedPos.x < 0) {
-								//	if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
-								//} else {
-								//	if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
-								//}
-								//if (roundedPos.y < 0) {
-								//	if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
-								//} else {
-								//	if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
-								//}
-
-								//roundedPos.x += (g_heightmap.imageWidth / 2);
-								//roundedPos.y -= (g_heightmap.imageHeight / 2);
-
-								//if (roundedPos.x < 0) roundedPos.x = 0;
-								//if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
-
-								//if (roundedPos.y < 0) roundedPos.y = 0;
-								//if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
-
-								//int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
-								//float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
-
-								//camera.SetCameraHeight(newHeight);
-							}
 						}
 					}
 				}
