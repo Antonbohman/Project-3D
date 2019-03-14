@@ -9,6 +9,7 @@
 
 #include "LightSource.h"
 #include "Camera.h"
+#include "Frustum.h"
 
 using namespace DirectX;
 
@@ -202,8 +203,11 @@ extern XMMATRIX View;
 extern XMMATRIX ViewRotated[5];
 extern XMMATRIX Projection;
 
-// CAMERAVIEW
+// CAMERAclass
 extern Camera camera;
+
+// FrustumOfCamera
+extern Frustum frustumCamera;
 
 // keeping track of current rotation
 extern float rotation;
