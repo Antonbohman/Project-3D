@@ -17,8 +17,8 @@ using namespace DirectX;
 ///////////////////
 
 // window size
-#define W_WIDTH 1920.0f
-#define W_HEIGHT 1080.0f
+#define W_WIDTH 1280.0f
+#define W_HEIGHT 720.0f
 
 //Fov (radians)
 #define FOV 0.45f//0.45f
@@ -135,6 +135,9 @@ extern ID3D11DeviceContext* gDeviceContext;
 
 // sampling resource
 extern ID3D11SamplerState* gSampling;
+
+//blend resource
+extern ID3D11BlendState* gBlendStateLight;
 
 // a resource to store Vertices in the GPU
 extern int gnrOfVert[5];

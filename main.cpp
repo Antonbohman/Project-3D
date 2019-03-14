@@ -108,17 +108,33 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 1;
+	nrOfLights = 2;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_POINT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[1] = LightSource(L_POINT, 5, XMVectorSet(50.0f, 10.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 400.0f, 2.0f);
+	Lights[0] = LightSource(L_SPOT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[1] = LightSource(L_SPOT, 5, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
 	}
 }
 
+void createBlendState() {
+	D3D11_BLEND_DESC blendStateDesc;
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+	blendStateDesc.AlphaToCoverageEnable = false;
+	blendStateDesc.IndependentBlendEnable = false;
+	blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_MAX;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
+}
 void SetViewport() {
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
@@ -245,8 +261,12 @@ void RenderBuffers() {
 }
 
 void RenderLights() {
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	
 	//set shaders for light calculation (final pass)
 	SetLightShaders();
+
+	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
 
 	//set our quad as fragment to render
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
@@ -298,6 +318,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
+
+		createBlendState();
+
 
 		CreateDeferredQuad();
 
@@ -536,41 +559,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
-
-							{
-								//FÖLJD FEL för många tillägg av height ser det ut som 
-
-								//XMINT2 roundedPos;
-								//roundedPos.x = CameraPos.z;
-								//roundedPos.y = CameraPos.x;
-								//roundedPos.y = g_heightmap.imageHeight - roundedPos.y;
-
-
-								//if (roundedPos.x < 0) {
-								//	if (float(roundedPos.x) - 0.5f > CameraPos.x) roundedPos.x--;
-								//} else {
-								//	if (float(roundedPos.x) + 0.5f < CameraPos.x) roundedPos.x++;
-								//}
-								//if (roundedPos.y < 0) {
-								//	if (float(roundedPos.y) - 0.5f > CameraPos.z) roundedPos.y--;
-								//} else {
-								//	if (float(roundedPos.y) + 0.5f < CameraPos.z) roundedPos.y++;
-								//}
-
-								//roundedPos.x += (g_heightmap.imageWidth / 2);
-								//roundedPos.y -= (g_heightmap.imageHeight / 2);
-
-								//if (roundedPos.x < 0) roundedPos.x = 0;
-								//if (roundedPos.x >= g_heightmap.imageWidth) roundedPos.x = g_heightmap.imageWidth - 1;
-
-								//if (roundedPos.y < 0) roundedPos.y = 0;
-								//if (roundedPos.y >= g_heightmap.imageHeight) roundedPos.y = g_heightmap.imageHeight - 1;
-
-								//int index = (roundedPos.y * g_heightmap.imageWidth) + roundedPos.x;
-								//float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
-
-								//camera.SetCameraHeight(newHeight);
-							}
 						}
 					}
 				}

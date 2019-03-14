@@ -491,6 +491,8 @@ HRESULT CreateLightPS() {
 }
 
 void setShadowShaders() {
+	gDeviceContext->OMSetBlendState(nullptr, 0, 0xffffffff);
+
 	gDeviceContext->VSSetShader(gShadowVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
@@ -540,7 +542,10 @@ void SetBlendShaders() {
 }
 
 void SetLightShaders() {
-	gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, gDepth);
+	float blendFactor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+
+	gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, nullptr);
+	gDeviceContext->OMSetBlendState(gBlendStateLight, blendFactor, 0xffffffff);
 
 	gDeviceContext->VSSetShader(gLightVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);

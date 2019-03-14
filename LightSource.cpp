@@ -272,9 +272,9 @@ XMMATRIX LightSource::getProjection() const {
 		);
 		break;
 	case L_DIRECTIONAL:
-		proj = XMMatrixPerspectiveFovLH(
-			(float)XM_PI * 1,
-			(float)S_WIDTH / (float)S_HEIGHT,
+		proj = XMMatrixOrthographicLH(
+			(float)S_WIDTH,
+			(float)S_HEIGHT,
 			0.1f,
 			data.intensity * 1.1
 		);
@@ -292,4 +292,3 @@ XMMATRIX LightSource::getProjection() const {
 
 	return proj;
 }
-
