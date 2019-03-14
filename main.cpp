@@ -135,6 +135,7 @@ void createBlendState() {
 
 	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
 }
+
 void SetViewport() {
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
@@ -301,7 +302,8 @@ void RenderLights() {
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) 
+{
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
@@ -318,7 +320,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse->SetWindow(wndHandle);
 
 
-	if (wndHandle) {
+	if (wndHandle) 
+	{
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
 
 		CreateShaders(); //4. Skapa vertex- och pixel-shaders
@@ -332,19 +335,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
 
-		//5. Definiera triangelvertiser, 6. Skapa vertex buffer, 7. Skapa input layout
 
 		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 20, 0));
 
-		//CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
 
 		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
 
-		//LoadObjectFile("Objects/OBJs/die.obj", XMINT3(0, 50, 30));
 
 		LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
 
-		//LoadObjectFile("Objects/OBJs/globe.obj", XMINT3(2, 45, 2));
 
 		LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 

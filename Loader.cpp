@@ -31,7 +31,6 @@ void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[]) {
 
 void loadHeightMap(char* filename) //24 bit colour depth
 {
-
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -206,7 +205,8 @@ void loadHeightMap(char* filename) //24 bit colour depth
 	delete[] bitmapImage;
 }
 
-void loadMultiTextureMap(char* filename) {
+void loadMultiTextureMap(char* filename)
+{
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -364,6 +364,9 @@ void loadMultiTextureMap(char* filename) {
 	// create a Vertex Buffer
 	HRESULT error;
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
+	delete[] g_map;
+	delete[] bitmapImage;
+	delete[] RGB;
 }
 
 void LoadObjectFile(char* filename, XMINT3 offset)
@@ -517,10 +520,6 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 					object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
 					object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
 
-					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
-					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
-					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
-
 					object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
 					object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
@@ -540,12 +539,6 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 		objectArray[i] = object[i];
 	}
 
-	//for (int i = 0; i < nrOfFaces; i++)
-	//{
-	//	objectArray[i].y += 10;
-	//}
-
-
 	createVertexBuffer(nrOfFaces, objectArray);
 
 	delete[] objectArray;
@@ -553,6 +546,7 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 	delete[] arrOfTxtCord;
 	delete[] arrOfNormals;
 	delete[] arrOfIndex;
+	delete object;
 }
 
 void loadTexture(const char* filepath)
@@ -563,7 +557,7 @@ void loadTexture(const char* filepath)
 	{
 		return;
 	}
-	
+
 	int loopControl = 1;
 	char line[128];
 
@@ -595,8 +589,12 @@ void loadTexture(const char* filepath)
 
 				std::mbstowcs(wideChar, pTexturePath, 50);
 
+				delete[] pTexturePath;
+
 				CreateDDSTextureFromFile(gDevice, wideChar, &gTexture2D[nrOfVertexBuffers], &gTextureSRV[nrOfVertexBuffers]);
 			}
 		}
+
 	}
+	fclose(fileptr);
 }
