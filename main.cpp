@@ -221,7 +221,7 @@ void RenderBuffers(float notToRender) {
 	//set world space for height map and update wvp matrix
 	//set specular for height map
 
-	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f ,1.0f,1.0f });
+	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 	updateCameraWorldViewProjection();
 	setSpecularValues(XMVectorSet(1, 1, 1, 1));
 
@@ -261,7 +261,7 @@ void RenderBuffers(float notToRender) {
 			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
 
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[1].offset_x,copies[1].offset_y,copies[1].offset_z,0.0f,0.0f,0.0f });
+			setWorldSpace({ 0.0f,0.0f,0.0f,copies[1].offset_x,copies[1].offset_y,copies[1].offset_z,1.0f,1.0f,1.0f });
 			updateCameraWorldViewProjection();
 			//Render objects
 			gDeviceContext->Draw(gnrOfVert[i], 0);
@@ -271,7 +271,7 @@ void RenderBuffers(float notToRender) {
 		{
 			//set world space for object and update wvp matrix
 			//set specular for object
-			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 			updateCameraWorldViewProjection();
 			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
