@@ -149,8 +149,12 @@ void setWorldSpace(WorldSpace world) {
 
 	//World = World *XMMatrixScaling(world.scale_x, world.scale_y, world.scale_z);
 
-	//World = World *XMMatrixMultiply(rotationX, XMMatrixMultiply(rotationY, rotationZ));
+	XMMATRIX scale = XMMatrixScaling(world.scale_x, world.scale_y, world.scale_z);
+	
+	XMMATRIX rotate = XMMatrixMultiply(rotationX, XMMatrixMultiply(rotationY, rotationZ));
 
+	World = XMMatrixMultiply(scale, rotate);
+	World = XMMatrixMultiply(World, offset);
 }
 
 void setCameraViewProjectionSpace() {

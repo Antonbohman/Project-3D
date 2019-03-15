@@ -232,3 +232,5 @@ extern ID3D11Resource* gTexture2D[5];
 
 extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
 extern ID3D11Resource* gMapTextureResource[4];
+
+extern float rotationTest;
