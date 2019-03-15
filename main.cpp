@@ -247,7 +247,8 @@ void RenderBuffers(float notToRender) {
 
 		if (0 == i )
 		{
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[0].offset_x,copies[0].offset_y,copies[0].offset_z,0.0f,0.0f,0.0f });
+			setWorldSpace({ 0.0f,0.0f,0.0f,copies[0].offset_x,copies[0].offset_y,copies[0].offset_z,3.0f,3.0f,3.0f });
+			
 			updateCameraWorldViewProjection();
 			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
