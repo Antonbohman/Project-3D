@@ -220,7 +220,8 @@ void RenderBuffers() {
 
 	//set world space for height map and update wvp matrix
 	//set specular for height map
-	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+
+	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f ,1.0f,1.0f });
 	updateCameraWorldViewProjection();
 	setSpecularValues(XMVectorSet(1, 1, 1, 1));
 
@@ -240,7 +241,8 @@ void RenderBuffers() {
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
 		//set world space for object and update wvp matrix
 		//set specular for object
-		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		rotationTest += 0.001f;
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f - (20 * rotationTest),0.0f,1.0f + rotationTest,1.0f + rotationTest,1.0f + rotationTest });
 		updateCameraWorldViewProjection();
 		setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
@@ -264,7 +266,7 @@ void RenderBuffers() {
 
 void RenderLights() {
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	
+
 	//set shaders for light calculation (final pass)
 	SetLightShaders();
 
@@ -286,7 +288,7 @@ void RenderLights() {
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
-		gDeviceContext->Draw(6, 0); 
+		gDeviceContext->Draw(6, 0);
 	}
 
 	//Release
@@ -299,7 +301,7 @@ void RenderLights() {
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) 
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	//create two timestamps variables and a delta between them to adjust update frequency
 	time_point<high_resolution_clock>start = high_resolution_clock::now();
@@ -317,7 +319,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	m_mouse->SetWindow(wndHandle);
 
 
-	if (wndHandle) 
+	if (wndHandle)
 	{
 		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
 
@@ -397,55 +399,55 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					//SHORT COMMANDS
 					{
 
-					
-					if (kb.Escape) {
-						camera.SetCamPos(camera.GetCamOriginalPos());
-						camera.SetYawAndPitch(0, 0);
-						camera.SetCamTarget(camera.GetCamOriginalTarget());
-						
-					}
-					if (kb.F1) {
-						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
 
-						float hyp = sqrt((pow(g_heightmap.imageWidth /2,2)+ pow(g_heightmap.imageHeight / 2, 2)) );
+						if (kb.Escape) {
+							camera.SetCamPos(camera.GetCamOriginalPos());
+							camera.SetYawAndPitch(0, 0);
+							camera.SetCamTarget(camera.GetCamOriginalTarget());
 
-						float angel = ((g_heightmap.imageWidth / 2) / hyp);
-						camera.SetYawAndPitch(XM_PI*angel, 0);
-					}
-					if (kb.F2) {
-						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-						
+						}
+						if (kb.F1) {
+							camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
 
-						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-						float angel = ((g_heightmap.imageWidth / 2) / hyp)+0.5;
-						//angel = 0.0f;
-						camera.SetYawAndPitch(XM_PI*angel, 0);
-					}
-					if (kb.F3) {
-						camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-					
-						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+							float angel = ((g_heightmap.imageWidth / 2) / hyp);
+							camera.SetYawAndPitch(XM_PI*angel, 0);
+						}
+						if (kb.F2) {
+							camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
 
-						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
 
-						camera.SetYawAndPitch(XM_PI*angel, 0);
-					}
-					if (kb.F4) {
-						camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-						
-						float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-						float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
-						camera.SetYawAndPitch(XM_PI*angel, 0);
-					}
+							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 0.5;
+							//angel = 0.0f;
+							camera.SetYawAndPitch(XM_PI*angel, 0);
+						}
+						if (kb.F3) {
+							camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
 
-					if (kb.O) {
-						freeFlight = true;
-					}
-					if (kb.P) {
-						freeFlight = false;
-					}
+							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+
+							camera.SetYawAndPitch(XM_PI*angel, 0);
+						}
+						if (kb.F4) {
+							camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+
+							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
+							camera.SetYawAndPitch(XM_PI*angel, 0);
+						}
+
+						if (kb.O) {
+							freeFlight = true;
+						}
+						if (kb.P) {
+							freeFlight = false;
+						}
 
 					}
 
@@ -521,7 +523,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						//Walking on terrain
 						if (!freeFlight) {
 							Vector4 CameraPos = camera.GetCamPos();
-							
+
 
 							//TEST byte ordningen så det liknar en graf.
 
@@ -543,16 +545,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 								if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
 							}
 
-							nRoundedPos.x += g_heightmap.imageWidth/2; 
-							nRoundedPos.y += g_heightmap.imageHeight/2;
+							nRoundedPos.x += g_heightmap.imageWidth / 2;
+							nRoundedPos.y += g_heightmap.imageHeight / 2;
 
 							//Avrundar så ingen ogiltig arrayplats nåss
 							if (nRoundedPos.x < 0) nRoundedPos.x = 0;
-								if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
+							if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
 
-								if (nRoundedPos.y < 0) nRoundedPos.y = 0;
-								if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
-							
+							if (nRoundedPos.y < 0) nRoundedPos.y = 0;
+							if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
+
 
 							int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
 							float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
