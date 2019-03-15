@@ -1,5 +1,6 @@
 #include "Global.h"
 
+
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
 

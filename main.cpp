@@ -235,10 +235,36 @@ void RenderBuffers(float notToRender) {
 	//Set object shader options
 	SetDeferredShaders();
 
+	WorldSpace copies[2];
+	copies[0].offset_x = 0; copies[0].offset_y = 30; copies[0].offset_z = 10;
+
+	copies[1].offset_x = 0; copies[1].offset_y = 40; copies[1].offset_z = 10;
+
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
+	
+		
 
-		if (notToRender == i)
+		if (0 == i )
+		{
+			setWorldSpace({ 0.0f,0.0f,0.0f,copies[0].offset_x,copies[0].offset_y,copies[0].offset_z,0.0f,0.0f,0.0f });
+			updateCameraWorldViewProjection();
+			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+			//set object texture
+			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+
+			//Render objects
+			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+			gDeviceContext->Draw(gnrOfVert[i], 0);
+
+			setWorldSpace({ 0.0f,0.0f,0.0f,copies[1].offset_x,copies[1].offset_y,copies[1].offset_z,0.0f,0.0f,0.0f });
+			updateCameraWorldViewProjection();
+			//Render objects
+			gDeviceContext->Draw(gnrOfVert[i], 0);
+			
+		}
+		else
 		{
 			//set world space for object and update wvp matrix
 			//set specular for object
@@ -355,7 +381,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		ShowWindow(wndHandle, nCmdShow);
 
+		Frustum camFrustum(&camera);
+
 		bool freeFlight = false;
+
+		
+
+		bool culling = false;
 
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -368,8 +400,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				//float DontRender[6] = {-1};
 				float DontRender = -1;
-
 				//FREE FLIGHT WITH O key
 				//HORIZONTAL movement with P 
 
@@ -401,6 +433,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					auto kb = m_keyboard->GetState();
 					//SHORT COMMANDS
 					{
+
+						//if()
 
 					
 					if (kb.Escape) {
@@ -560,18 +594,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 							
 
 							int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
-							float newHeight = (g_heightmap.verticesPos[index].y + 1.5f);
+							float newHeight = (g_heightmap.verticesPos[index].y + WALKING_HEIGHT);
 
 							//ställer pitch, yaw, ny höjd 
 							camera.SetCameraHeight(newHeight);
 
-							//frustumCamera.calculateFrustum();
+							//camFrustum.calculateFrustum(FOV,W_WIDTH,W_HEIGHT);
 
-							/*if(frustumCamera.pointInFrustum({ 0.0f, 20.0f, 0.0f, 0.0f })!=0 )
-							{
-								DontRender = 0;
-							}*/
-						
+							//if(camFrustum.pointInFrustum({ 5.0f, 25.0f, 5.0f, 0.0f })!=0 )
+							//{
+							//	//LOOKING AT MARS REMOVES FISH
+							//	DontRender = 0;
+							//}
 						}
 
 					}
@@ -581,7 +615,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				SetViewport();
 
-				RenderBuffers(-1);
+				RenderBuffers(0);
 
 				RenderLights();
 

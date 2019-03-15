@@ -4,6 +4,7 @@
 
 void Quadtree::Divide()
 {
+
 }
 
 Quadtree::Quadtree(int mapWidth, int mapHeight)

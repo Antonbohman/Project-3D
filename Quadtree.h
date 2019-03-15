@@ -13,6 +13,7 @@ class Quadtree
 	int mapHeight;
 
 	unsigned int content;
+
 	struct Quad
 	{
 		Vector2 Quadrant[4];

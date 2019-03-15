@@ -1,10 +1,10 @@
 #include "Frustum.h"
-
+#include "Global.h"
 
 Frustum::Frustum()
 {
-	/*this->frustumNearDist = PROJECTION_NEAR_Z;
-	this->frustumFarDist = PROJECTION_FAR_Z;*/
+	this->frustumNearDist = PROJECTION_NEAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z;
 	
 	cameraReference = nullptr;
 }
@@ -16,8 +16,8 @@ Frustum::~Frustum()
 
 Frustum::Frustum(Camera * camera)
 {
-	/*this->frustumNearDist = PROJECTION_NEAR_Z;
-	this->frustumFarDist = PROJECTION_FAR_Z;*/
+	this->frustumNearDist = PROJECTION_NEAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z;
 	cameraReference = camera;
 }
 
@@ -104,21 +104,21 @@ void Frustum::GiveCameraReference(Camera * theCamera)
 	cameraReference = theCamera;
 }
 
-void Frustum::calculateFrustum(/*float FOV, float W_WIDTH, float W_HEIGHT*/)
+void Frustum::calculateFrustum(float fov, float windowsWidth, float windowHeight)
 {
 	//NEAR H / W
-	int ratio = (W_WIDTH / W_HEIGHT);
-	this->frustumHightNear = 2 * tan(FOV / 2)* frustumNearDist;
+	float ratio = (windowsWidth / windowHeight);
+	this->frustumHightNear = 2 * tan(fov / 2)* frustumNearDist;
 	this->frustumWidthNear = frustumHightNear * /*ratioWindow*/ ratio;
 	//FAR H / W
-	this->frustumHightFar = 2 * tan(FOV / 2)* frustumFarDist;
+	this->frustumHightFar = 2 * tan(fov/ 2)* frustumFarDist;
 	this->frustumWidthFar = frustumHightFar * ratio;
 
 	Vector4 tempUp = cameraReference->GetCamUp();
 	Vector4 tempRight = cameraReference->GetCamRight();
 	Vector4 verticalEdgeFar = (tempUp*(frustumHightFar / 2));
 	Vector4 horizontalEdgeFar = ((tempRight *(frustumWidthFar / 2)));
-	Vector4 verticalEgeNear = (tempUp* (frustumHightNear / 2));
+	Vector4 verticalEdgeNear = (tempUp* (frustumHightNear / 2));
 	Vector4 horizontalEdgeNear = (tempRight *(frustumWidthNear / 2));
 
 	this->frustumFarCenter = cameraReference->GetCamPos() + cameraReference->GetCameraNormal() * frustumFarDist;
@@ -132,10 +132,10 @@ void Frustum::calculateFrustum(/*float FOV, float W_WIDTH, float W_HEIGHT*/)
 
 	this->frustumNearCenter = cameraReference->GetCamPos()+ cameraReference->GetCameraNormal() * frustumNearDist;
 
-	this->frustNtl = frustumNearCenter + verticalEgeNear - horizontalEdgeNear;
-	this->frustNtr = frustumNearCenter + verticalEgeNear + horizontalEdgeNear;
-	this->frustNbl = frustumNearCenter - verticalEgeNear - horizontalEdgeNear;
-	this->frustNbr = frustumNearCenter - verticalEgeNear + horizontalEdgeNear;
+	this->frustNtl = frustumNearCenter + verticalEdgeNear - horizontalEdgeNear;
+	this->frustNtr = frustumNearCenter + verticalEdgeNear + horizontalEdgeNear;
+	this->frustNbl = frustumNearCenter - verticalEdgeNear - horizontalEdgeNear;
+	this->frustNbr = frustumNearCenter - verticalEdgeNear + horizontalEdgeNear;
 
 	//PLANE DEFFINITION
 

@@ -4,7 +4,7 @@
 //#include <DirectXMath.h>
 
 #include "Camera.h"
-#include "Global.h"
+
 
 class Frustum {
 private:
@@ -14,8 +14,8 @@ private:
 	enum InsideFrustum { OUTSIDE, INTERSECT, INSIDE };
 	
 	//Frustum data Accelerator
-	float frustumNearDist=5;
-	float frustumFarDist=200;
+	float frustumNearDist;
+	float frustumFarDist;
 
 	float frustumHightNear;
 	float frustumWidthNear;
@@ -48,7 +48,6 @@ private:
 
 	struct FrustumPlanes
 	{
-	
 		Vector4 normal;
 		Vector4* pointInPlane;
 
@@ -72,7 +71,7 @@ public:
 
 	//int isInFront(Vector3 point);
 
-	void calculateFrustum(/*float FOV, float W_WIDTH, float W_HEIGHT*/);
+	void calculateFrustum(float fov, float windowsWidth, float windowHeight);
 
 	int pointInFrustum(Vector4 point);
 	//SPHERE FOR NOW 
