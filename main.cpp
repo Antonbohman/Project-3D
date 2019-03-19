@@ -135,7 +135,36 @@ void createBlendState() {
 
 	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
 }
-void SetViewport() {
+
+void createViewport() {
+	svp[0].Width = (float)W_WIDTH / 2;
+	svp[0].Height = (float)W_HEIGHT / 2;
+	svp[0].MinDepth = 0.0f;
+	svp[0].MaxDepth = 1.0f;
+	svp[0].TopLeftX = 0;
+	svp[0].TopLeftY = 0;
+
+	svp[1].Width = (float)W_WIDTH / 2;
+	svp[1].Height = (float)W_HEIGHT / 2;
+	svp[1].MinDepth = 0.0f;
+	svp[1].MaxDepth = 1.0f;
+	svp[1].TopLeftX = (float)W_WIDTH / 2;
+	svp[1].TopLeftY = 0;
+
+	svp[2].Width = (float)W_WIDTH / 2;
+	svp[2].Height = (float)W_HEIGHT / 2;
+	svp[2].MinDepth = 0.0f;
+	svp[2].MaxDepth = 1.0f;
+	svp[2].TopLeftX = 0;
+	svp[2].TopLeftY = (float)W_HEIGHT / 2;;
+
+	svp[3].Width = (float)W_WIDTH / 2;
+	svp[3].Height = (float)W_HEIGHT / 2;
+	svp[3].MinDepth = 0.0f;
+	svp[3].MaxDepth = 1.0f;
+	svp[3].TopLeftX = (float)W_WIDTH / 2;
+	svp[3].TopLeftY = (float)W_HEIGHT / 2;;
+
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
 		vp->Width = (float)W_WIDTH;
@@ -145,8 +174,53 @@ void SetViewport() {
 		vp->TopLeftX = 0;
 		vp->TopLeftY = 0;
 	}
+}
 
-	gDeviceContext->RSSetViewports(1, vp);
+void SetViewport() {
+	if (renderOpt & RENDER_DOUBLE_VIEWPORT) {
+		gDeviceContext->RSSetViewports(4, svp);
+	} else {
+		gDeviceContext->RSSetViewports(1, vp);
+	}
+}
+
+void RenderWireframe() {
+	// clear the back buffer to a black
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	setWireframeShaders();
+
+	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
+	
+	// make sure our depth buffer is cleared to black each time we render
+	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+
+	updateCameraValues();
+	setCameraViewProjectionSpace();
+
+	//set world space for height map and update wvp matrix
+	//set specular for height map
+	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+	updateCameraWorldViewProjection();
+
+	//Render heightmap
+	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
+	gDeviceContext->Draw(nrOfHMVert, 0);
+
+	for (int i = 0; i < nrOfVertexBuffers; i++) {
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		updateCameraWorldViewProjection();
+
+		//Render objects
+		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+		gDeviceContext->Draw(gnrOfVert[i], 0);
+	}
+	
+	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
 void RenderShadowMaps() {
@@ -320,6 +394,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		createBlendState();
 
+		createViewport();
 
 		CreateDeferredQuad();
 
@@ -351,7 +426,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		ShowWindow(wndHandle, nCmdShow);
 
-		bool freeFlight = false;
+		bool freeFlight = true;
 
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -562,13 +637,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 				}
 
-				RenderShadowMaps();
+				if (renderOpt & RENDER_WIREFRAME) {
+					SetViewport();
 
-				SetViewport();
+					RenderWireframe();
+				} else {
+					RenderShadowMaps();
 
-				RenderBuffers();
+					SetViewport();
 
-				RenderLights();
+					RenderBuffers();
+
+					RenderLights();
+				}
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
@@ -841,6 +922,32 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 		}
 
 		pDepthTexture->Release();
+
+		if (renderOpt & RENDER_WIREFRAME) {
+			D3D11_RASTERIZER_DESC rastDesc;
+			ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+			rastDesc.FillMode = D3D11_FILL_WIREFRAME;
+			rastDesc.CullMode = D3D11_CULL_BACK;
+			rastDesc.FrontCounterClockwise = false;
+			rastDesc.DepthBias = 0;
+			rastDesc.DepthBiasClamp = 0.0f;
+			rastDesc.SlopeScaledDepthBias = 0.0f;
+			rastDesc.DepthClipEnable = true;
+			rastDesc.ScissorEnable = false;
+			rastDesc.MultisampleEnable = false;
+			rastDesc.AntialiasedLineEnable = false;
+
+			ID3D11RasterizerState* gRasterizerState;
+
+			hr = gDevice->CreateRasterizerState(
+				&rastDesc,
+				&gRasterizerState
+			);
+
+			gDeviceContext->RSSetState(gRasterizerState);
+		}
+
 	}
 
 	return hr;

@@ -198,6 +198,8 @@ ID3D11ShaderResourceView* LightSource::getShadowMap() const {
 XMMATRIX LightSource::getView(int index) const {
 	XMMATRIX view;
 
+	//fix position for L_DIRECTIONAL to place itself in front of camera always instead
+
 	if (data.type == L_SPOT) {
 		view = XMMatrixLookAtLH(
 			data.position,

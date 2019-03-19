@@ -31,12 +31,25 @@ using namespace DirectX;
 #define VERTICES 6
 
 // light types
-#define L_POINT 0
-#define L_SPOT 1
-#define L_DIRECTIONAL 2
+#define L_POINT			0
+#define L_SPOT			1
+#define L_DIRECTIONAL	2
 
 // define number of layers of g-buffer used in rendering
 #define G_BUFFER 4
+
+
+
+///////////////////
+// Enums         //
+///////////////////
+
+// render types
+typedef enum RenderFlags {
+	RENDER_DEFAULT = 0x00000000U,
+	RENDER_DOUBLE_VIEWPORT = 0x00000001U,
+	RENDER_WIREFRAME = 0x00000010U,
+} RenderFlags;
 
 
 
@@ -116,12 +129,18 @@ struct WorldSpace {
 	float scale_z;
 };
 
+
+
 /////////////////////
 // Variables       //
 /////////////////////
 
+// rendering options
+extern RenderFlags renderOpt;
+
 // viewport
 extern D3D11_VIEWPORT* vp;
+extern D3D11_VIEWPORT svp[4];
 
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
@@ -164,6 +183,7 @@ extern ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
+extern ID3D11PixelShader* gWirePixelShader;
 extern ID3D11VertexShader* gShadowVertexShader;
 extern ID3D11GeometryShader* gShadowGeometryShader;
 extern ID3D11PixelShader* gShadowPixelShader;

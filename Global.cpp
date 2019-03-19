@@ -1,7 +1,11 @@
 #include "Global.h"
 
+// rendering options
+RenderFlags renderOpt = RENDER_WIREFRAME;
+
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
+D3D11_VIEWPORT svp[4];
 
 //Viewspace
 //WorldSpace
@@ -53,6 +57,7 @@ ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
+ID3D11PixelShader* gWirePixelShader = nullptr;
 ID3D11VertexShader* gShadowVertexShader = nullptr;
 ID3D11GeometryShader* gShadowGeometryShader = nullptr;
 ID3D11PixelShader* gShadowPixelShader = nullptr;
