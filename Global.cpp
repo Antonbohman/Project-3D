@@ -1,15 +1,11 @@
 #include "Global.h"
 
 // rendering options
-RenderFlags renderOpt = RENDER_WIREFRAME;
+ULONG renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT;
 
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
 D3D11_VIEWPORT svp[4];
-
-//Viewspace
-//WorldSpace
-//ProjectionSpace
 
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
@@ -103,8 +99,6 @@ XMMATRIX View;
 XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
 
-
-
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
@@ -125,3 +119,49 @@ ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, null
 ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
 
 float rotationTest = 0;
+
+
+
+// terminate function for globals
+void DestroyGlobals() {
+	delete vp;
+
+	delete[] Lights;
+
+	//gVertexBuffer->Release();
+	gDeferredQuadBuffer->Release();
+
+	gLightDataBuffer->Release();
+
+	_aligned_free(gAmbientSpecularData);
+	gAmbientSpecularBuffer->Release();
+
+	_aligned_free(gCameraMatrix);
+	gCameraMatrixBuffer->Release();
+
+	_aligned_free(gWorldMatrix);
+	gWorldMatrixBuffer->Release();
+
+	_aligned_free(gObjectMatrix);
+	gObjectMatrixBuffer->Release();
+
+	gDepth->Release();
+
+	for (int i = 0; i < G_BUFFER; i++) {
+		if (gRenderTargetViewArray[i]) {
+			gRenderTargetViewArray[i]->Release();
+		}
+
+		if (gShaderResourceViewArray[i]) {
+			gShaderResourceViewArray[i]->Release();
+		}
+
+		if (gRenderTargetTextureArray[i]) {
+			gRenderTargetTextureArray[i]->Release();
+		}
+	}
+
+	gSwapChain->Release();
+	gDevice->Release();
+	gDeviceContext->Release();
+}

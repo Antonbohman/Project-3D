@@ -49,11 +49,13 @@ using namespace DirectX;
 ///////////////////
 
 // render types
-typedef enum RenderFlags {
-	RENDER_DEFAULT = 0x00000000U,
-	RENDER_DOUBLE_VIEWPORT = 0x00000001U,
-	RENDER_WIREFRAME = 0x00000010U,
-} RenderFlags;
+enum RenderFlags {
+	RENDER_DEFAULT = 0x00000000UL,
+	RENDER_DOUBLE_VIEWPORT = 0x00000001UL,
+	RENDER_WIREFRAME = 0x00000010UL,
+	RENDER_FREE_FLIGHT = 0x00000100UL,
+	RENDER_CULLING = 0x00001000UL,
+};
 
 
 
@@ -140,7 +142,7 @@ struct WorldSpace {
 /////////////////////
 
 // rendering options
-extern RenderFlags renderOpt;
+extern ULONG renderOpt;
 
 // viewport
 extern D3D11_VIEWPORT* vp;
@@ -254,3 +256,11 @@ extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
 extern ID3D11Resource* gMapTextureResource[4];
 
 extern float rotationTest;
+
+
+
+///////////////////////
+// Garbage Collector //
+///////////////////////
+
+void DestroyGlobals();
