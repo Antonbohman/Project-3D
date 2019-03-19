@@ -34,6 +34,8 @@ ID3D11BlendState* gBlendStateLight = nullptr;
 //TriangleVertex* gObject = nullptr;
 int gnrOfVert[5];
 ID3D11Buffer *ppVertexBuffers[5];
+XMFLOAT3 ObjectReflection[5];
+
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
 int nrOfVertexBuffers;
@@ -93,11 +95,15 @@ int nrOfLights = 0;
 Camera camera({ +0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
+//Frustum frustumCamera(&camera);
+
 //World/View/Projection
 XMMATRIX World;
 XMMATRIX View;
 XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
+
+
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -117,3 +123,5 @@ ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 
 ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
 ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
+
+float rotationTest = 0;

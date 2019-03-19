@@ -99,6 +99,7 @@
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="Quadtree.cpp" />
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="main.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="Loader.h" />
+    <ClInclude Include="Quadtree.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="LightSource.h" />
   </ItemGroup>

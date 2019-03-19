@@ -1,3 +1,4 @@
+
 #include "Loader.h"
 #include "Global.h"
 
@@ -30,7 +31,6 @@ void createVertexBuffer(int nrOfVertices, TriangleVertex ArrOfVert[]) {
 
 void loadHeightMap(char* filename) //24 bit colour depth
 {
-
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -197,11 +197,16 @@ void loadHeightMap(char* filename) //24 bit colour depth
 		}
 	}
 
-	//delete[] map;
+	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Lava16x16.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
+	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Sand16x16.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
+	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass16x16.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
+	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Stone16x16.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
+
 	delete[] bitmapImage;
 }
 
-void loadMultiTextureMap(char* filename) {
+void loadMultiTextureMap(char* filename)
+{
 	FILE *fileptr; //filepointer
 	BITMAPFILEHEADER bitmapFileHeader; //struct containing file information
 	BITMAPINFOHEADER bitmapInfoHeader; //struct contatining image information
@@ -359,6 +364,9 @@ void loadMultiTextureMap(char* filename) {
 	// create a Vertex Buffer
 	HRESULT error;
 	error = gDevice->CreateBuffer(&bufferDesc, &data, &heightmapBuffer);
+	delete[] g_map;
+	delete[] bitmapImage;
+	delete[] RGB;
 }
 
 void LoadObjectFile(char* filename, XMINT3 offset)
@@ -386,6 +394,8 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 	XMFLOAT3* arrOfNormals = nullptr; //NormalCoordinates
 	int nrOfNormals = 0;
 	int normArrSize = 0;
+
+	char materialPath[25] = "Objects/OBJs/";
 
 	int nrOfFaces = 0;
 
@@ -472,11 +482,14 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 				arrOfNormals[nrOfNormals] = vertex;
 				nrOfNormals++;
 			}
-			else if (strcmp(line, "usemtl") == 0)
+			else if (strcmp(line, "mtllib") == 0)
 			{
-				textureName = new char[30];
-				fscanf(fileptr, "%s", textureName);
-				int okok = 2;
+				char materialName[50];
+				fscanf(fileptr, "%s", materialName);
+				std::strcat(materialPath, materialName);
+
+				loadTexture(materialPath);
+
 			}
 			else if (strcmp(line, "f") == 0)
 			{
@@ -507,10 +520,6 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 					object[nrOfFaces + i].y = arrOfVertices[vertex[i].x - 1].y + offset.y;
 					object[nrOfFaces + i].z = arrOfVertices[vertex[i].x - 1].z + offset.z;
 
-					//object[nrOfVertices + i].x_n = arrOfNormals[vertex[i].y - 1].x;
-					//object[nrOfVertices + i].y_n = arrOfNormals[vertex[i].y - 1].y;
-					//object[nrOfVertices + i].z_n = arrOfNormals[vertex[i].y - 1].z;
-
 					object[nrOfFaces + i].u = arrOfTxtCord[vertex[i].y - 1].x;
 					object[nrOfFaces + i].v = arrOfTxtCord[vertex[i].y - 1].y;
 
@@ -530,11 +539,6 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 		objectArray[i] = object[i];
 	}
 
-	for (int i = 0; i < nrOfFaces; i++)
-	{
-		objectArray[i].y += 10;
-	}
-
 	createVertexBuffer(nrOfFaces, objectArray);
 
 	delete[] objectArray;
@@ -542,17 +546,55 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 	delete[] arrOfTxtCord;
 	delete[] arrOfNormals;
 	delete[] arrOfIndex;
+	delete object;
 }
 
-void loadTexture() {
-	HRESULT hr0 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Lava16x16.dds", &gMapTextureResource[0], &gMapTexturesSRV[0]);
-	HRESULT hr1 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Sand16x16.dds", &gMapTextureResource[1], &gMapTexturesSRV[1]);
-	HRESULT hr2 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass16x16.dds", &gMapTextureResource[2], &gMapTexturesSRV[2]);
-	HRESULT hr3 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Stone16x16.dds", &gMapTextureResource[3], &gMapTexturesSRV[3]);
+void loadTexture(const char* filepath)
+{
+	FILE* fileptr;
+	fileptr = fopen(filepath, "r");
+	if (fileptr == NULL)
+	{
+		return;
+	}
 
-	HRESULT hr4 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Fishy.dds", &gTexture2D[0], &gTextureSRV[0]);
-	HRESULT hr5 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Mars.dds", &gTexture2D[1], &gTextureSRV[1]);
-	HRESULT hr6 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Moon.dds", &gTexture2D[2], &gTextureSRV[2]);
-	HRESULT hr7 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/Grass.dds", &gTexture2D[3], &gTextureSRV[3]);
-	HRESULT hr8 = CreateDDSTextureFromFile(gDevice, L"Objects/Materials/trex.dds", &gTexture2D[4], &gTextureSRV[4]);
+	int loopControl = 1;
+	char line[128];
+
+	while (loopControl != EOF)
+	{
+		loopControl = fscanf(fileptr, "%s", line);
+		if (loopControl == EOF) {}
+		else
+		{
+			//if (strcmp(line, "Ka"))
+			//{
+			//	XMFLOAT3 vertex;
+			//	fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+			//}
+			//else if (strcmp(line, "Kd")){}
+			/*else */
+			if (strcmp(line, "Ks") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				ObjectReflection[nrOfVertexBuffers] = vertex;
+			}
+			else if (strcmp(line, "map_Kd") == 0)
+			{
+				char *pTexturePath = new char[50];
+				fscanf(fileptr, "%s", pTexturePath);
+
+				wchar_t wideChar[50];
+
+				std::mbstowcs(wideChar, pTexturePath, 50);
+
+				delete[] pTexturePath;
+
+				CreateDDSTextureFromFile(gDevice, wideChar, &gTexture2D[nrOfVertexBuffers], &gTextureSRV[nrOfVertexBuffers]);
+			}
+		}
+
+	}
+	fclose(fileptr);
 }

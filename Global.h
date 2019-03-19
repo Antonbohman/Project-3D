@@ -9,6 +9,8 @@
 
 #include "LightSource.h"
 #include "Camera.h"
+#include "Frustum.h"
+//#include "Frustum.h"
 
 using namespace DirectX;
 
@@ -20,11 +22,13 @@ using namespace DirectX;
 #define W_WIDTH 1280.0f
 #define W_HEIGHT 720.0f
 
+#define WALKING_HEIGHT 4
+
 //Fov (radians)
-#define FOV 0.45f//0.45f
+#define FOV 0.50f//0.45f
 
 // PROJECTION RANGE
-#define PROJECTION_NEAR_Z 0.1f
+#define PROJECTION_NEAR_Z 1.0f
 #define PROJECTION_FAR_Z 500.0f
 
 // define number of vertices used in rendering
@@ -161,10 +165,11 @@ extern ID3D11BlendState* gBlendStateLight;
 // a resource to store Vertices in the GPU
 extern int gnrOfVert[5];
 extern ID3D11Buffer*ppVertexBuffers[5];
+extern XMFLOAT3 ObjectReflection[5];
 extern ID3D11Buffer *heightmapBuffer;
 extern int nrOfHMVert;
 extern int nrOfVertexBuffers;
-extern char* textureName;
+//extern char* textureName;
 
 extern ID3D11Buffer* gDeferredQuadBuffer;
 
@@ -221,8 +226,13 @@ extern XMMATRIX View;
 extern XMMATRIX ViewRotated[5];
 extern XMMATRIX Projection;
 
-// CAMERAVIEW
+// CAMERAclass
 extern Camera camera;
+
+// FrustumOfCamera
+
+//extern Frustum frustumCamera;
+//extern Frustum frustumCamera;
 
 // keeping track of current rotation
 extern float rotation;
@@ -242,3 +252,5 @@ extern ID3D11Resource* gTexture2D[5];
 
 extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
 extern ID3D11Resource* gMapTextureResource[4];
+
+extern float rotationTest;
