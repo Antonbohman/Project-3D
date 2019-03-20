@@ -14,6 +14,7 @@ using namespace DirectX;
 HRESULT CreateShaders();
 void DestroyShaders();
 
+HRESULT CreateWireframePS();
 HRESULT CreateShadowVS();
 HRESULT CreateShadowGS();
 HRESULT CreateShadowPS();
@@ -25,6 +26,7 @@ HRESULT CreateDeferredCS();
 HRESULT CreateLightVS();
 HRESULT CreateLightPS();
 
+void setWireframeShaders();
 void setShadowShaders();
 void SetDeferredShaders();
 void SetBlendShaders();
