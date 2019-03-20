@@ -111,9 +111,10 @@ void CreateLigths() {
 	nrOfLights = 3;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_SPOT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[1] = LightSource(L_SPOT, 5, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[2] = LightSource(L_SPOT, 5, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[3] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, 0.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
@@ -178,7 +179,7 @@ void createViewport() {
 }
 
 void SetViewport(bool forceSingle) {
-	if (renderOpt & RENDER_DOUBLE_VIEWPORT && !forceSingle) {
+	if (renderOpt & RENDER_MULTI_VIEWPORT && !forceSingle) {
 		gDeviceContext->RSSetViewports(4, svp);
 	} else {
 		gDeviceContext->RSSetViewports(1, vp);
@@ -215,7 +216,8 @@ void RenderWireframe() {
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
-	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
@@ -240,6 +242,7 @@ void RenderWireframe() {
 	
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
 }
 
 void RenderShadowMaps() {
@@ -298,7 +301,8 @@ void RenderBuffers(float notToRender) {
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
-	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
 	//Set heightmap shader options
@@ -328,20 +332,16 @@ void RenderBuffers(float notToRender) {
 	//Set object shader options
 	SetDeferredShaders();
 
-	WorldSpace copies[2];
-	copies[0].offset_x = 0; copies[0].offset_y = 30; copies[0].offset_z = 10;
-
-	copies[1].offset_x = 0; copies[1].offset_y = 40; copies[1].offset_z = 10;
+	WorldSpace copies[2] = { 
+		{ 0.0f,0.0f,0.0f,0,30,10,3.0f,3.0f,3.0f },
+		{ 0.0f,0.0f,0.0f,0,40,10,1.0f,1.0f,1.0f },
+	};
 
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
-	
-		
-
 		if (0 == i )
 		{
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[0].offset_x,copies[0].offset_y,copies[0].offset_z,3.0f,3.0f,3.0f });
-			
+			setWorldSpace(copies[0]);
 			updateCameraWorldViewProjection();
 			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
@@ -352,11 +352,11 @@ void RenderBuffers(float notToRender) {
 			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
 
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[1].offset_x,copies[1].offset_y,copies[1].offset_z,1.0f,1.0f,1.0f });
+			setWorldSpace(copies[1]);
 			updateCameraWorldViewProjection();
+
 			//Render objects
 			gDeviceContext->Draw(gnrOfVert[i], 0);
-			
 		}
 		else
 		{
@@ -382,6 +382,7 @@ void RenderBuffers(float notToRender) {
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 }
 
@@ -397,8 +398,9 @@ void RenderLights() {
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
 	//bind our constant buffers to shaders
-	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
-	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->PSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
+	gDeviceContext->PSSetConstantBuffers(2, 1, &gLightDataBuffer);
 
 	//bind our g-buffer textures to pixelshader
 	gDeviceContext->PSSetShaderResources(0, 1, &gShaderResourceViewArray[0]);
@@ -420,6 +422,7 @@ void RenderLights() {
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
+	gDeviceContext->PSSetConstantBuffers(2, 1, &nullCB);
 }
 
 void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
@@ -682,6 +685,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				start = high_resolution_clock::now();
 
 				updateKeyAndMouseInput(&freeFlight,&culling,&camFrustum, delta);
+
+				updateRenderingOptions();
 
 				if (renderOpt & RENDER_WIREFRAME) {
 					SetViewport(false);

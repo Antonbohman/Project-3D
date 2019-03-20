@@ -28,3 +28,5 @@ void updateLightViewProjection(LightSource* light);
 void updateCameraValues();
 
 void setSpecularValues(XMVECTOR specular);
+
+void updateRenderingOptions();

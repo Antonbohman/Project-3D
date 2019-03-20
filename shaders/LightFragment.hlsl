@@ -1,12 +1,18 @@
+// light types
 #define TYPE_POINT 0
 #define TYPE_SPOT 1
 #define TYPE_DIRECTIONAL 2
 
-#define RENDER_NORMAL 0
-#define RENDER_DIFFUSE 1
-#define RENDER_SPECULAR 2
-#define RENDER_POSITON 3
-#define RENDER_SHADOWS 4
+// render modes
+#define RENDER_DEFAULT			0 //default output, everything on
+#define RENDER_DIFFUSE			1 //only outputs diffuse albedo
+#define RENDER_SPECULAR			2 //only outputs specular albedo
+#define RENDER_NORMALS		    3 //only outputs normals
+#define RENDER_POSITIONS		4 //only outputs position
+#define RENDER_DEPTH			5 //only outputs depth buffer
+#define RENDER_NO_SHADOWS		6 //as default but without shadows
+#define RENDER_NO_SPECULAR		7 //as defaults but without specular
+#define RENDER_NO_LIGHTS		8 //as default but without shadows,specular and lights
 
 struct PS_IN
 {
@@ -22,13 +28,19 @@ Texture2D PositionTexture : register(t3);
 
 SamplerState Sampling : register(s0);
 
-cbuffer PS_CB_CAMERA : register(b0)
+cbuffer GS_CB_FLAGS : register(b0)
+{
+    bool SplitView;
+    uint RenderMode;
+};
+
+cbuffer PS_CB_CAMERA : register(b1)
 {
     float4 CameraOrigin;
     float4 CameraFocus;
 };
 
-cbuffer PS_CB_LIGHT : register(b1)
+cbuffer PS_CB_LIGHT : register(b2)
 {
     int LightType;
     int AmbientPower;
@@ -63,7 +75,31 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float3 lightVector = 0;
     float attenuation = 1.0f;
     
-    if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT) 
+    switch (RenderMode)
+    {
+        case RENDER_DIFFUSE:
+            //Render diffuse albedo
+            return float4(diffuseAlbedo.rgb, 1);
+            break;
+        case RENDER_SPECULAR:
+            //Render specular albedo
+            return float4(specularAlbedo.rgb, 1);
+            break;
+        case RENDER_NORMALS:
+            //Renders normals
+            return float4(normal.rgb, 1);
+            break;
+        case RENDER_POSITIONS:
+            //Render positions
+            return float4(position.rgb, 1);
+            break;
+        case RENDER_DEPTH:
+            //Renders depth (TODO)
+            //return float4(depth.rgb, 1);
+            break;
+    }
+
+    if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT)
     {
         lightVector = LightPos.xyz - position.xyz;
 
@@ -83,7 +119,7 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //calculate angle between light source direction and normal 
     float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
 
-    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.10f, 1.0f); //F ökade ambiance för han såg inget
+    float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
@@ -98,13 +134,4 @@ float4 PS_light(PS_IN input) : SV_TARGET
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + ((diffuseColour /*+ specularColour*/) * attenuation), 0.0f, 1.0f);
-
-    //Renders normals
-    //return float4(normal.rgb, 1);
-
-    //Render positions
-    //return float4(position.rgb, 1);
-
-    //Render diffuse albedo
-    //return float4(diffuseAlbedo.rgb, 1);
 }

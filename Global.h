@@ -42,6 +42,17 @@ using namespace DirectX;
 #define L_SPOT			1
 #define L_DIRECTIONAL	2
 
+// render modes
+#define R_DEFAULT			0 //default output, everything on
+#define R_DIFFUSE			1 //only outputs diffuse albedo
+#define R_SPECULAR			2 //only outputs specular albedo
+#define R_NORMALS			3 //only outputs normals
+#define R_POSITIONS			4 //only outputs position
+#define R_DEPTH				5 //only outputs depth buffer
+#define R_NO_SHADOWS		6 //as default but without shadows
+#define R_NO_SPECULAR		7 //as defaults but without specular
+#define R_NO_LIGHTS			8 //as default but without shadows,specular and lights
+
 // define number of layers of g-buffer used in rendering
 #define G_BUFFER 4
 
@@ -54,7 +65,7 @@ using namespace DirectX;
 // render types
 enum RenderFlags {
 	RENDER_DEFAULT = 0x00000000UL,
-	RENDER_DOUBLE_VIEWPORT = 0x00000001UL,
+	RENDER_MULTI_VIEWPORT = 0x00000001UL,
 	RENDER_WIREFRAME = 0x00000010UL,
 	RENDER_FREE_FLIGHT = 0x00000100UL,
 	RENDER_CULLING = 0x00001000UL,
@@ -65,6 +76,13 @@ enum RenderFlags {
 ///////////////////
 // Structs       //
 ///////////////////
+
+// resource storing camera source
+struct RenderOptions {
+	bool splitView;
+	UINT renderMode;
+	float padding1,padding2;
+};
 
 // heightmap
 struct Heightmap {
@@ -147,6 +165,7 @@ struct WorldSpace {
 
 // rendering options
 extern ULONG renderOpt;
+extern UINT renderMode;
 
 // viewport
 extern D3D11_VIEWPORT* vp;
@@ -205,6 +224,9 @@ extern ID3D11PixelShader* gBlendShader;
 extern ID3D11ComputeShader* gComputeShader;
 extern ID3D11VertexShader* gLightVertexShader;
 extern ID3D11PixelShader* gLightPixelShader;
+
+extern RenderOptions* gRenderingOptionsData;
+extern ID3D11Buffer* gRenderingOptionsBuffer;
 
 extern AmbientSpecular* gAmbientSpecularData;
 extern ID3D11Buffer* gAmbientSpecularBuffer;

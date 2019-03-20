@@ -1,7 +1,8 @@
 #include "Global.h"
 
 // rendering options
-ULONG renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT;
+ULONG renderOpt = RENDER_FREE_FLIGHT;
+UINT renderMode = R_DEFAULT;
 
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
@@ -66,6 +67,9 @@ ID3D11PixelShader* gBlendShader = nullptr;
 ID3D11ComputeShader* gComputeShader = nullptr;
 ID3D11VertexShader* gLightVertexShader = nullptr;
 ID3D11PixelShader* gLightPixelShader = nullptr;
+
+RenderOptions* gRenderingOptionsData = nullptr;
+ID3D11Buffer* gRenderingOptionsBuffer = nullptr;
 
 AmbientSpecular* gAmbientSpecularData = nullptr;
 ID3D11Buffer* gAmbientSpecularBuffer = nullptr;
@@ -132,6 +136,9 @@ void DestroyGlobals() {
 	gDeferredQuadBuffer->Release();
 
 	gLightDataBuffer->Release();
+
+	_aligned_free(gRenderingOptionsData);
+	gRenderingOptionsBuffer->Release();
 
 	_aligned_free(gAmbientSpecularData);
 	gAmbientSpecularBuffer->Release();

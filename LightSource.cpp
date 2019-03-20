@@ -219,7 +219,6 @@ XMMATRIX LightSource::getView(int index) const {
 			);
 			break;
 		case 1:
-
 			view = XMMatrixLookAtLH(
 				data.position,
 				XMVectorSet(direction->x-1, direction->y, direction->z, 0.0f),
