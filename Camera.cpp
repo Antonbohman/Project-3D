@@ -159,7 +159,7 @@ void Camera::MoveCamTarget(Vector4 move)
 void Camera::UpdateCamera(Vector3 movement, bool speedMultiplier, double time)
 {
 	//ROTATION OF CAMERA
-	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->pitch, this->yaw, 0);
+	//this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->pitch, this->yaw, 0);
 	//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
 	//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
 
