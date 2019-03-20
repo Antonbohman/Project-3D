@@ -177,8 +177,8 @@ void createViewport() {
 	}
 }
 
-void SetViewport() {
-	if (renderOpt & RENDER_DOUBLE_VIEWPORT) {
+void SetViewport(bool forceSingle) {
+	if (renderOpt & RENDER_DOUBLE_VIEWPORT && !forceSingle) {
 		gDeviceContext->RSSetViewports(4, svp);
 	} else {
 		gDeviceContext->RSSetViewports(1, vp);
@@ -680,15 +680,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				updateKeyAndMouseInput(&camFrustum, delta);
 
 				if (renderOpt & RENDER_WIREFRAME) {
-					SetViewport();
+					SetViewport(false);
 
 					RenderWireframe();
 				} else {
 					RenderShadowMaps();
 
-					SetViewport();
+					SetViewport(false);
 
 					RenderBuffers(0);
+
+					SetViewport(true);
 
 					RenderLights();
 				}
@@ -954,4 +956,3 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 
 	return hr;
 }
-

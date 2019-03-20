@@ -88,7 +88,7 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ +0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
 //Frustum frustumCamera(&camera);

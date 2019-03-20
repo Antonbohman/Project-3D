@@ -98,6 +98,7 @@ struct LightVP {
 struct CameraWVP {
 	XMMATRIX World;
 	XMMATRIX ViewProjection;
+	XMMATRIX RotatedViewProjection[3];
 };
 
 // basic vertex struct µ

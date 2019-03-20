@@ -1,8 +1,8 @@
 #include "LightSource.h"
 
 LightSource::LightSource(const int type, const int ambient, const XMVECTOR position,
-	const XMVECTOR direction, const XMVECTOR colour,
-	const float intensity, const float lightFocus) {
+						 const XMVECTOR direction, const XMVECTOR colour,
+						 const float intensity, const float lightFocus) {
 	data.type = type;
 	data.ambient = ambient;
 	data.position = position;
