@@ -258,7 +258,8 @@ extern ID3D11Resource* gMapTextureResource[4];
 
 extern float rotationTest;
 
-
+extern ID3D11Texture2D* gBlurTexture;
+extern ID3D11ShaderResourceView* gBlurShaderResource;
 
 ///////////////////////
 // Garbage Collector //

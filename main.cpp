@@ -420,9 +420,17 @@ void RenderLights() {
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
+
+	//gDeviceContext->CopyResource(gBlurShaderResource);
+
+	//pBackBuffer
+
+	gDeviceContext->CSSetShaderResources(0, 1, &gBlurShaderResource);
+	gDeviceContext->Dispatch(45, 45, 1);
 }
 
-void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) 
+{
 	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
 	bool culling = renderOpt & RENDER_CULLING;
 
@@ -814,6 +822,7 @@ HRESULT CreateRenderTargets() {
 
 	// use the back buffer address to create the render target
 	gDevice->CreateRenderTargetView(pBackBuffer, NULL, &gBackbufferRTV);
+	//gDevice->CreateShaderResourceView(pBackBuffer,,&gBlurShaderResource) // Nevermind this!
 	pBackBuffer->Release();
 
 	for (int i = 0; i < G_BUFFER; i++) {

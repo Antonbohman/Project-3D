@@ -14,7 +14,7 @@ HRESULT CreateShaders() {
 	if (FAILED(CreateDeferredPS())) return S_FALSE;
 	if (FAILED(CreateDeferredMTPS())) return S_FALSE;
 
-	//if (FAILED(CreateDeferredCS())) return S_FALSE;
+	if (FAILED(CreateDeferredCS())) return S_FALSE;
 
 	//create light shaders
 	if (FAILED(CreateLightVS())) return S_FALSE;
@@ -34,7 +34,7 @@ void DestroyShaders() {
 	gGeometryShader->Release();
 	gPixelShader->Release();
 	gBlendShader->Release();
-	//gComputeShader->Release();	
+	gComputeShader->Release();	
 
 	gLightVertexShader->Release();
 	gLightPixelShader->Release();
@@ -408,7 +408,7 @@ HRESULT CreateDeferredCS() {
 	ID3DBlob* pCS = nullptr;
 
 	HRESULT result = D3DCompileFromFile(
-		L"Compute.hlsl",   // filename
+		L"shaders/BlurShader.hlsl",   // filename
 		nullptr,		  // optional macros
 		nullptr,		  // optional include files
 		"CS_main",		  // entry point
@@ -429,12 +429,12 @@ HRESULT CreateDeferredCS() {
 		return result;
 	}
 
-	/*gDevice->CreateComputeShader(
+	gDevice->CreateComputeShader(
 		pCS->GetBufferPointer(),
 		pCS->GetBufferSize(),
 		nullptr,
-		&gPixelShader
-	);*/
+		&gComputeShader
+	);
 
 	if (errorBlob) errorBlob->Release();
 	pCS->Release();
@@ -542,7 +542,7 @@ void setWireframeShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gWirePixelShader, nullptr, 0);
-	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+	gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -559,7 +559,7 @@ void setShadowShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(gShadowGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gShadowPixelShader, nullptr, 0);
-	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+	gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -576,7 +576,7 @@ void SetDeferredShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gPixelShader, nullptr, 0);
-	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+	gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -593,7 +593,7 @@ void SetBlendShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
 	gDeviceContext->PSSetShader(gBlendShader, nullptr, 0);
-	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+	gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -613,7 +613,7 @@ void SetLightShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->PSSetShader(gLightPixelShader, nullptr, 0);
-	//gDeviceContext->CSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
