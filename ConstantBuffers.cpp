@@ -163,6 +163,52 @@ void setCameraViewProjectionSpace() {
 	);
 	View = XMMatrixTranspose(View);
 
+	if (renderOpt & RENDER_DOUBLE_VIEWPORT) {
+		/*XMFLOAT4 camVec;
+		XMFLOAT4 targVec;
+		XMVECTOR rotVec;
+
+		XMVECTOR g = camera.GetCamTarget();
+
+		XMVECTOR test = XMVectorMultiply(g, camera.GetCamPos());
+
+		XMStoreFloat4(&camVec, camera.GetCamPos());
+		XMStoreFloat4(&targVec, XMVector4Normalize(test));
+
+		float temp = targVec.x;
+		targVec.x = -targVec.y;
+		targVec.y = temp;
+
+		camVec.x += targVec.x;// * PROJECTION_FAR_Z;
+		camVec.y += targVec.y;// * PROJECTION_FAR_Z;
+
+		rotVec = XMLoadFloat4(&camVec);*/
+
+		XMVECTOR camVec = camera.GetCamTarget() - camera.GetCamPos();
+		
+		ViewRotated[0] = XMMatrixLookAtLH(
+			camera.GetCamPos(),
+			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(90)), 
+			camera.GetCamUp()
+		);
+		
+		ViewRotated[1] = XMMatrixLookAtLH(
+			camera.GetCamPos(),
+			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(180)),
+			camera.GetCamUp()
+		);
+
+		ViewRotated[2] = XMMatrixLookAtLH(
+			camera.GetCamPos(),
+			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(270)),
+			camera.GetCamUp()
+		);
+
+		for (int i = 0; i < 3; i++) {
+			ViewRotated[i] = XMMatrixTranspose(ViewRotated[i]);
+		}
+	}
+
 	Projection = XMMatrixPerspectiveFovLH(
 		(float)XM_PI*FOV,
 		(float)W_WIDTH / (float)W_HEIGHT,
@@ -189,6 +235,12 @@ void setLightViewProjectionSpace(LightSource* light) {
 void updateCameraWorldViewProjection() {
 	gWorldMatrix->World = World;
 	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
+
+	if (renderOpt & RENDER_DOUBLE_VIEWPORT) {
+		gWorldMatrix->RotatedViewProjection[0] = XMMatrixMultiply(Projection, ViewRotated[0]);
+		gWorldMatrix->RotatedViewProjection[1] = XMMatrixMultiply(Projection, ViewRotated[1]);
+		gWorldMatrix->RotatedViewProjection[2] = XMMatrixMultiply(Projection, ViewRotated[2]);
+	}
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory
 	D3D11_MAPPED_SUBRESOURCE mappedMemory;
