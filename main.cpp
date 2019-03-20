@@ -422,9 +422,8 @@ void RenderLights() {
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
-void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
-	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
-	bool culling = renderOpt & RENDER_CULLING;
+void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+
 
 	//float DontRender[6] = {-1};
 	float DontRender = -1;
@@ -501,11 +500,13 @@ void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
 			if (kb.O) {
-				freeFlight = true;
+				*freeFlight = true;
 			}
 			if (kb.P) {
-				freeFlight = false;
+				*freeFlight = false;
 			}
+
+			//BUTTON FOR CULLING
 		}
 
 		Vector3 moveInDepthCameraClass = Vector3::Zero;
@@ -521,7 +522,7 @@ void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 
 		//pineapple in a green pie
 		if (kb.W) {//FORWARD IN
 
-			if (freeFlight) {
+			if (*freeFlight) {
 				moveInDepthCameraClass += camera.GetCameraNormal();
 			} else {
 				moveInDepthCameraClass += camera.GetCamForward();
@@ -529,7 +530,7 @@ void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 
 
 		}
 		if (kb.S) { //BACK
-			if (freeFlight) {
+			if (*freeFlight) {
 				moveInDepthCameraClass -= camera.GetCameraNormal();
 			} else {
 				moveInDepthCameraClass -= camera.GetCamForward();
@@ -544,11 +545,11 @@ void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 
 			deltaChange.x -= 1.0f;
 		}
 		if (kb.Q) { //UP
-			if (freeFlight)
+			if (*freeFlight)
 				deltaChange.y += 1.0f;
 		}
 		if (kb.E) { //DOWN
-			if (freeFlight)
+			if (*freeFlight)
 				deltaChange.y -= 1.0f;
 		}
 
@@ -576,7 +577,7 @@ void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 
 			camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
 
 			//Walking on terrain
-			if (!freeFlight) {
+			if (!*freeFlight) {
 				Vector4 CameraPos = camera.GetCamPos();
 
 				//TEST byte ordningen så det liknar en graf.
@@ -634,6 +635,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
 	duration<double, std::ratio<1, 15>> delta;
 
+	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
+	bool culling = renderOpt & RENDER_CULLING;
+
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance);
 
@@ -677,7 +681,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				updateKeyAndMouseInput(&camFrustum, delta);
+				updateKeyAndMouseInput(&freeFlight,&culling,&camFrustum, delta);
 
 				if (renderOpt & RENDER_WIREFRAME) {
 					SetViewport(false);

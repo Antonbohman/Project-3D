@@ -164,31 +164,9 @@ void setCameraViewProjectionSpace() {
 	View = XMMatrixTranspose(View);
 
 	if (renderOpt & RENDER_DOUBLE_VIEWPORT) {
-		/*XMFLOAT4 camVec;
-		XMFLOAT4 targVec;
-		XMVECTOR rotVec;
-
-		XMVECTOR g = camera.GetCamTarget();
-
-		XMVECTOR test = XMVectorMultiply(g, camera.GetCamPos());
-
-		XMStoreFloat4(&camVec, camera.GetCamPos());
-		XMStoreFloat4(&targVec, XMVector4Normalize(test));
-
-		float temp = targVec.x;
-		targVec.x = -targVec.y;
-		targVec.y = temp;
-
-		camVec.x += targVec.x;// * PROJECTION_FAR_Z;
-		camVec.y += targVec.y;// * PROJECTION_FAR_Z;
-
-		rotVec = XMLoadFloat4(&camVec);*/
-
-		XMVECTOR camVec = camera.GetCamTarget() - camera.GetCamPos();
-		
 		ViewRotated[0] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() +camera.GetCamRight(), 
+			camera.GetCamPos() + camera.GetCamRight(), 
 			camera.GetCamUp()
 		);
 		
@@ -200,7 +178,7 @@ void setCameraViewProjectionSpace() {
 
 		ViewRotated[2] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() -camera.GetCamRight(),
+			camera.GetCamPos() - camera.GetCamRight(),
 			camera.GetCamUp()
 		);
 
