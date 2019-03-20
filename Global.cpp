@@ -1,12 +1,11 @@
 #include "Global.h"
 
+// rendering options
+ULONG renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT;
 
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
-
-//Viewspace
-//WorldSpace
-//ProjectionSpace
+D3D11_VIEWPORT svp[4];
 
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
@@ -56,6 +55,7 @@ ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
+ID3D11PixelShader* gWirePixelShader = nullptr;
 ID3D11VertexShader* gShadowVertexShader = nullptr;
 ID3D11GeometryShader* gShadowGeometryShader = nullptr;
 ID3D11PixelShader* gShadowPixelShader = nullptr;
@@ -88,7 +88,7 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ +0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
 //Frustum frustumCamera(&camera);
@@ -98,8 +98,6 @@ XMMATRIX World;
 XMMATRIX View;
 XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
-
-
 
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
@@ -121,3 +119,49 @@ ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, null
 ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
 
 float rotationTest = 0;
+
+
+
+// terminate function for globals
+void DestroyGlobals() {
+	delete vp;
+
+	delete[] Lights;
+
+	//gVertexBuffer->Release();
+	gDeferredQuadBuffer->Release();
+
+	gLightDataBuffer->Release();
+
+	_aligned_free(gAmbientSpecularData);
+	gAmbientSpecularBuffer->Release();
+
+	_aligned_free(gCameraMatrix);
+	gCameraMatrixBuffer->Release();
+
+	_aligned_free(gWorldMatrix);
+	gWorldMatrixBuffer->Release();
+
+	_aligned_free(gObjectMatrix);
+	gObjectMatrixBuffer->Release();
+
+	gDepth->Release();
+
+	for (int i = 0; i < G_BUFFER; i++) {
+		if (gRenderTargetViewArray[i]) {
+			gRenderTargetViewArray[i]->Release();
+		}
+
+		if (gShaderResourceViewArray[i]) {
+			gShaderResourceViewArray[i]->Release();
+		}
+
+		if (gRenderTargetTextureArray[i]) {
+			gRenderTargetTextureArray[i]->Release();
+		}
+	}
+
+	gSwapChain->Release();
+	gDevice->Release();
+	gDeviceContext->Release();
+}

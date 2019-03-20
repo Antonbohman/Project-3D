@@ -137,7 +137,35 @@ void createBlendState() {
 	HRESULT res = gDevice->CreateBlendState(&blendStateDesc, &gBlendStateLight);
 }
 
-void SetViewport() {
+void createViewport() {
+	svp[0].Width = (float)W_WIDTH / 2;
+	svp[0].Height = (float)W_HEIGHT / 2;
+	svp[0].MinDepth = 0.0f;
+	svp[0].MaxDepth = 1.0f;
+	svp[0].TopLeftX = 0;
+	svp[0].TopLeftY = 0;
+
+	svp[1].Width = (float)W_WIDTH / 2;
+	svp[1].Height = (float)W_HEIGHT / 2;
+	svp[1].MinDepth = 0.0f;
+	svp[1].MaxDepth = 1.0f;
+	svp[1].TopLeftX = (float)W_WIDTH / 2;
+	svp[1].TopLeftY = 0;
+
+	svp[2].Width = (float)W_WIDTH / 2;
+	svp[2].Height = (float)W_HEIGHT / 2;
+	svp[2].MinDepth = 0.0f;
+	svp[2].MaxDepth = 1.0f;
+	svp[2].TopLeftX = 0;
+	svp[2].TopLeftY = (float)W_HEIGHT / 2;;
+
+	svp[3].Width = (float)W_WIDTH / 2;
+	svp[3].Height = (float)W_HEIGHT / 2;
+	svp[3].MinDepth = 0.0f;
+	svp[3].MaxDepth = 1.0f;
+	svp[3].TopLeftX = (float)W_WIDTH / 2;
+	svp[3].TopLeftY = (float)W_HEIGHT / 2;;
+
 	if (!vp) {
 		vp = new D3D11_VIEWPORT;
 		vp->Width = (float)W_WIDTH;
@@ -147,8 +175,71 @@ void SetViewport() {
 		vp->TopLeftX = 0;
 		vp->TopLeftY = 0;
 	}
+}
 
-	gDeviceContext->RSSetViewports(1, vp);
+void SetViewport(bool forceSingle) {
+	if (renderOpt & RENDER_DOUBLE_VIEWPORT && !forceSingle) {
+		gDeviceContext->RSSetViewports(4, svp);
+	} else {
+		gDeviceContext->RSSetViewports(1, vp);
+	}
+}
+
+void CreateObjects() {
+	loadHeightMap("Objects/Heightmaps/halv_island.bmp");
+
+	loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
+
+
+	LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 20, 0));
+
+
+	LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
+
+
+	LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
+
+
+	LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
+}
+
+void RenderWireframe() {
+	// clear the back buffer to a black
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	setWireframeShaders();
+
+	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
+	
+	// make sure our depth buffer is cleared to black each time we render
+	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+
+	updateCameraValues();
+	setCameraViewProjectionSpace();
+
+	//set world space for height map and update wvp matrix
+	//set specular for height map
+	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
+	updateCameraWorldViewProjection();
+
+	//Render heightmap
+	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
+	gDeviceContext->Draw(nrOfHMVert, 0);
+
+	for (int i = 0; i < nrOfVertexBuffers; i++) {
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
+		updateCameraWorldViewProjection();
+
+		//Render objects
+		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+		gDeviceContext->Draw(gnrOfVert[i], 0);
+	}
+	
+	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
 void RenderShadowMaps() {
@@ -331,6 +422,211 @@ void RenderLights() {
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
+void updateKeyAndMouseInput(Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
+	bool culling = renderOpt & RENDER_CULLING;
+
+	//float DontRender[6] = {-1};
+	float DontRender = -1;
+	//FREE FLIGHT WITH O key
+	//HORIZONTAL movement with P 
+
+	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+	{//IN FREEFLIGHT				O key
+	 //INTO CAMERA FORWARD		W
+	 //INTO CAMERA BACKWARDS		S
+	 //CAMERA RIGHT				D
+	 //CAMERA LEFT				A
+	 //CAMERA UP					Q
+	 //CAMERA DOWN				E
+
+	 //IN HORIZONTAL				P key
+	 //CAMERA FORWARD			W
+	 //CAMERA BACKWARDS			S
+	 //CAMERA RIGHT				D
+	 //CAMERA LEFT				A
+
+	 //OTHER
+	 //NV corner				F1				
+	 //NE corner				F2
+	 //SE corner				F3
+	 //SV corner				F4
+	}
+	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+
+	//KEYBOARD 
+	{
+		auto kb = m_keyboard->GetState();
+		//SHORT COMMANDS
+		{
+			if (kb.Escape) {
+				camera.SetCamPos(camera.GetCamOriginalPos());
+				camera.SetYawAndPitch(0, 0);
+				camera.SetCamTarget(camera.GetCamOriginalTarget());
+			}
+			if (kb.F1) {
+				camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+
+				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+				float angel = ((g_heightmap.imageWidth / 2) / hyp);
+
+				camera.SetYawAndPitch(XM_PI*angel, 0);
+			}
+			if (kb.F2) {
+				camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+
+				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 0.5;
+				//angel = 0.0f;
+				camera.SetYawAndPitch(XM_PI*angel, 0);
+			}
+			if (kb.F3) {
+				camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+
+				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+
+				camera.SetYawAndPitch(XM_PI*angel, 0);
+			}
+			if (kb.F4) {
+				camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
+
+				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
+
+				camera.SetYawAndPitch(XM_PI*angel, 0);
+			}
+			if (kb.O) {
+				freeFlight = true;
+			}
+			if (kb.P) {
+				freeFlight = false;
+			}
+		}
+
+		Vector3 moveInDepthCameraClass = Vector3::Zero;
+		Vector3 deltaChange = Vector3::Zero;
+		bool run = false;
+
+		//UPDATE VECTOR
+
+		if (kb.LeftShift) {
+			run = true;
+		}
+
+		//pineapple in a green pie
+		if (kb.W) {//FORWARD IN
+
+			if (freeFlight) {
+				moveInDepthCameraClass += camera.GetCameraNormal();
+			} else {
+				moveInDepthCameraClass += camera.GetCamForward();
+			}
+
+		}
+		if (kb.S) { //BACK
+			if (freeFlight) {
+				moveInDepthCameraClass -= camera.GetCameraNormal();
+			} else {
+				moveInDepthCameraClass -= camera.GetCamForward();
+			}
+
+		}
+		if (kb.D) { //RIGHT
+			deltaChange.x += 1.0f;
+
+		}
+		if (kb.A) { //LEFT
+			deltaChange.x -= 1.0f;
+		}
+		if (kb.Q) { //UP
+			if (freeFlight)
+				deltaChange.y += 1.0f;
+		}
+		if (kb.E) { //DOWN
+			if (freeFlight)
+				deltaChange.y -= 1.0f;
+		}
+
+		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+		auto mouse = m_mouse->GetState();
+
+		if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+			//MOUSE RELATIVE CONTROL
+			float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+			camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+		}
+
+		m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+
+
+		//UPDATE CAMERA
+		{
+			deltaChange = XMVector3Normalize(deltaChange);
+			//ROTATION OF CAMERA
+			deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
+			deltaChange += moveInDepthCameraClass;
+
+			deltaChange = deltaChange;
+			camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
+
+			//Walking on terrain
+			if (!freeFlight) {
+				Vector4 CameraPos = camera.GetCamPos();
+
+				//TEST byte ordningen så det liknar en graf.
+
+				XMINT2 nRoundedPos;
+				nRoundedPos.x = CameraPos.x;
+				nRoundedPos.y = CameraPos.z;
+
+				//avrundar till närmsta heltal
+				if (nRoundedPos.x < 0) {
+					if (float(nRoundedPos.x) - 0.5f > CameraPos.x) nRoundedPos.x--;
+				} else {
+					if (float(nRoundedPos.x) + 0.5f < CameraPos.x) nRoundedPos.x++;
+				}
+				if (nRoundedPos.y < 0) {
+					if (float(nRoundedPos.y) - 0.5f > CameraPos.z) nRoundedPos.y--;
+				} else {
+					if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
+				}
+
+				nRoundedPos.x += g_heightmap.imageWidth / 2;
+				nRoundedPos.y += g_heightmap.imageHeight / 2;
+
+				//Avrundar så ingen ogiltig arrayplats nåss
+				if (nRoundedPos.x < 0) nRoundedPos.x = 0;
+				if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
+
+				if (nRoundedPos.y < 0) nRoundedPos.y = 0;
+				if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
+
+
+				int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
+				float newHeight = (g_heightmap.verticesPos[index].y + WALKING_HEIGHT);
+
+				//ställer pitch, yaw, ny höjd 
+				camera.SetCameraHeight(newHeight);
+
+				//camFrustum->calculateFrustum(FOV,W_WIDTH,W_HEIGHT);
+
+				//if(camFrustum->pointInFrustum({ 5.0f, 25.0f, 5.0f, 0.0f })!=0 )
+				//{
+				//	//LOOKING AT MARS REMOVES FISH
+				//	DontRender = 0;
+				//}
+			}
+
+		}
+	}
+}
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
 	//create two timestamps variables and a delta between them to adjust update frequency
@@ -338,59 +634,37 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
 	duration<double, std::ratio<1, 15>> delta;
 
-	//m_mouse->SetWindow();
-
 	MSG msg = { 0 };
-	HWND wndHandle = InitWindow(hInstance); //1. Skapa fönster
+	HWND wndHandle = InitWindow(hInstance);
+
+	Frustum camFrustum(&camera);
 
 	//Mouse and keyboard ini (ONLY MOUSE)
 	m_keyboard = std::make_unique<Keyboard>();
 	m_mouse = std::make_unique<Mouse>();
 	m_mouse->SetWindow(wndHandle);
 
-
 	if (wndHandle)
 	{
-		CreateDirect3DContext(wndHandle); //2. Skapa och koppla SwapChain, Device och Device Context
+		CreateDirect3DContext(wndHandle);
 
-		CreateShaders(); //4. Skapa vertex- och pixel-shaders
+		CreateShaders();
 
 		createBlendState();
 
+		createViewport();
 
 		CreateDeferredQuad();
 
-		loadHeightMap("Objects/Heightmaps/halv_island.bmp");
-
-		loadMultiTextureMap("Objects/Heightmaps/halv_islandMT.bmp");
-
-
-		LoadObjectFile("Objects/OBJs/fish.obj", XMINT3(0, 20, 0));
-
-
-		LoadObjectFile("Objects/OBJs/Mars.obj", XMINT3(5, 25, 5));
-
-
-		LoadObjectFile("Objects/OBJs/Moon.obj", XMINT3(0, 25, -5));
-
-
-		LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
-
-		CreateConstantBuffer(); //8. Create constant buffers
+		CreateConstantBuffer();
 
 		CreateSampling();
 
 		CreateLigths();
 
+		CreateObjects();
+
 		ShowWindow(wndHandle, nCmdShow);
-
-		Frustum camFrustum(&camera);
-
-		bool freeFlight = false;
-
-		
-
-		bool culling = false;
 
 		while (WM_QUIT != msg.message) {
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -403,270 +677,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				//float DontRender[6] = {-1};
-				float DontRender = -1;
-				//FREE FLIGHT WITH O key
-				//HORIZONTAL movement with P 
+				updateKeyAndMouseInput(&camFrustum, delta);
 
-				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-				{//IN FREEFLIGHT				O key
-				//INTO CAMERA FORWARD		W
-				//INTO CAMERA BACKWARDS		S
-				//CAMERA RIGHT				D
-				//CAMERA LEFT				A
-				//CAMERA UP					Q
-				//CAMERA DOWN				E
+				if (renderOpt & RENDER_WIREFRAME) {
+					SetViewport(false);
 
-				//IN HORIZONTAL				P key
-				//CAMERA FORWARD			W
-				//CAMERA BACKWARDS			S
-				//CAMERA RIGHT				D
-				//CAMERA LEFT				A
+					RenderWireframe();
+				} else {
+					RenderShadowMaps();
 
-				//OTHER
-					//NV corner				F1				
-					//NE corner				F2
-					//SE corner				F3
-					//SV corner				F4
+					SetViewport(false);
+
+					RenderBuffers(0);
+
+					SetViewport(true);
+
+					RenderLights();
 				}
-				/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-
-				//KEYBOARD 
-				{
-					auto kb = m_keyboard->GetState();
-					//SHORT COMMANDS
-					{
-
-
-						if (kb.Escape) {
-							camera.SetCamPos(camera.GetCamOriginalPos());
-							camera.SetYawAndPitch(0, 0);
-							camera.SetCamTarget(camera.GetCamOriginalTarget());
-
-						}
-						if (kb.F1) {
-							camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-
-							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
-
-							float angel = ((g_heightmap.imageWidth / 2) / hyp);
-							camera.SetYawAndPitch(XM_PI*angel, 0);
-						}
-						if (kb.F2) {
-							camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
-
-
-							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
-
-							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 0.5;
-							//angel = 0.0f;
-							camera.SetYawAndPitch(XM_PI*angel, 0);
-						}
-						if (kb.F3) {
-							camera.SetCamPos({ float(+g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-
-							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
-
-							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
-
-							camera.SetYawAndPitch(XM_PI*angel, 0);
-						}
-						if (kb.F4) {
-							camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(-g_heightmap.imageHeight / 2),0.0f });
-
-							float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
-
-							float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.5;
-							camera.SetYawAndPitch(XM_PI*angel, 0);
-						}
-
-						if (kb.O) {
-							freeFlight = true;
-						}
-						if (kb.P) {
-							freeFlight = false;
-						}
-
-					}
-
-					Vector3 moveInDepthCameraClass = Vector3::Zero;
-					Vector3 deltaChange = Vector3::Zero;
-					bool run = false;
-
-					//UPDATE VECTOR
-
-					if (kb.LeftShift) {
-						run = true;
-					}
-
-					//pineapple in a green pie
-					if (kb.W) {//FORWARD IN
-
-						if (freeFlight) {
-							moveInDepthCameraClass += camera.GetCameraNormal();
-						}
-						else {
-							moveInDepthCameraClass += camera.GetCamForward();
-						}
-
-					}
-					if (kb.S) { //BACK
-						if (freeFlight) {
-							moveInDepthCameraClass -= camera.GetCameraNormal();
-						}
-						else {
-							moveInDepthCameraClass -= camera.GetCamForward();
-						}
-
-					}
-					if (kb.D) { //RIGHT
-						deltaChange.x += 1.0f;
-
-					}
-					if (kb.A) { //LEFT
-						deltaChange.x -= 1.0f;
-					}
-					if (kb.Q) { //UP
-						if (freeFlight)
-							deltaChange.y += 1.0f;
-					}
-					if (kb.E) { //DOWN
-						if (freeFlight)
-							deltaChange.y -= 1.0f;
-					}
-					//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
-					auto mouse = m_mouse->GetState();
-
-					if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-						//MOUSE RELATIVE CONTROL
-						float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
-
-						camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
-					}
-
-					m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
-
-
-					//UPDATE CAMERA
-					{
-						deltaChange = XMVector3Normalize(deltaChange);
-						//ROTATION OF CAMERA
-						deltaChange = deltaChange.x*camera.GetCamRight() + deltaChange.y*camera.GetCamUp();
-						deltaChange += moveInDepthCameraClass;
-
-						deltaChange = deltaChange;
-						camera.UpdateCamera({ deltaChange.x,deltaChange.y,deltaChange.z }, run, float(delta.count()));
-
-
-						//Walking on terrain
-						if (!freeFlight) {
-							Vector4 CameraPos = camera.GetCamPos();
-
-
-							//TEST byte ordningen så det liknar en graf.
-
-							XMINT2 nRoundedPos;
-							nRoundedPos.x = CameraPos.x;
-							nRoundedPos.y = CameraPos.z;
-
-							//avrundar till närmsta heltal
-							if (nRoundedPos.x < 0) {
-								if (float(nRoundedPos.x) - 0.5f > CameraPos.x) nRoundedPos.x--;
-							}
-							else {
-								if (float(nRoundedPos.x) + 0.5f < CameraPos.x) nRoundedPos.x++;
-							}
-							if (nRoundedPos.y < 0) {
-								if (float(nRoundedPos.y) - 0.5f > CameraPos.z) nRoundedPos.y--;
-							}
-							else {
-								if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
-							}
-
-							nRoundedPos.x += g_heightmap.imageWidth / 2;
-							nRoundedPos.y += g_heightmap.imageHeight / 2;
-
-							//Avrundar så ingen ogiltig arrayplats nåss
-							if (nRoundedPos.x < 0) nRoundedPos.x = 0;
-							if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
-
-							if (nRoundedPos.y < 0) nRoundedPos.y = 0;
-							if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
-
-
-							int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
-							float newHeight = (g_heightmap.verticesPos[index].y + WALKING_HEIGHT);
-
-							//ställer pitch, yaw, ny höjd 
-							camera.SetCameraHeight(newHeight);
-
-							//camFrustum.calculateFrustum(FOV,W_WIDTH,W_HEIGHT);
-
-							//if(camFrustum.pointInFrustum({ 5.0f, 25.0f, 5.0f, 0.0f })!=0 )
-							//{
-							//	//LOOKING AT MARS REMOVES FISH
-							//	DontRender = 0;
-							//}
-						}
-
-					}
-				}
-
-				RenderShadowMaps();
-
-				SetViewport();
-
-				RenderBuffers(0);
-
-				RenderLights();
 
 				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
 			}
 		}
 
-		delete vp;
-
-		delete[] Lights;
-
-		//make sure there are no leaks by releasing stored pointers
-		//gVertexBuffer->Release();
-		gDeferredQuadBuffer->Release();
-
-		gLightDataBuffer->Release();
-
-		_aligned_free(gAmbientSpecularData);
-		gAmbientSpecularBuffer->Release();
-
-		_aligned_free(gCameraMatrix);
-		gCameraMatrixBuffer->Release();
-
-		_aligned_free(gWorldMatrix);
-		gWorldMatrixBuffer->Release();
-
-		_aligned_free(gObjectMatrix);
-		gObjectMatrixBuffer->Release();
-
+		//destroy
 		DestroyShaders();
-
-		gDepth->Release();
-
-		for (int i = 0; i < G_BUFFER; i++) {
-			if (gRenderTargetViewArray[i]) {
-				gRenderTargetViewArray[i]->Release();
-			}
-
-			if (gShaderResourceViewArray[i]) {
-				gShaderResourceViewArray[i]->Release();
-			}
-
-			if (gRenderTargetTextureArray[i]) {
-				gRenderTargetTextureArray[i]->Release();
-			}
-		}
-
-		gSwapChain->Release();
-		gDevice->Release();
-		gDeviceContext->Release();
+		DestroyGlobals();
 		DestroyWindow(wndHandle);
 	}
 
@@ -891,6 +926,32 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 		}
 
 		pDepthTexture->Release();
+
+		if (renderOpt & RENDER_WIREFRAME) {
+			D3D11_RASTERIZER_DESC rastDesc;
+			ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+			rastDesc.FillMode = D3D11_FILL_WIREFRAME;
+			rastDesc.CullMode = D3D11_CULL_BACK;
+			rastDesc.FrontCounterClockwise = false;
+			rastDesc.DepthBias = 0;
+			rastDesc.DepthBiasClamp = 0.0f;
+			rastDesc.SlopeScaledDepthBias = 0.0f;
+			rastDesc.DepthClipEnable = true;
+			rastDesc.ScissorEnable = false;
+			rastDesc.MultisampleEnable = false;
+			rastDesc.AntialiasedLineEnable = false;
+
+			ID3D11RasterizerState* gRasterizerState;
+
+			hr = gDevice->CreateRasterizerState(
+				&rastDesc,
+				&gRasterizerState
+			);
+
+			gDeviceContext->RSSetState(gRasterizerState);
+		}
+
 	}
 
 	return hr;

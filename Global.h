@@ -35,12 +35,27 @@ using namespace DirectX;
 #define VERTICES 6
 
 // light types
-#define L_POINT 0
-#define L_SPOT 1
-#define L_DIRECTIONAL 2
+#define L_POINT			0
+#define L_SPOT			1
+#define L_DIRECTIONAL	2
 
 // define number of layers of g-buffer used in rendering
 #define G_BUFFER 4
+
+
+
+///////////////////
+// Enums         //
+///////////////////
+
+// render types
+enum RenderFlags {
+	RENDER_DEFAULT = 0x00000000UL,
+	RENDER_DOUBLE_VIEWPORT = 0x00000001UL,
+	RENDER_WIREFRAME = 0x00000010UL,
+	RENDER_FREE_FLIGHT = 0x00000100UL,
+	RENDER_CULLING = 0x00001000UL,
+};
 
 
 
@@ -83,6 +98,7 @@ struct LightVP {
 struct CameraWVP {
 	XMMATRIX World;
 	XMMATRIX ViewProjection;
+	XMMATRIX RotatedViewProjection[3];
 };
 
 // basic vertex struct µ
@@ -120,12 +136,18 @@ struct WorldSpace {
 	float scale_z;
 };
 
+
+
 /////////////////////
 // Variables       //
 /////////////////////
 
+// rendering options
+extern ULONG renderOpt;
+
 // viewport
 extern D3D11_VIEWPORT* vp;
+extern D3D11_VIEWPORT svp[4];
 
 // Most directX Objects are COM Interfaces
 // https://es.wikipedia.org/wiki/Component_Object_Model
@@ -169,6 +191,7 @@ extern ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
+extern ID3D11PixelShader* gWirePixelShader;
 extern ID3D11VertexShader* gShadowVertexShader;
 extern ID3D11GeometryShader* gShadowGeometryShader;
 extern ID3D11PixelShader* gShadowPixelShader;
@@ -234,3 +257,11 @@ extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
 extern ID3D11Resource* gMapTextureResource[4];
 
 extern float rotationTest;
+
+
+
+///////////////////////
+// Garbage Collector //
+///////////////////////
+
+void DestroyGlobals();

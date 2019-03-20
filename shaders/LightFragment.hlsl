@@ -2,6 +2,12 @@
 #define TYPE_SPOT 1
 #define TYPE_DIRECTIONAL 2
 
+#define RENDER_NORMAL 0
+#define RENDER_DIFFUSE 1
+#define RENDER_SPECULAR 2
+#define RENDER_POSITON 3
+#define RENDER_SHADOWS 4
+
 struct PS_IN
 {
     float4 ScreenPos : SV_POSITION;
@@ -11,6 +17,8 @@ Texture2D NormalTexture : register(t0);
 Texture2D DiffuseTexture : register(t1);
 Texture2D SpecularTexture : register(t2);
 Texture2D PositionTexture : register(t3);
+
+//Texture2DArray ShadowMaps : register(t4);
 
 SamplerState Sampling : register(s0);
 
@@ -30,6 +38,12 @@ cbuffer PS_CB_LIGHT : register(b1)
     float LightIntensity;
     float LightFocus;
 };
+
+/*cbuffer PS_CB_WVP : register(b2)
+{
+    
+};
+*/
 
 float4 PS_light(PS_IN input) : SV_TARGET
 {

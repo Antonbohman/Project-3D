@@ -1,6 +1,9 @@
 #include "Shaders.h"
 
 HRESULT CreateShaders() {
+	//create wireframe shaders
+	if (FAILED(CreateWireframePS())) return S_FALSE;
+
 	if (FAILED(CreateShadowVS())) return S_FALSE;
 	if (FAILED(CreateShadowGS())) return S_FALSE;
 	if (FAILED(CreateShadowPS())) return S_FALSE;
@@ -21,6 +24,8 @@ HRESULT CreateShaders() {
 }
 
 void DestroyShaders() {
+	gWirePixelShader->Release();
+
 	gShadowVertexShader->Release();
 	gShadowGeometryShader->Release();
 	gShadowPixelShader->Release();
@@ -37,6 +42,45 @@ void DestroyShaders() {
 	gShadowVertexLayout->Release();
 	gVertexLayout->Release();
 	gLightVertexLayout->Release();
+}
+
+HRESULT CreateWireframePS() {
+	ID3DBlob* errorBlob = nullptr;
+	ID3DBlob* pPS = nullptr;
+
+	HRESULT result = D3DCompileFromFile(
+		L"shaders/WireframeFragment.hlsl",   // filename
+		nullptr,		    // optional macros
+		nullptr,		    // optional include files
+		"PS_wire",		// entry point
+		"ps_5_0",		    // shader model (target)
+		D3DCOMPILE_DEBUG,	// shader compile options
+		0,				    // effect compile options
+		&pPS,			    // double pointer to ID3DBlob		
+		&errorBlob			// pointer for Error Blob messages.
+	);
+
+	if (FAILED(result)) {
+		if (errorBlob) {
+			OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+			errorBlob->Release();
+		}
+		if (pPS)
+			pPS->Release();
+		return result;
+	}
+
+	gDevice->CreatePixelShader(
+		pPS->GetBufferPointer(),
+		pPS->GetBufferSize(),
+		nullptr,
+		&gWirePixelShader
+	);
+
+	if (errorBlob) errorBlob->Release();
+	pPS->Release();
+
+	return S_OK;
 }
 
 HRESULT CreateShadowVS() {
@@ -488,6 +532,23 @@ HRESULT CreateLightPS() {
 	pPS->Release();
 
 	return S_OK;
+}
+
+void setWireframeShaders() {
+	gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, gDepth);
+
+	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
+	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->GSSetShader(gGeometryShader, nullptr, 0);
+	gDeviceContext->PSSetShader(gWirePixelShader, nullptr, 0);
+	//gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+
+	// specify the topology to use when drawing
+	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// specify the IA Layout (how is data passed)
+	gDeviceContext->IASetInputLayout(gVertexLayout);
 }
 
 void setShadowShaders() {
