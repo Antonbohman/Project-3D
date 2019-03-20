@@ -188,19 +188,19 @@ void setCameraViewProjectionSpace() {
 		
 		ViewRotated[0] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(90)), 
+			camera.GetCamPos() +camera.GetCamRight(), 
 			camera.GetCamUp()
 		);
 		
 		ViewRotated[1] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(180)),
+			camera.GetCamPos() - camera.GetCamForward(),
 			camera.GetCamUp()
 		);
 
 		ViewRotated[2] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() + XMVector3Transform(camVec, XMMatrixRotationY(270)),
+			camera.GetCamPos() -camera.GetCamRight(),
 			camera.GetCamUp()
 		);
 
