@@ -13,6 +13,7 @@ struct PS_OUT
     float4 Diffuse : SV_Target1;
     float4 Specular : SV_Target2;
     float4 Position : SV_Target3;
+    float4 GlowEffect : SV_Target4;
 };
 
 Texture2D Texture : register(t0);
@@ -48,6 +49,18 @@ PS_OUT PS_main(PS_IN input)
     
     //add position map
     output.Position = input.Pos_W;
+
+
+    //If the alpha of a pixel is above threshold send it to the computeShader
+    //float brightness = dot(pixelColour.xyz, float3(0.2126, 0.7152, 0.0722));
+    if (pixelColour.a > 0.75)
+    {
+        output.GlowEffect = pixelColour;
+    }
+    else
+    {
+        output.GlowEffect = (0.0f, 0.0f, 0.0f, 1.0f);
+    }
 
     return output;
 };

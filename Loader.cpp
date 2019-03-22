@@ -395,7 +395,7 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 	int nrOfNormals = 0;
 	int normArrSize = 0;
 
-	char materialPath[25] = "Objects/OBJs/";
+	char materialPath[50] = "Objects/OBJs/";
 
 	int nrOfFaces = 0;
 

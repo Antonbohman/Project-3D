@@ -54,7 +54,7 @@ using namespace DirectX;
 #define R_NO_LIGHTS			8 //as default but without shadows,specular and lights
 
 // define number of layers of g-buffer used in rendering
-#define G_BUFFER 4
+#define G_BUFFER 5
 
 
 
@@ -281,10 +281,22 @@ extern ID3D11Resource* gTexture2D[5];
 extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
 extern ID3D11Resource* gMapTextureResource[4];
 
+extern ID3D11UnorderedAccessView* nullUAV;
+
+//Test
+
 extern float rotationTest;
 
-extern ID3D11Texture2D* gBlurTexture;
+
+//Blur
+extern ID3D11Texture2D* gBlurTextureDraw;
+extern ID3D11Texture2D* gBlurTextureRead;
 extern ID3D11ShaderResourceView* gBlurShaderResource;
+//extern ID3D11Resource* gBlurResource;
+
+extern ID3D11UnorderedAccessView* blurUAV;
+
+//extern ID3D11Resource
 
 ///////////////////////
 // Garbage Collector //

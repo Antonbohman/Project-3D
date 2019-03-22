@@ -122,8 +122,16 @@ ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
 ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
 
-ID3D11Texture2D* gBlurTexture = nullptr;
+ID3D11UnorderedAccessView* nullUAV = nullptr;
+
+
+
+//Blur
+ID3D11Texture2D* gBlurTextureDraw = nullptr;
+ID3D11Texture2D* gBlurTextureRead = nullptr;
 ID3D11ShaderResourceView* gBlurShaderResource = nullptr;
+
+ID3D11UnorderedAccessView* blurUAV = nullptr;
 
 float rotationTest = 0;
 
