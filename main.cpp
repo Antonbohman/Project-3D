@@ -108,12 +108,12 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 3;
+	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
 	Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	//Lights[3] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, 0.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
@@ -251,13 +251,13 @@ void RenderShadowMaps() {
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gObjectMatrixBuffer);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gLightMatrixBuffer);
 
+	WorldSpace copy = { 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 10.0f, 1.0f, 1.0f, 1.0f };
+
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].prepareShadowRender(gDeviceContext);
 
-		setLightViewProjectionSpace(&Lights[i]);
-
 		//set world space for height map and update wvp
-		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 		updateObjectWorldSpace();
 		updateLightViewProjection(&Lights[i]);
 
@@ -267,13 +267,22 @@ void RenderShadowMaps() {
 
 		for (int i = 0; i < nrOfVertexBuffers; i++) {
 			//set world space for each object and update wvp
-			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+			setWorldSpace(worldObjects[i]);
 			updateObjectWorldSpace();
 			updateLightViewProjection(&Lights[i]);
 
 			//Render objects
 			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
+
+			if (!i) {
+				//Set copy
+				setWorldSpace(copy);
+				updateCameraWorldViewProjection();
+
+				//Render objects
+				gDeviceContext->Draw(gnrOfVert[i], 0);
+			}
 		}
 	}
 
@@ -315,10 +324,9 @@ void RenderBuffers(float notToRender) {
 
 	//set world space for height map and update wvp matrix
 	//set specular for height map
-
 	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 	updateCameraWorldViewProjection();
-	setSpecularValues(XMVectorSet(1, 1, 1, 1));
+	updateSpecularValues(XMVectorSet(1, 1, 1, 1));
 
 	//Render heightmap
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
@@ -332,45 +340,30 @@ void RenderBuffers(float notToRender) {
 	//Set object shader options
 	SetDeferredShaders();
 
-	WorldSpace copies[2] = { 
-		{ 0.0f,0.0f,0.0f,0,30,10,3.0f,3.0f,3.0f },
-		{ 0.0f,0.0f,0.0f,0,40,10,1.0f,1.0f,1.0f },
-	};
+	WorldSpace copy = { 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 10.0f, 3.0f, 3.0f, 3.0f };
 
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
-		if (0 == i )
+		//set object texture
+		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+
+		//set world space for object and update wvp matrix
+		//set specular for object
+		setWorldSpace(worldObjects[i]);
+		updateCameraWorldViewProjection();
+		updateSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+		//Render objects
+		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+		gDeviceContext->Draw(gnrOfVert[i], 0);
+
+		if (!i)
 		{
-			setWorldSpace(copies[0]);
-			updateCameraWorldViewProjection();
-			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-			//set object texture
-			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
-
-			//Render objects
-			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
-			gDeviceContext->Draw(gnrOfVert[i], 0);
-
-			setWorldSpace(copies[1]);
+			//Set copy
+			setWorldSpace(copy);
 			updateCameraWorldViewProjection();
 
 			//Render objects
-			gDeviceContext->Draw(gnrOfVert[i], 0);
-		}
-		else
-		{
-			//set world space for object and update wvp matrix
-			//set specular for object
-			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
-			updateCameraWorldViewProjection();
-			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-			//set object texture
-			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
-
-			//Render objects
-			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
 		}
 	}
@@ -387,6 +380,7 @@ void RenderBuffers(float notToRender) {
 }
 
 void RenderLights() {
+	ID3D11ShaderResourceView* pShadowMap = nullptr;
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	//set shaders for light calculation (final pass)
@@ -407,10 +401,15 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(1, 1, &gShaderResourceViewArray[1]);
 	gDeviceContext->PSSetShaderResources(2, 1, &gShaderResourceViewArray[2]);
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
-
+	gDeviceContext->PSSetShaderResources(4, 1, &gDepthShaderResourceView);
+	
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
+
+		pShadowMap = Lights[i].getShadowMap();
+		gDeviceContext->PSSetShaderResources(8, 1, &pShadowMap);
+
 		gDeviceContext->Draw(6, 0);
 	}
 
@@ -419,6 +418,7 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(1, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(4, 1, &nullSRV[0]);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
@@ -648,6 +648,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
 	bool culling = renderOpt & RENDER_CULLING;
 
+	bool renderOnce = true;
+
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance);
 
@@ -700,8 +702,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					RenderWireframe();
 				} else {
-					RenderShadowMaps();
-
+					if (renderOnce) {
+						RenderShadowMaps();
+						renderOnce = false;
+					}
+						
 					SetViewport(false);
 
 					RenderBuffers(0);
@@ -711,7 +716,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					RenderLights();
 				}
 
-				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
+				gSwapChain->Present(0, 0);
 			}
 		}
 
@@ -795,9 +800,9 @@ HRESULT CreateDepthBuffer(ID3D11Texture2D** pDepthTexture) {
 	//describe how the texture should be handled
 	D3D11_TEXTURE2D_DESC depthDesc;
 	depthDesc.ArraySize = 1;
-	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	depthDesc.CPUAccessFlags = 0;
-	depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+	depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R32_TYPELESS;
 	depthDesc.Height = W_HEIGHT;
 	depthDesc.Width = W_WIDTH;
 	depthDesc.MipLevels = 1;
@@ -808,7 +813,24 @@ HRESULT CreateDepthBuffer(ID3D11Texture2D** pDepthTexture) {
 
 	//load texture data into the texture object, 
 	//for now it's a blank texture to be used later as depth buffer
-	return gDevice->CreateTexture2D(&depthDesc, NULL, pDepthTexture);
+	HRESULT hr = gDevice->CreateTexture2D(&depthDesc, NULL, pDepthTexture);
+	if (FAILED(hr)) {
+		return S_FALSE;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
+	ZeroMemory(&ShaderResourceViewDesc, sizeof(ShaderResourceViewDesc));
+	ShaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	ShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	ShaderResourceViewDesc.Texture2D.MipLevels = depthDesc.MipLevels;
+	ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+	hr = gDevice->CreateShaderResourceView(*pDepthTexture, &ShaderResourceViewDesc, &gDepthShaderResourceView);
+	if (FAILED(hr)) {
+		return S_FALSE;
+	}
+
+	return S_OK;
 }
 
 HRESULT CreateDepthStencilView(ID3D11Texture2D** pDepthTexture) {

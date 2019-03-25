@@ -536,6 +536,7 @@ HRESULT CreateLightPS() {
 
 void setWireframeShaders() {
 	gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, gDepth);
+	gDeviceContext->OMSetBlendState(nullptr, 0, 0xffffffff);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -570,6 +571,7 @@ void setShadowShaders() {
 
 void SetDeferredShaders() {
 	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
+	gDeviceContext->OMSetBlendState(nullptr, 0, 0xffffffff);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -587,6 +589,7 @@ void SetDeferredShaders() {
 
 void SetBlendShaders() {
 	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
+	gDeviceContext->OMSetBlendState(nullptr, 0, 0xffffffff);
 
 	gDeviceContext->VSSetShader(gVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
@@ -603,10 +606,8 @@ void SetBlendShaders() {
 }
 
 void SetLightShaders() {
-	float blendFactor[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-
 	gDeviceContext->OMSetRenderTargets(1, &gBackbufferRTV, nullptr);
-	gDeviceContext->OMSetBlendState(gBlendStateLight, blendFactor, 0xffffffff);
+	gDeviceContext->OMSetBlendState(gBlendStateLight, 0, 0xffffffff);
 
 	gDeviceContext->VSSetShader(gLightVertexShader, nullptr, 0);
 	gDeviceContext->HSSetShader(nullptr, nullptr, 0);

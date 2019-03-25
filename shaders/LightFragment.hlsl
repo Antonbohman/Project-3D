@@ -12,7 +12,6 @@
 #define RENDER_DEPTH			5 //only outputs depth buffer
 #define RENDER_NO_SHADOWS		6 //as default but without shadows
 #define RENDER_NO_SPECULAR		7 //as defaults but without specular
-#define RENDER_NO_LIGHTS		8 //as default but without shadows,specular and lights
 
 struct PS_IN
 {
@@ -23,12 +22,13 @@ Texture2D NormalTexture : register(t0);
 Texture2D DiffuseTexture : register(t1);
 Texture2D SpecularTexture : register(t2);
 Texture2D PositionTexture : register(t3);
+Texture2D DepthTexture : register(t4);
 
-//Texture2DArray ShadowMaps : register(t4);
+Texture2DArray ShadowMaps : register(t8);
 
 SamplerState Sampling : register(s0);
 
-cbuffer GS_CB_FLAGS : register(b0)
+cbuffer PS_CB_FLAGS : register(b0)
 {
     bool SplitView;
     uint RenderMode;
@@ -42,20 +42,62 @@ cbuffer PS_CB_CAMERA : register(b1)
 
 cbuffer PS_CB_LIGHT : register(b2)
 {
-    int LightType;
-    int AmbientPower;
+    uint LightType;
+    uint AmbientPower;
+    float LightIntensity;
+    float LightFocus;
     float4 LightPos;
     float4 LightDir;
     float4 LightColour;
-    float LightIntensity;
-    float LightFocus;
+    float4x4 LighViewProjection;
+    float4x4 RotatedLightViewProjection[5];
 };
 
-/*cbuffer PS_CB_WVP : register(b2)
+bool shadow(float3 position)
 {
+    float4 lsp = mul(float4(position, 1.0f), LighViewProjection);
+
+    lsp.xyz /= lsp.w;
+
+    float2 sMapTex = float2(0.5f * lsp.x + 0.5, -0.5f * lsp.y + 0.5f);
+        
+    if (lsp.x < -1.0f || lsp.x > 1.0f ||
+            lsp.y < -1.0f || lsp.y > 1.0f ||
+            lsp.z < 0.0f || lsp.z > 1.0f)
+        return true;
     
-};
-*/
+    lsp.z -= 0.0005f;
+
+    float shadowMapDepth = ShadowMaps.Sample(Sampling, float3(sMapTex, 0)).r;
+
+    if (shadowMapDepth < lsp.z)
+        return true;
+
+    return false;
+}
+
+bool shadow(float3 position, int index)
+{
+    float4 lsp = mul(float4(position, 1.0f), RotatedLightViewProjection[index]);
+
+    lsp.xyz /= lsp.w;
+
+    float2 sMapTex = float2(0.5f * lsp.x + 0.5, -0.5f * lsp.y + 0.5f);
+        
+    if (lsp.x < -1.0f || lsp.x > 1.0f ||
+            lsp.y < -1.0f || lsp.y > 1.0f ||
+            lsp.z < 0.0f || lsp.z > 1.0f)
+        return true;
+    
+    lsp.z -= 0.0005f;
+
+    float shadowMapDepth = ShadowMaps.Sample(Sampling, float3(sMapTex, index+1)).r;
+
+    if (shadowMapDepth < lsp.z)
+        return true;
+
+    return false;
+}
 
 float4 PS_light(PS_IN input) : SV_TARGET
 {
@@ -67,14 +109,12 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float3 position = PositionTexture.Load(texPos).xyz;
     float3 diffuseAlbedo = DiffuseTexture.Load(texPos).xyz;
     float4 specularData = SpecularTexture.Load(texPos);
-
+    float depth = DepthTexture.Load(texPos).x;
+    
     float3 specularAlbedo = specularData.xyz;
     float specularPower = specularData.w;
 
-    //calculate angles and attenuation
-    float3 lightVector = 0;
-    float attenuation = 1.0f;
-    
+    //alternative render modes
     switch (RenderMode)
     {
         case RENDER_DIFFUSE:
@@ -94,10 +134,14 @@ float4 PS_light(PS_IN input) : SV_TARGET
             return float4(position.rgb, 1);
             break;
         case RENDER_DEPTH:
-            //Renders depth (TODO)
-            //return float4(depth.rgb, 1);
+            //Renders depth
+            return float4(depth.r, depth.r, depth.r, 1);
             break;
     }
+    
+    //calculate angles and attenuation
+    float3 lightVector = 0.0f;
+    float attenuation = 1.0f;
 
     if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT)
     {
@@ -115,22 +159,40 @@ float4 PS_light(PS_IN input) : SV_TARGET
     {
         lightVector = (LightPos.xyz - LightDir.xyz);
     }
-    
+
     //calculate angle between light source direction and normal 
     float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
 
+    //calculate vector for reflected light
+    float3 lightReflectionVector = 2 * lightFactor * normal - normalize(LightPos.xyz - position.xyz);
+
+    //get ambient colour
     float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
-
-    //calculate vector for reflected light
-    float3 lightReflectionVector = 2 * lightFactor * normal - normalize(LightPos.xyz - position.xyz); //from slide
     
     //clamp so only positive dot product is acceptable
     float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
     //change diffuse albedo to specular albedo when added!
     float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
+
+    if (shadow(position))
+    {
+        return ambientColour;
+    }
+        
+
+    if (LightType.x == TYPE_POINT)
+    {
+        /*for (int i = 0; i < 5; i++)
+        {
+            if (shadow(position, i))
+            {
+                return ambientColour;
+            }
+        }*/
+    }
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
     return clamp(ambientColour + ((diffuseColour /*+ specularColour*/) * attenuation), 0.0f, 1.0f);
