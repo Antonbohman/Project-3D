@@ -286,7 +286,8 @@ void RenderShadowMaps() {
 
 void RenderBuffers(float notToRender) {
 	// clear the back buffer to a deep blue
-	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	//float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
@@ -398,24 +399,30 @@ void RenderBuffers(float notToRender) {
 	//ID3D11Texture2D* computedResource = nullptr;
 	//gBlurShaderResource->GetResource();
 	//gDeviceContext->CopyResource();
+	if (blurFilter == true)
+	{
+		SetComputeShaders();
 
-	SetComputeShaders();
+		gDeviceContext->CSSetShaderResources(0, 1, &gShaderResourceViewArray[4]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &blurUAV, 0);
 
-	gDeviceContext->CSSetShaderResources(0, 1, &gShaderResourceViewArray[4]);
-	gDeviceContext->CSSetUnorderedAccessViews(0, 1, &blurUAV, 0);
+		gDeviceContext->Dispatch(45, 45, 1);
 
-	gDeviceContext->Dispatch(45, 45, 1);
+		//Release
 
-	//Release
+		gDeviceContext->CSSetShaderResources(0, 1, &nullSRV[0]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, 0);
 
-	gDeviceContext->CSSetShaderResources(0, 1, &nullSRV[0]);
-	gDeviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, 0);
-
-	//Copy resources
-	gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureDraw);
+		//Copy resources
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureDraw);
+	}
+	else
+	{
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureEmpty);
+	}
 }
 
-void RenderLights() 
+void RenderLights()
 {
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
@@ -539,6 +546,15 @@ void updateKeyAndMouseInput(bool *freeFlight, bool *culling, Frustum* camFrustum
 			}
 			if (kb.P) {
 				*freeFlight = false;
+			}
+			if (kb.G)
+			{
+				blurFilter = true;
+			}
+			if (kb.H)
+			{
+				blurFilter = false;
+
 			}
 
 			//BUTTON FOR CULLING
@@ -959,10 +975,12 @@ HRESULT CreateRenderTargets() {
 		return DXGI_ERROR_ACCESS_DENIED;
 	}
 
+	gDevice->CreateTexture2D(&textureDesc, NULL, &gBlurTextureEmpty);
+
 	return S_OK;
 }
 
-HRESULT CreateDirect3DContext(HWND wndHandle) 
+HRESULT CreateDirect3DContext(HWND wndHandle)
 {
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;

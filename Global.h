@@ -293,6 +293,9 @@ extern ID3D11Texture2D* gBlurTextureDraw;
 extern ID3D11Texture2D* gBlurTextureRead;
 extern ID3D11ShaderResourceView* gBlurShaderResource;
 //extern ID3D11Resource* gBlurResource;
+extern bool blurFilter;
+extern ID3D11Texture2D* gBlurTextureEmpty;
+
 
 extern ID3D11UnorderedAccessView* blurUAV;
 

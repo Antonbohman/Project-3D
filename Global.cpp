@@ -130,6 +130,8 @@ ID3D11UnorderedAccessView* nullUAV = nullptr;
 ID3D11Texture2D* gBlurTextureDraw = nullptr;
 ID3D11Texture2D* gBlurTextureRead = nullptr;
 ID3D11ShaderResourceView* gBlurShaderResource = nullptr;
+bool blurFilter = false;
+ID3D11Texture2D* gBlurTextureEmpty;
 
 ID3D11UnorderedAccessView* blurUAV = nullptr;
 

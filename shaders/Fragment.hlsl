@@ -59,7 +59,7 @@ PS_OUT PS_main(PS_IN input)
     }
     else
     {
-        output.GlowEffect = (0.0f, 0.0f, 0.0f, 1.0f);
+        output.GlowEffect = (0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     return output;
