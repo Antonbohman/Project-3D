@@ -51,7 +51,6 @@ using namespace DirectX;
 #define R_DEPTH				5 //only outputs depth buffer
 #define R_NO_SHADOWS		6 //as default but without shadows
 #define R_NO_SPECULAR		7 //as defaults but without specular
-#define R_NO_LIGHTS			8 //as default but without shadows,specular and lights
 
 // define number of layers of g-buffer used in rendering
 #define G_BUFFER 5
@@ -69,6 +68,7 @@ enum RenderFlags {
 	RENDER_WIREFRAME = 0x00000010UL,
 	RENDER_FREE_FLIGHT = 0x00000100UL,
 	RENDER_CULLING = 0x00001000UL,
+	RENDER_BLOOM = 0x00010000UL,
 };
 
 
@@ -138,11 +138,13 @@ struct PositionVertex {
 struct LightData {
 	int type;
 	int ambient;
+	float intensity;
+	float lightFocus;
 	XMVECTOR position;
 	XMVECTOR direction;
 	XMVECTOR colour;
-	float intensity;
-	float lightFocus;
+	XMMATRIX viewProjection;
+	XMMATRIX rotatedViewProjection[5];
 };
 
 struct WorldSpace {
@@ -210,6 +212,7 @@ extern ID3D11RenderTargetView* gRenderTargetViewArray[G_BUFFER];
 extern ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 
 // resources for depth buffer image
+extern ID3D11ShaderResourceView* gDepthShaderResourceView;
 extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
@@ -261,6 +264,8 @@ extern Camera camera;
 
 //extern Frustum frustumCamera;
 //extern Frustum frustumCamera;
+
+extern WorldSpace worldObjects[4];
 
 // keeping track of current rotation
 extern float rotation;

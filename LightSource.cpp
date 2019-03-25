@@ -14,6 +14,11 @@ LightSource::LightSource(const int type, const int ambient, const XMVECTOR posit
 	shadowRenderTargetTexture = nullptr;
 	shadowDepthStencilView = nullptr;
 	shadowShaderResourceView = nullptr;
+
+	setViewport();
+	setViews();
+	setProjection();
+	setViewProjection();
 }
 
 LightSource::LightSource(const LightSource& origObj) {
@@ -28,6 +33,11 @@ LightSource::LightSource(const LightSource& origObj) {
 	shadowRenderTargetTexture = nullptr;
 	shadowDepthStencilView = nullptr;
 	shadowShaderResourceView = nullptr;
+
+	setViewport();
+	setViews();
+	setProjection();
+	setViewProjection();
 }
 
 LightSource& LightSource::operator=(const LightSource& origObj) {
@@ -39,6 +49,11 @@ LightSource& LightSource::operator=(const LightSource& origObj) {
 		this->data.colour = origObj.data.colour;
 		this->data.intensity = origObj.data.intensity;
 		this->data.lightFocus = origObj.data.lightFocus;
+
+		setViewport();
+		setViews();
+		setProjection();
+		setViewProjection();
 	}
 
 	return *this;
@@ -56,14 +71,133 @@ LightSource::~LightSource() {
 	}
 }
 
+void LightSource::setViewport() {
+	vp.Width = (float)S_WIDTH;
+	vp.Height = (float)S_HEIGHT;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+}
+
+void LightSource::setViews() {
+	if (data.type == L_SPOT) {
+		views[0] = XMMatrixLookAtLH(
+			data.position,
+			data.direction,
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+		views[1] = views[0];
+		views[2] = views[0];
+		views[3] = views[0];
+		views[4] = views[0];
+		views[5] = views[0];
+	} else if (data.type == L_DIRECTIONAL) {
+		//fix position for L_DIRECTIONAL to place itself in front of camera always instead
+		views[0] = XMMatrixLookAtLH(
+			data.position,
+			data.direction,
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+		views[1] = views[0];
+		views[2] = views[0];
+		views[3] = views[0];
+		views[4] = views[0];
+		views[5] = views[0];
+	} else {
+		XMFLOAT3* direction = new XMFLOAT3;
+		XMStoreFloat3(direction, data.position);
+
+		views[0] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x + 1, direction->y, direction->z, 0.0f),
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+		views[1] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x - 1, direction->y, direction->z, 0.0f),
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+		views[2] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y + 1, direction->z, 0.0f),
+			XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f)
+		);
+		views[3] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y - 1, direction->z, 0.0f),
+			XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)
+		);
+		views[4] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y, direction->z + 1, 0.0f),
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+		views[5] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y, direction->z - 1, 0.0f),
+			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+		);
+	}
+
+	for (int i = 0; i < 6; i++) {
+		views[i] = XMMatrixTranspose(views[i]);
+	}
+}
+
+void LightSource::setProjection() {
+	switch (data.type) {
+	case L_SPOT:
+		projection = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 0.5,
+			(float)S_WIDTH * 2 / (float)S_HEIGHT * 2,
+			0.1f,
+			max(data.intensity * 1.1f, 1.0f)
+		);
+		break;
+	case L_DIRECTIONAL:
+		projection = XMMatrixOrthographicLH(
+			(float)S_WIDTH,
+			(float)S_HEIGHT,
+			0.1f,
+			max(data.intensity * 1.1f, 1.0f)
+		);
+		break;
+	case L_POINT:
+		projection = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 0.5,
+			(float)S_WIDTH * 2 / (float)S_HEIGHT * 2,
+			0.1f,
+			max(data.intensity * 1.1f, 1.0f)
+		);
+		break;
+	}
+	projection = XMMatrixTranspose(projection);
+}
+
+void LightSource::setViewProjection() {
+	XMMATRIX p = this->projection;
+	XMMATRIX v = this->views[0];
+
+	data.viewProjection = XMMatrixMultiply(p, v);
+	v = this->views[1];
+	data.rotatedViewProjection[0] = XMMatrixMultiply(p, v);
+	v = this->views[2];
+	data.rotatedViewProjection[1] = XMMatrixMultiply(p, v);
+	v = this->views[3];
+	data.rotatedViewProjection[2] = XMMatrixMultiply(p, v);
+	v = this->views[4];
+	data.rotatedViewProjection[3] = XMMatrixMultiply(p, v);
+	v = this->views[5];
+	data.rotatedViewProjection[4] = XMMatrixMultiply(p, v);
+}
+
 HRESULT LightSource::createShadowBuffer(ID3D11Device* device) {
 	HRESULT result;
 
 	D3D11_TEXTURE2D_DESC textureDesc;
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
-
-	createViewport();
 
 	if (data.type == L_POINT) {
 		// Initialize the render target texture description.
@@ -132,15 +266,6 @@ HRESULT LightSource::createShadowBuffer(ID3D11Device* device) {
 	return S_OK;
 }
 
-void LightSource::createViewport() {
-	vp.Width = (float)S_WIDTH;
-	vp.Height = (float)S_HEIGHT;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-}
-
 void LightSource::prepareShadowRender(ID3D11DeviceContext* deviceContext) const {
 	deviceContext->RSSetViewports(1, &this->vp);
 
@@ -195,101 +320,12 @@ ID3D11ShaderResourceView* LightSource::getShadowMap() const {
 	return shadowShaderResourceView;
 }
 
-XMMATRIX LightSource::getView(int index) const {
-	XMMATRIX view;
+XMMATRIX LightSource::getViewProjection(int index) const {
+	if (index > 5)
+		index = 0;
 
-	//fix position for L_DIRECTIONAL to place itself in front of camera always instead
-
-	if (data.type == L_SPOT) {
-		view = XMMatrixLookAtLH(
-			data.position,
-			data.direction,
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-		);
-	} else {
-		XMFLOAT3* direction = new XMFLOAT3;
-		XMStoreFloat3(direction, data.position);
-
-		switch (index) {
-		case 0:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x+1, direction->y, direction->z, 0.0f),
-				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-			);
-			break;
-		case 1:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x-1, direction->y, direction->z, 0.0f),
-				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-			);
-			break;
-		case 2:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x, direction->y+1, direction->z, 0.0f),
-				XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f)
-			);
-			break;
-		case 3:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x, direction->y-1, direction->z, 0.0f),
-				XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)
-			);
-			break;
-		case 4:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x, direction->y, direction->z+1, 0.0f),
-				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-			);
-			break;
-		case 5:
-			view = XMMatrixLookAtLH(
-				data.position,
-				XMVectorSet(direction->x, direction->y, direction->z-1, 0.0f),
-				XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
-			);
-			break;
-		}
-	}
-	view = XMMatrixTranspose(view);
-
-	return view;
-}
-
-XMMATRIX LightSource::getProjection() const {
-	XMMATRIX proj;
-
-	switch (data.type) {
-	case L_SPOT:
-		proj = XMMatrixPerspectiveFovLH(
-			(float)XM_PI * 0.5,
-			(float)S_WIDTH*2 / (float)S_HEIGHT*2,
-			0.1f,
-			data.intensity * 1.1
-		);
-		break;
-	case L_DIRECTIONAL:
-		proj = XMMatrixOrthographicLH(
-			(float)S_WIDTH,
-			(float)S_HEIGHT,
-			0.1f,
-			data.intensity * 1.1
-		);
-		break;
-	case L_POINT:
-		proj = XMMatrixPerspectiveFovLH(
-			(float)XM_PI * 0.5,
-			(float)S_WIDTH*2 / (float)S_HEIGHT*2,
-			0.1f,
-			data.intensity * 1.1
-		);
-		break;
-	}
-	proj = XMMatrixTranspose(proj);
-
-	return proj;
+	if(index == 0)
+		return data.viewProjection;
+	else
+		return data.rotatedViewProjection[index];
 }

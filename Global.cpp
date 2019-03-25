@@ -53,6 +53,7 @@ ID3D11RenderTargetView* gRenderTargetViewArray[G_BUFFER];
 ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 
 // resources for depth buffer image
+ID3D11ShaderResourceView* gDepthShaderResourceView = nullptr;
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
@@ -96,6 +97,13 @@ Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
 //Frustum frustumCamera(&camera);
+
+WorldSpace worldObjects[4] = {
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }
+};
 
 //World/View/Projection
 XMMATRIX World;
@@ -166,6 +174,7 @@ void DestroyGlobals() {
 	gObjectMatrixBuffer->Release();
 
 	gDepth->Release();
+	gDepthShaderResourceView->Release();
 
 	for (int i = 0; i < G_BUFFER; i++) {
 		if (gRenderTargetViewArray[i]) {

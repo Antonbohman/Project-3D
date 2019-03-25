@@ -226,20 +226,6 @@ void setCameraViewProjectionSpace() {
 	Projection = XMMatrixTranspose(Projection);
 }
 
-void setLightViewProjectionSpace(LightSource* light) {
-	View = light->getView(0);
-
-	if (light->getLightType() == L_POINT) {
-		ViewRotated[0] = light->getView(1);
-		ViewRotated[1] = light->getView(2);
-		ViewRotated[2] = light->getView(3);
-		ViewRotated[3] = light->getView(4);
-		ViewRotated[4] = light->getView(5);
-	}
-
-	Projection = light->getProjection();
-}
-
 void updateCameraWorldViewProjection() {
 	gWorldMatrix->World = World;
 	gWorldMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
@@ -274,15 +260,12 @@ void updateObjectWorldSpace() {
 void updateLightViewProjection(LightSource* light) {
 	gLightMatrix->LightType = light->getLightType();
 	XMStoreFloat3(&gLightMatrix->Origin, light->getOrigin());
-	gLightMatrix->ViewProjection = XMMatrixMultiply(Projection, View);
-	
-	if (gLightMatrix->LightType == L_POINT) {
-		gLightMatrix->RotatedViewProjection[0] = XMMatrixMultiply(Projection, ViewRotated[0]);
-		gLightMatrix->RotatedViewProjection[1] = XMMatrixMultiply(Projection, ViewRotated[1]);
-		gLightMatrix->RotatedViewProjection[2] = XMMatrixMultiply(Projection, ViewRotated[2]);
-		gLightMatrix->RotatedViewProjection[3] = XMMatrixMultiply(Projection, ViewRotated[3]);
-		gLightMatrix->RotatedViewProjection[4] = XMMatrixMultiply(Projection, ViewRotated[4]);
-	}
+	gLightMatrix->ViewProjection = light->getViewProjection(0);
+	gLightMatrix->RotatedViewProjection[0] = light->getViewProjection(1);
+	gLightMatrix->RotatedViewProjection[1] = light->getViewProjection(2);
+	gLightMatrix->RotatedViewProjection[2] = light->getViewProjection(3);
+	gLightMatrix->RotatedViewProjection[3] = light->getViewProjection(4);
+	gLightMatrix->RotatedViewProjection[4] = light->getViewProjection(5);
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory
 	D3D11_MAPPED_SUBRESOURCE mappedMemory;
@@ -307,7 +290,7 @@ void updateCameraValues() {
 	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
 };
 
-void setSpecularValues(XMVECTOR specular) {
+void updateSpecularValues(XMVECTOR specular) {
 	gAmbientSpecularData->Specular = specular;
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory
