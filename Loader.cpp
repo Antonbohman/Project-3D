@@ -567,18 +567,26 @@ void loadTexture(const char* filepath)
 		if (loopControl == EOF) {}
 		else
 		{
-			//if (strcmp(line, "Ka"))
-			//{
-			//	XMFLOAT3 vertex;
-			//	fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			//}
-			//else if (strcmp(line, "Kd")){}
-			/*else */
+			if (strcmp(line, "Ka") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				ambientReflection[nrOfVertexBuffers] = vertex;
+
+			}
+			else if (strcmp(line, "Kd") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				diffuseReflection[nrOfVertexBuffers] = vertex;
+
+			}
+			
 			if (strcmp(line, "Ks") == 0)
 			{
 				XMFLOAT3 vertex;
 				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				ObjectReflection[nrOfVertexBuffers] = vertex;
+				specularReflection[nrOfVertexBuffers] = vertex;
 			}
 			else if (strcmp(line, "map_Kd") == 0)
 			{

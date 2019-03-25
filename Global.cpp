@@ -24,14 +24,11 @@ ID3D11SamplerState* gSampling = nullptr;
 //blend resource
 ID3D11BlendState* gBlendStateLight = nullptr;
 
-// a resource to store Vertices in the GPU
-//ID3D11Buffer* gVertexBufferMap = nullptr;
-//ID3D11Buffer* gVertexBufferObj = nullptr;
-//TriangleVertex* gMap = nullptr;
-//TriangleVertex* gObject = nullptr;
-int gnrOfVert[5];
-ID3D11Buffer *ppVertexBuffers[5];
-XMFLOAT3 ObjectReflection[5];
+int gnrOfVert[OBJECTS];
+ID3D11Buffer *ppVertexBuffers[OBJECTS];
+XMFLOAT3 ambientReflection[OBJECTS];
+XMFLOAT3 diffuseReflection[OBJECTS];
+XMFLOAT3 specularReflection[OBJECTS];
 
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
@@ -98,10 +95,11 @@ Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
 
 //Frustum frustumCamera(&camera);
 
-WorldSpace worldObjects[4] = {
+WorldSpace worldObjects[5] = {
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }
 };
 
@@ -114,24 +112,22 @@ XMMATRIX Projection;
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
-int nrOfVertices = 0;
 Heightmap g_heightmap;
 TriangleVertex* g_map;
-
-int gnrOfVertices = 0;
 
 //clear pointers
 ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
 ID3D11Buffer* nullCB = nullptr;
 
-ID3D11ShaderResourceView* gTextureSRV[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+//Objects
+ID3D11ShaderResourceView* gTextureSRV[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //SRVs for each object
+ID3D11Resource* gTexture2D[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //Texture2Ds for each object
 
-ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
+//Blendmapping
+ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr }; //SRVs for blendmapping
+ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr }; //Resources for each texture2Ds
 
-ID3D11UnorderedAccessView* nullUAV = nullptr;
-
+ID3D11UnorderedAccessView* nullUAV = nullptr; //null UAV for clearing
 
 
 //Blur
@@ -142,10 +138,6 @@ bool blurFilter = false;
 ID3D11Texture2D* gBlurTextureEmpty;
 
 ID3D11UnorderedAccessView* blurUAV = nullptr;
-
-float rotationTest = 0;
-
-
 
 // terminate function for globals
 void DestroyGlobals() {
