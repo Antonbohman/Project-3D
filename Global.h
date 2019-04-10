@@ -83,7 +83,7 @@ enum RenderFlags {
 struct RenderOptions {
 	bool splitView;
 	UINT renderMode;
-	float padding1,padding2;
+	float padding1, padding2;
 };
 
 // heightmap
@@ -161,6 +161,12 @@ struct WorldSpace {
 	float scale_z;
 };
 
+struct ReflectionAmount
+{
+	float a_r, a_g, a_b;
+	float d_r, d_g, d_b;
+	float s_r, s_g, s_b;
+};
 
 
 /////////////////////
@@ -193,9 +199,6 @@ extern ID3D11BlendState* gBlendStateLight;
 
 extern int gnrOfVert[OBJECTS]; //The number of vertices in each object
 extern ID3D11Buffer*ppVertexBuffers[OBJECTS]; //Buffers for storing the objects
-extern XMFLOAT3 ambientReflection[OBJECTS]; //The ambient Reflection from the .mtl file
-extern XMFLOAT3 diffuseReflection[OBJECTS];//The diffuse Reflection from the .mtl file
-extern XMFLOAT3 specularReflection[OBJECTS];//The specular Reflection from the .mtl file
 extern ID3D11Buffer *heightmapBuffer; //Buffer for storing the heightmap
 extern int nrOfHMVert; //The number of vertices in the heightmap
 extern int nrOfVertexBuffers; //A counter for how many vertexBuffers are being used at the moment
@@ -283,6 +286,9 @@ extern ID3D11Buffer* nullCB;
 
 extern ID3D11ShaderResourceView* gTextureSRV[OBJECTS]; //SRVs for each object
 extern ID3D11Resource* gTexture2D[OBJECTS]; //Resources for each object
+
+extern ReflectionAmount* gReflection;
+extern ID3D11Buffer* reflectionBuffers[OBJECTS];
 
 extern ID3D11ShaderResourceView* gMapTexturesSRV[4]; //SRVs for blendmapping
 extern ID3D11Resource* gMapTextureResource[4]; //Resources for each object

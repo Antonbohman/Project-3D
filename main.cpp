@@ -205,6 +205,24 @@ void CreateObjects() {
 	LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
 
 	LoadObjectFile("Objects/OBJs/RedHerring.obj", XMINT3(0, 50, 0));
+
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	bufferDesc.ByteWidth = sizeof(ReflectionAmount);
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+
+	//D3D11_SUBRESOURCE_DATA data;
+	//data.pSysMem = gReflection;
+
+	for (int i = 0; i < OBJECTS; i++)
+	{
+		D3D11_SUBRESOURCE_DATA data;
+		data.pSysMem = &gReflection[i];
+
+		gDevice->CreateBuffer(&bufferDesc, &data, &reflectionBuffers[i]);
+	}
 }
 
 void RenderWireframe() {
@@ -439,7 +457,7 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
 	gDeviceContext->PSSetShaderResources(4, 1, &gBlurShaderResource);
 	gDeviceContext->PSSetShaderResources(5, 1, &gDepthShaderResourceView);
-	
+
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
@@ -744,12 +762,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					SetViewport(false);
 
 					RenderWireframe();
-				} else {
+				}
+				else {
 					if (renderOnce) {
 						RenderShadowMaps();
 						renderOnce = false;
 					}
-						
+
 					SetViewport(false);
 
 					RenderBuffers(0);

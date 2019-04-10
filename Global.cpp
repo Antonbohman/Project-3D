@@ -26,9 +26,6 @@ ID3D11BlendState* gBlendStateLight = nullptr;
 
 int gnrOfVert[OBJECTS];
 ID3D11Buffer *ppVertexBuffers[OBJECTS];
-XMFLOAT3 ambientReflection[OBJECTS];
-XMFLOAT3 diffuseReflection[OBJECTS];
-XMFLOAT3 specularReflection[OBJECTS];
 
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
@@ -122,6 +119,9 @@ ID3D11Buffer* nullCB = nullptr;
 //Objects
 ID3D11ShaderResourceView* gTextureSRV[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //SRVs for each object
 ID3D11Resource* gTexture2D[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //Texture2Ds for each object
+
+ReflectionAmount* gReflection = new ReflectionAmount[OBJECTS]; //How much each material reflects of each colour and light
+ID3D11Buffer* reflectionBuffers[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 
 //Blendmapping
 ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr }; //SRVs for blendmapping
