@@ -22,6 +22,10 @@ SamplerState Sampling : register(s0);
 
 cbuffer PS_CB_AMBIENT_SPECULAR : register(b0)
 {
+    float3 AmbientAlbedo;
+    float AmbientPower;
+    float3 DiffuseAlbedo;
+    float DiffusePower;
     float3 SpecularAlbedo;
     float SpecularPower;
 };
@@ -42,7 +46,8 @@ PS_OUT PS_main(PS_IN input)
     //pixelColour = float4(input.Color, 1.0f);
 
     //add ambient lightning
-    output.Diffuse = pixelColour;
+
+    output.Diffuse = float4((pixelColour.r * DiffuseAlbedo.r), (pixelColour.g * DiffuseAlbedo.g), (pixelColour.b * DiffuseAlbedo.b), DiffusePower);
     
     //add specular map
     output.Specular = float4(SpecularAlbedo, SpecularPower);
@@ -52,8 +57,6 @@ PS_OUT PS_main(PS_IN input)
 
 
     //If the alpha of a pixel is above threshold send it to the computeShader
-    //float brightness = dot(pixelColour.xyz, float3(0.2126, 0.7152, 0.0722));
-    float brightness = (pixelColour.x * pixelColour.y * pixelColour.z);
     if (length(pixelColour.xyz) > 0.9f * 1.7f)
     {
         output.GlowEffect = pixelColour;

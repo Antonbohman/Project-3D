@@ -95,6 +95,8 @@ struct Heightmap {
 
 // resource storing ambient and specular
 struct AmbientSpecular {
+	XMVECTOR Ambient;
+	XMVECTOR Diffuse;
 	XMVECTOR Specular;
 };
 

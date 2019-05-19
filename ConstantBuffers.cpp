@@ -290,7 +290,9 @@ void updateCameraValues() {
 	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
 };
 
-void updateSpecularValues(XMVECTOR specular) {
+void updateSpecularValues(XMVECTOR ambient, XMVECTOR diffuse, XMVECTOR specular) {
+	gAmbientSpecularData->Ambient = ambient;
+	gAmbientSpecularData->Diffuse = diffuse;
 	gAmbientSpecularData->Specular = specular;
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory

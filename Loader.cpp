@@ -571,18 +571,18 @@ void loadTexture(const char* filepath)
 			{
 				XMFLOAT3 vertex;
 				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				gReflection[nrOfVertexBuffers].a_r = 1.0f/*vertex.x*/;
-				gReflection[nrOfVertexBuffers].a_g = 0.0f/*vertex.y*/;
-				gReflection[nrOfVertexBuffers].a_b = 0.0f/*vertex.z*/;
+				gReflection[nrOfVertexBuffers].a_r = vertex.x;
+				gReflection[nrOfVertexBuffers].a_g = vertex.y;
+				gReflection[nrOfVertexBuffers].a_b = vertex.z;
 
 			}
 			else if (strcmp(line, "Kd") == 0)
 			{
 				XMFLOAT3 vertex;
 				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				gReflection[nrOfVertexBuffers].d_r = 1.0f/*vertex.x*/;
-				gReflection[nrOfVertexBuffers].d_g = 0.0f/*vertex.y*/;
-				gReflection[nrOfVertexBuffers].d_b = 0.0f/*vertex.z*/;
+				gReflection[nrOfVertexBuffers].d_r = vertex.x;
+				gReflection[nrOfVertexBuffers].d_g = vertex.y;
+				gReflection[nrOfVertexBuffers].d_b = vertex.z;
 
 			}
 			
@@ -590,9 +590,9 @@ void loadTexture(const char* filepath)
 			{
 				XMFLOAT3 vertex;
 				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				gReflection[nrOfVertexBuffers].s_r = 1.0f/*vertex.x*/;
-				gReflection[nrOfVertexBuffers].s_g = 0.0f/*vertex.y*/;
-				gReflection[nrOfVertexBuffers].s_b = 0.0f/*vertex.z*/;
+				gReflection[nrOfVertexBuffers].s_r = vertex.x;
+				gReflection[nrOfVertexBuffers].s_g = vertex.y;
+				gReflection[nrOfVertexBuffers].s_b = vertex.z;
 			}
 			else if (strcmp(line, "map_Kd") == 0)
 			{
