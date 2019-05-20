@@ -57,7 +57,7 @@ PS_OUT PS_main(PS_IN input)
 
 
     //If the alpha of a pixel is above threshold send it to the computeShader
-    if (length(pixelColour.xyz) > 0.9f * 1.7f)
+    if (length(pixelColour.xyz) > 0.95f * 1.73f)
     {
         output.GlowEffect = pixelColour;
     }

@@ -594,6 +594,12 @@ void loadTexture(const char* filepath)
 				gReflection[nrOfVertexBuffers].s_g = vertex.y;
 				gReflection[nrOfVertexBuffers].s_b = vertex.z;
 			}
+			if (strcmp(line, "Ns") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f\n", &vertex.x);
+				gReflection[nrOfVertexBuffers].s_p = vertex.x;
+			}
 			else if (strcmp(line, "map_Kd") == 0)
 			{
 				char *pTexturePath = new char[50];

@@ -314,7 +314,7 @@ void RenderShadowMaps() {
 void RenderBuffers(float notToRender) {
 	// clear the back buffer to a deep blue
 	//float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
-	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
@@ -324,6 +324,9 @@ void RenderBuffers(float notToRender) {
 	{
 		gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[i], clearColor);
 	}
+	
+	float blurClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[4], blurClear);
 
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -376,7 +379,7 @@ void RenderBuffers(float notToRender) {
 		//set specular for object
 		setWorldSpace(worldObjects[i]);
 		updateCameraWorldViewProjection();
-		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, 1000));
+		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, gReflection[i].s_p));
 
 		//Render objects
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
@@ -395,10 +398,10 @@ void RenderBuffers(float notToRender) {
 	}
 
 	//Release
-	for (int i = 0; i < nrOfVertexBuffers; i++)
-	{
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
-	}
+	//for (int i = 0; i < nrOfVertexBuffers; i++)
+	//{
+		gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
+	//}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
@@ -408,9 +411,6 @@ void RenderBuffers(float notToRender) {
 
 	//Compute Gaussian Filter
 
-	//ID3D11Texture2D* computedResource = nullptr;
-	//gBlurShaderResource->GetResource();
-	//gDeviceContext->CopyResource();
 	if (blurFilter == true)
 	{
 		SetComputeShaders();
@@ -475,6 +475,8 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(4, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(5, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(8, 1, &nullSRV[0]);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);

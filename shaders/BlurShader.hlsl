@@ -70,12 +70,16 @@ void CS_main(uint3 DTid : SV_DispatchThreadID)
     //Colour
     float4 Colour = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    //Bluring the pixel with the closest 25 texels
-    for (int x = 0; x < 49; x++)
+
+    if (length(Input.Load(textureLocation + int3(24, 24, 0))) > 0.1f)
     {
-        for (int y = 0; y < 49; y++)
+    //Bluring the pixel with the closest 25 texels
+        for (int x = 0; x < 49; x++)
         {
-            Colour += Input.Load(textureLocation + int3(x, y, 0)) * filter[x][y];
+            for (int y = 0; y < 49; y++)
+            {
+                Colour += Input.Load(textureLocation + int3(x, y, 0)) * filter[x][y];
+            }
         }
     }
     Output[DTid.xy] = Colour;

@@ -163,24 +163,22 @@ float4 PS_light(PS_IN input) : SV_TARGET
     }
 
     //calculate angle between light source direction and normal 
-    float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
-
-    //calculate vector for reflected light
-    float3 lightReflectionVector = 2 * lightFactor * normal - normalize(LightPos.xyz - position.xyz);
+    float lightFactor = clamp(dot(normalize(normal), normalize(lightVector)), 0.0f, 1.0f);
 
     //get ambient colour
     float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
 
     //calculate diffuse lightning (no ligth/distance loss calculated here)
     float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
-    
+
+    //calculate vector for reflected light
+    float3 lightReflectionVector = 2 * lightFactor * normalize(normal) - normalize(lightVector);
     //clamp so only positive dot product is acceptable
     float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
     //change diffuse albedo to specular albedo when added!
-    float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
+    float4 specularColour = float4(specularAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
 
-
-    float4 finalColour = clamp(ambientColour + ((diffuseColour) * attenuation), 0.0f, 1.0f);
+    float4 finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
 
     if (shadow(position))
     {
