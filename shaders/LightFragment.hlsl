@@ -147,10 +147,10 @@ float4 PS_light(PS_IN input) : SV_TARGET
 
     if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT)
     {
-        lightVector = LightPos.xyz - position.xyz;
+        lightVector = LightPos.xyz - position.xyz; //pointing from objectposition to the light
 
         float ligthDist = length(lightVector);
-        attenuation = clamp(1.0f - (ligthDist / LightIntensity), 0, 1.0f);
+        attenuation = clamp(1.0f - (ligthDist / LightIntensity), 0.0f, 1.0f);
         
         if (LightType.x == TYPE_SPOT)
         {
@@ -163,29 +163,30 @@ float4 PS_light(PS_IN input) : SV_TARGET
     }
 
     //calculate angle between light source direction and normal 
-    float lightFactor = clamp(dot(normalize(normal), normalize(lightVector)), 0.0f, 1.0f);
+    float lightFactor = clamp(dot(normalize(normal), normalize(lightVector)), -1.0f, 1.0f);
 
     //get ambient colour
     float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
-
+    float4 diffuseColour = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 specularColour = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    if (lightFactor > 0.0f)
+    {
     //calculate diffuse lightning (no ligth/distance loss calculated here)
-    float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
+        diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
 
     //calculate vector for reflected light
-    float3 lightReflectionVector = 2 * lightFactor * normalize(normal) - normalize(lightVector);
+        float3 lightReflectionVector = 2 * lightFactor * normalize(normal) - normalize(lightVector);
     //clamp so only positive dot product is acceptable
-    float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
+        float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
     //change diffuse albedo to specular albedo when added!
-    float4 specularColour = float4(specularAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
-
+        specularColour = float4(specularAlbedo.rgb * LightColour.rgb * pow(max(dotProduct, 0), specularPower), 1.0f);
+    }
     float4 finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
 
     if (shadow(position))
     {
         finalColour = ambientColour; //return ambientColour;
     }
-        
-
     if (LightType.x == TYPE_POINT)
     {
         /*for (int i = 0; i < 5; i++)

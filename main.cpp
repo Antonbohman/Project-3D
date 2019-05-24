@@ -112,8 +112,8 @@ void CreateLigths() {
 	Lights = new LightSource[nrOfLights];
 
 	Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-13.2f, 42.0f, 33.7f, 0.0f), XMVectorSet(-12.5f, 41.3f, 34.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(-11.24f, 20.81f, -64.8f, 0.0f), XMVectorSet(-10.75f, 20.98f, -63.95f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	//Lights[3] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, 0.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
@@ -324,7 +324,7 @@ void RenderBuffers(float notToRender) {
 	{
 		gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[i], clearColor);
 	}
-	
+
 	float blurClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[4], blurClear);
 
@@ -353,7 +353,7 @@ void RenderBuffers(float notToRender) {
 	//set specular for height map
 	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 	updateCameraWorldViewProjection();
-	updateSpecularValues(XMVectorSet(1, 1, 1, 1), XMVectorSet(1, 1, 1, 1), XMVectorSet(1, 1, 1, 1));
+	updateSpecularValues(XMVectorSet(1, 1, 1, 1), XMVectorSet(1, 1, 1, 0.01), XMVectorSet(0.1, 0.1, 0.1, 0.00000010f));
 
 	//Render heightmap
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
@@ -379,7 +379,7 @@ void RenderBuffers(float notToRender) {
 		//set specular for object
 		setWorldSpace(worldObjects[i]);
 		updateCameraWorldViewProjection();
-		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, gReflection[i].s_p));
+		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, gReflection[i].s_p * 100));
 
 		//Render objects
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
@@ -400,7 +400,7 @@ void RenderBuffers(float notToRender) {
 	//Release
 	//for (int i = 0; i < nrOfVertexBuffers; i++)
 	//{
-		gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
 	//}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);

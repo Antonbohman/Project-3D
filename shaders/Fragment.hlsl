@@ -66,7 +66,5 @@ PS_OUT PS_main(PS_IN input)
         output.GlowEffect = (0.0f, 0.0f, 0.0f, 0.0f);
     }
 
-    //output.GlowEffect = pixelColour;
-
     return output;
 };
