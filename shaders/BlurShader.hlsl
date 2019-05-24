@@ -71,8 +71,12 @@ void CS_main(uint3 DTid : SV_DispatchThreadID)
     float4 Colour = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 
-    if (length(Input.Load(textureLocation + int3(24, 24, 0))) > 0.1f)
-    {
+ //   if (length(Input.Load(textureLocation + int3(24, 24, 0))) > 0.1f
+ //|| (length(Input.Load(textureLocation + int3(0, 0, 0))) > 0.1f)
+ //|| (length(Input.Load(textureLocation + int3(0, 49, 0))) > 0.1f)
+ //|| (length(Input.Load(textureLocation + int3(49, 0, 0))) > 0.1f)
+ //|| (length(Input.Load(textureLocation + int3(49, 49, 0))) > 0.1f))
+ //   {
     //Bluring the pixel with the closest 25 texels
         for (int x = 0; x < 49; x++)
         {
@@ -81,6 +85,6 @@ void CS_main(uint3 DTid : SV_DispatchThreadID)
                 Colour += Input.Load(textureLocation + int3(x, y, 0)) * filter[x][y];
             }
         }
-    }
+    //}
     Output[DTid.xy] = Colour;
 }
