@@ -316,8 +316,8 @@ void RenderShadowMaps() {
 
 void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 	// clear the back buffer to a deep blue
-	//float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
-	float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
+	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	//float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
@@ -391,6 +391,7 @@ void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 
 		if (!i)
 		{
+
 			//Set copy
 			setWorldSpace(copy);
 			updateCameraWorldViewProjection();
@@ -1055,7 +1056,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				{
 					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
 				}*/
-				updateKeyAndMouseInput(&freeFlight, &culling, &camFrustum, delta);
+				//updateKeyAndMouseInput(&freeFlight, &culling, &camFrustum, delta);
 
 				updateRenderingOptions();
 
