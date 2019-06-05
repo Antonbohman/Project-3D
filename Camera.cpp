@@ -17,7 +17,20 @@ Camera::Camera(Vector4 camPos, Vector4 camFocus)
 	cameraOriginalPosition = cameraPosition;
 	cameraTarget = camFocus;
 	cameraNormal = XMVector3Normalize(cameraTarget - cameraPosition);
+
+
+	/*camera.SetCamPos({ float(-g_heightmap.imageWidth / 2),3.0f,float(+g_heightmap.imageHeight / 2),0.0f });
+
+				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
+
+				float angel = ((g_heightmap.imageWidth / 2) / hyp);
+*/
+	
+	Vector3 norm = cameraNormal;
+	this->SetYawAndPitch(XM_PI*0.5, 0);
+	
 	cameraOriginalTarget = cameraTarget;
+	this->UpdateCamera({ 0.0f,0.0f,0.0f }, 0.0f, 0.0f);
 }
 
 Camera::~Camera()
@@ -111,6 +124,11 @@ XMVECTOR Camera::GetCameraNormal() const
 	return this->cameraNormal;
 }
 
+XMMATRIX Camera::GetCamRotationMatrix() const
+{
+	return this->camRotationMatrix;
+}
+
 float Camera::GetYaw() const
 {
 	return this->yaw;
@@ -124,6 +142,8 @@ float Camera::GetPitch() const
 void Camera::UpdateCameraNormal()
 {
 	this->cameraNormal = XMVector4Normalize(this->cameraTarget - this->cameraPosition);
+
+	//this->cameraNormal = this->camForward;
 }
 
 void Camera::SetCameraHeight(float newY)
@@ -163,16 +183,15 @@ void Camera::UpdateCamera(Vector3 movement, bool speedMultiplier, double time)
 	//cameraFocus = XMVector3TransformCoord(DefaultForward, camRotationMatrix);
 	//cameraFocus = XMVector3Normalize(cameraFocus); //DID NOT WORK
 
-	//DID WORK
 	float y = sinf(pitch);
 	float r = cosf(pitch);
 	float z = r * cosf(yaw);
 	float x = r * sinf(yaw);
 	this->cameraTarget = this->cameraPosition + XMVECTOR{ x, y, z, 0.0f };
-	//cameraFocus = XMVector3Normalize(cameraFocus); 
 
 	XMMATRIX RotateYTempMatrix;
 	RotateYTempMatrix = XMMatrixRotationY(yaw);
+	
 
 	//Update cameraForward,Up,Right
 	camRight = XMVector3TransformCoord(defaultRight, RotateYTempMatrix);
@@ -180,7 +199,10 @@ void Camera::UpdateCamera(Vector3 movement, bool speedMultiplier, double time)
 	camUp = XMVector3TransformCoord(camUp, RotateYTempMatrix);
 	camForward = XMVector3TransformCoord(defaultForward, RotateYTempMatrix);
 
+	this->camRotationMatrix = RotateYTempMatrix;
+
 	Vector4 timeMovement = XMVector3Normalize(movement);
+	
 	int speed = 1.0f;
 	if (speedMultiplier)
 	{

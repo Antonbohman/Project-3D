@@ -4,10 +4,11 @@
 //#include <DirectXMath.h>
 
 #include "Camera.h"
+#include "Quadtree.h"
 
 
 class Frustum {
-private:
+public:
 	Camera* cameraReference;
 
 	//http://www.lighthouse3d.com/tutorials/view-frustum-culling/geometric-approach-extracting-the-planes/
@@ -22,6 +23,8 @@ private:
 
 	float frustumHightFar;
 	float frustumWidthFar;
+
+	float scaleFactor;
 	
 	//Frustum points
 	Vector4 frustumNearCenter;
@@ -38,7 +41,12 @@ private:
 	Vector4 frustFtl;
 	Vector4 frustFbl;
 
-	enum PlaneNames{NEARPLANE,
+	//Frustum "middle" for a ok point at search
+	Vector4 frustMiddle;
+	Vector4 cameraPos;
+
+	enum PlaneNames{
+		NEARPLANE,
 		FARPLANE,
 		RIGHTPLANE,
 		TOPPLANE,
@@ -51,11 +59,9 @@ private:
 		Vector4 normal;
 		Vector4* pointInPlane;
 
-		int distance(Vector4 objectPoint);
+		int distance(Vector3 objectPoint);
 	};
 	FrustumPlanes planes[6];
-	
-public:
 
 	Frustum();
 
@@ -69,13 +75,19 @@ public:
 
 	void GiveCameraReference(Camera * theCamera);
 
-	//int isInFront(Vector3 point);
+	void calculateFrustum(float fov, float windowWidth, float windowHeight);
 
-	void calculateFrustum(float fov, float windowsWidth, float windowHeight);
+	void calculateFrustum(float fov, float windowWidth, float windowHeight, float scaleFactor);
 
-	int pointInFrustum(Vector4 point);
-	//SPHERE FOR NOW 
-	int sphereInFrustum(Vector4 &point, float radius);
+	int pointInFrustum(Vector3 point);
 
-	/*int boxInFrustum()*/
+	//CHECKS ONLY with 2 planes
+	int pointInFrustum(Vector3 point, float extraRange);
+
+	bool insideChild(Quadtree* theTree,float extraDiscrepancy);
+
+	int isQuadInside(Quadtree* theTree, int & output, int * elementsOutputArray, int & capacity);
+
+	int sphereInFrustum(Vector3 point, float radius);
+
 };

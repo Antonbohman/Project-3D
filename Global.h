@@ -10,7 +10,7 @@
 #include "LightSource.h"
 #include "Camera.h"
 #include "Frustum.h"
-//#include "Frustum.h"
+#include "Quadtree.h"
 
 using namespace DirectX;
 
@@ -19,20 +19,20 @@ using namespace DirectX;
 ///////////////////
 
 // window size
-#define W_WIDTH 800.0f
-#define W_HEIGHT 600.0f
+//#define W_WIDTH 800.0f
+//#define W_HEIGHT 600.0f
 
-//#define W_WIDTH 1280.0f
-//#define W_HEIGHT 720.0f
+#define W_WIDTH 1280.0f
+#define W_HEIGHT 720.0f
 
-#define WALKING_HEIGHT 4
+#define WALKING_HEIGHT 8
 
 //Fov (radians)
 #define FOV 0.45f//0.45f
 
 // PROJECTION RANGE
 #define PROJECTION_NEAR_Z 1.0f
-#define PROJECTION_FAR_Z 500.0f
+#define PROJECTION_FAR_Z 800.0f
 
 // define number of vertices used in rendering
 #define VERTICES 6
@@ -235,7 +235,19 @@ extern XMMATRIX Projection;
 // CAMERAclass
 extern Camera camera;
 
-// FrustumOfCamera
+extern Quadtree theObjectTree;
+
+extern Point* copies;
+
+extern int elementsAmount;
+
+extern int* elementsIndexQuadCulling; //Culling from tree
+
+extern int objectsCulledFromQuad;
+
+extern int objectsFromFrustum;
+
+extern int* elementsIndexFrustumCulling;// FrustumOfCamera
 
 //extern Frustum frustumCamera;
 //extern Frustum frustumCamera;

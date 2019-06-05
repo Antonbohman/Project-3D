@@ -45,13 +45,16 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace std::chrono;
 
-std::unique_ptr<DirectX::Mouse>m_mouse;
-std::unique_ptr<DirectX::Keyboard>m_keyboard;
+std::unique_ptr<DirectX::Mouse>mouseInput;
+std::unique_ptr<DirectX::Keyboard>keyboardInput;
 
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
+
+bool keyReleased = true;
+
 
 void CreateDeferredQuad() {
 	PositionVertex triangleVertices[6] =
@@ -278,7 +281,7 @@ void RenderShadowMaps() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
-void RenderBuffers(float notToRender) {
+void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
 
@@ -327,36 +330,41 @@ void RenderBuffers(float notToRender) {
 
 	//Set object shader options
 	SetDeferredShaders();
-
-	WorldSpace copies[2];
-	copies[0].offset_x = 0; copies[0].offset_y = 30; copies[0].offset_z = 10;
-
-	copies[1].offset_x = 0; copies[1].offset_y = 40; copies[1].offset_z = 10;
-
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
 	
-		
+		rotation+=0.01f;
 
 		if (0 == i )
 		{
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[0].offset_x,copies[0].offset_y,copies[0].offset_z,3.0f,3.0f,3.0f });
-			
-			updateCameraWorldViewProjection();
-			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
 
 			//set object texture
-			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[1]);
 
 			//Render objects
-			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
-			gDeviceContext->Draw(gnrOfVert[i], 0);
+			setVertexBuffer(ppVertexBuffers[1], sizeof(TriangleVertex), 0);
 
-			setWorldSpace({ 0.0f,0.0f,0.0f,copies[1].offset_x,copies[1].offset_y,copies[1].offset_z,1.0f,1.0f,1.0f });
-			updateCameraWorldViewProjection();
-			//Render objects
-			gDeviceContext->Draw(gnrOfVert[i], 0);
-			
+			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+			if (*drawAllCopies==false)
+			{
+				//DRAW COPIES THAT ARE CULLED BY FRUSTUM AND QUADTREE
+				for (int j = 0; j < amount; j++)
+				{
+					setWorldSpace({ 0.0f,0.0f,0.0f,copies[RenderCopies[j]].x,copies[RenderCopies[j]].y,copies[RenderCopies[j]].z,0.5f,0.5f,0.5f });
+					updateCameraWorldViewProjection();
+					gDeviceContext->Draw(gnrOfVert[1], 0);
+				}
+			}
+			else
+			{
+				for (int j = 0; j < elementsAmount; j++)
+				{
+					setWorldSpace({ 0.0f,0.0f,0.0f,copies[j].x,copies[j].y,copies[j].z,0.5f,0.5f,0.5f });
+					updateCameraWorldViewProjection();
+					gDeviceContext->Draw(gnrOfVert[1], 0);
+				}
+			}
 		}
 		else
 		{
@@ -422,40 +430,125 @@ void RenderLights() {
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 }
 
-void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+void CreateCopies()
+{
+	srand(time(NULL));
+
+	//Point *copies = new Point[256];
+
+	//8 point TEST 
+	if (0) 
+	{
+		Vector3 temp = { 0,10,20 };
+		copies[0] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[0]);
+		temp = { -20,10,20 };
+		copies[1] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[1]);
+		temp = { 20,10,20 };
+		copies[2] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[2]);
+
+		temp = { -20,10,0 };
+		copies[3] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[3]);
+		temp = { 20,10,0 };
+		copies[4] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[4]);
+
+
+		temp = { -20,10,-20 };
+		copies[5] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[5]);
+		temp = { 0,10,-20 };
+		copies[6] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[6]);
+		temp = { 20,10,-20 };
+		copies[7] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[7]);
+	}
+	else
+	{
+		//Vector3 temp = { 0,20,0 };
+		int x = -500;
+		int z = -500;
+		int y = 20;
+		int randx=0;
+		int randz=0;
+
+		srand(time(NULL));
+		
+		/*Point* objects = new Point[elementsAmount];*/
+		for(int i=0;i<elementsAmount;i++)
+		{
+			randx = x + rand() % 1001;
+			randz = z + rand() % 1001;
+			if (i % 50 == 0)
+			{
+				y += 10;
+			}
+
+			copies[i] = Point(randx, y, randz, i);
+		
+			theObjectTree.insert(copies[i]);			
+		}
+	}
+	
+
+}
+
+void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObjects,bool * wireframe, bool *forceSingle,bool *onlyQuadCulling, Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
 
 
 	//float DontRender[6] = {-1};
-	float DontRender = -1;
+	//float DontRender = -1;
 	//FREE FLIGHT WITH O key
 	//HORIZONTAL movement with P 
 
 	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-	{//IN FREEFLIGHT				O key
+	{//<<<<IN FREEFLIGHT<<<< 	O key // TOGGLE
 	 //INTO CAMERA FORWARD		W
-	 //INTO CAMERA BACKWARDS		S
+	 //INTO CAMERA BACKWARDS	S
 	 //CAMERA RIGHT				D
 	 //CAMERA LEFT				A
-	 //CAMERA UP					Q
+	 //CAMERA UP				Q
 	 //CAMERA DOWN				E
 
-	 //IN HORIZONTAL				P key
+
+	 //<<<<IN HORIZONTAL<<<<	O key // TOGGLE
 	 //CAMERA FORWARD			W
 	 //CAMERA BACKWARDS			S
 	 //CAMERA RIGHT				D
 	 //CAMERA LEFT				A
 
-	 //OTHER
-	 //NV corner				F1				
-	 //NE corner				F2
-	 //SE corner				F3
-	 //SV corner				F4
+	 //<<<<OTHER<<<<
+	 
+	 //SPRINT					LSHIFT
+	 //ROTATE					R
+
 	}
 	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 
+	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
+	{
+		//CAMERA POSITION
+		//STARTING POS				ESC
+		//NV corner					F1				
+		//NE corner					F2
+		//SE corner					F3
+		//SV corner					F4
+
+		//TOGGLES
+		//CullingDisplay			P
+		//Show all culling objects	U
+		//CAMERA VIEWS				Y
+		//WIREFRAME					H
+	}
+	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
+
 	//KEYBOARD 
 	{
-		auto kb = m_keyboard->GetState();
+		auto kb = keyboardInput->GetState();
 		//SHORT COMMANDS
 		{
 			if (kb.Escape) {
@@ -477,7 +570,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 0.5;
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) +0.5f;
 				//angel = 0.0f;
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
@@ -486,7 +579,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0f;
 
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
@@ -499,15 +592,138 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
-			if (kb.O) {
-				*freeFlight = true;
-			}
-			if (kb.P) {
-				*freeFlight = false;
-			}
 
-			//BUTTON FOR CULLING
+			//TOGGLE KEYS
+			if (!keyReleased)
+			{
+				if (kb.O)
+				{
+
+				}
+				else if (kb.R)
+				{
+
+				}
+				else if (kb.P)
+				{
+
+				}
+				else if (kb.U)
+				{
+
+				}
+				else if (kb.Y)
+				{
+
+				}
+				else if (kb.H)
+				{
+
+				}
+				else  if (kb.J)
+				{
+
+				}
+				else
+				{
+					keyReleased = true;
+				}
+
+			}
+			if (keyReleased)
+			{
+				if (kb.O) {
+					if(*freeFlight == true)
+					*freeFlight = false;
+					else
+					*freeFlight = true;
+
+					keyReleased = false;
+				}
+				if (kb.R) {
+					camera.AddYaw(XM_PI*0.1f);
+					keyReleased = false;
+				}
+				if (kb.P)
+				{
+					if (*culling == true)
+					{
+						*culling = false;
+						*showCullingObjects = false;
+						*onlyQuadCulling = false;
+					}
+					else
+						*culling = true;
+					keyReleased = false;
+				}
+				if (kb.U)
+				{
+					if (*culling ==true)
+					{ 
+					if (*showCullingObjects == true)
+						* showCullingObjects = false;
+
+					else
+						* showCullingObjects = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.Y)
+				{
+					if (*forceSingle == true)
+					{ 
+						* forceSingle = false;
+					}
+					else
+					{ 
+						* forceSingle = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.H)
+				{
+					if (*wireframe == true)
+					{
+						*wireframe = false;
+					}
+					else
+					{
+						*wireframe = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.J)
+				{
+					if (*culling == true)
+					{
+						if (*onlyQuadCulling == true)
+						{
+							*onlyQuadCulling = false;
+						}
+						else
+						{
+							*onlyQuadCulling = true;
+						}
+					}
+					keyReleased = false;
+				}
+
+				//WIRE FRAME CHECK ?
+
+			}
 		}
+
+		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+		auto mouse = mouseInput->GetState();
+
+		if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+			//MOUSE RELATIVE CONTROL
+			float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+			camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+		}
+
+		mouseInput->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 		Vector3 moveInDepthCameraClass = Vector3::Zero;
 		Vector3 deltaChange = Vector3::Zero;
@@ -553,17 +769,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 				deltaChange.y -= 1.0f;
 		}
 
-		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
-		auto mouse = m_mouse->GetState();
-
-		if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-			//MOUSE RELATIVE CONTROL
-			float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
-
-			camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
-		}
-
-		m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
+		
 
 
 		//UPDATE CAMERA
@@ -579,12 +785,19 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 			//Walking on terrain
 			if (!*freeFlight) {
 				Vector4 CameraPos = camera.GetCamPos();
+				Vector4 CameraForward = camera.GetCamForward();
 
 				//TEST byte ordningen så det liknar en graf.
+
+				//2 mätpunkter 1 på cameran samt en framför
 
 				XMINT2 nRoundedPos;
 				nRoundedPos.x = CameraPos.x;
 				nRoundedPos.y = CameraPos.z;
+
+				XMINT2 n2RoundedPos;
+				n2RoundedPos.x = CameraPos.x+CameraForward.x;
+				n2RoundedPos.y = CameraPos.z+CameraForward.z;
 
 				//avrundar till närmsta heltal
 				if (nRoundedPos.x < 0) {
@@ -597,33 +810,102 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 				} else {
 					if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
 				}
+				if (n2RoundedPos.x < 0) {
+					if (float(n2RoundedPos.x) - 0.5f > CameraPos.x) n2RoundedPos.x--;
+				}
+				else {
+					if (float(n2RoundedPos.x) + 0.5f < CameraPos.x) n2RoundedPos.x++;
+				}
+				if (n2RoundedPos.y < 0) {
+					if (float(n2RoundedPos.y) - 0.5f > CameraPos.z) n2RoundedPos.y--;
+				}
+				else {
+					if (float(n2RoundedPos.y) + 0.5f < CameraPos.z) n2RoundedPos.y++;
+				}
 
 				nRoundedPos.x += g_heightmap.imageWidth / 2;
 				nRoundedPos.y += g_heightmap.imageHeight / 2;
+
+				n2RoundedPos.x += g_heightmap.imageWidth / 2;
+				n2RoundedPos.y += g_heightmap.imageHeight / 2;
 
 				//Avrundar så ingen ogiltig arrayplats nåss
 				if (nRoundedPos.x < 0) nRoundedPos.x = 0;
 				if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
 
+				if (n2RoundedPos.x < 0) n2RoundedPos.x = 0;
+				if (n2RoundedPos.x >= g_heightmap.imageWidth) n2RoundedPos.x = g_heightmap.imageWidth - 1;
+
 				if (nRoundedPos.y < 0) nRoundedPos.y = 0;
 				if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
 
+				if (n2RoundedPos.y < 0) n2RoundedPos.y = 0;
+				if (n2RoundedPos.y >= g_heightmap.imageHeight) n2RoundedPos.y = g_heightmap.imageHeight - 1;
+
 
 				int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
-				float newHeight = (g_heightmap.verticesPos[index].y + WALKING_HEIGHT);
+
+				int index2 = (n2RoundedPos.y * g_heightmap.imageWidth) + n2RoundedPos.x;
+
+				/*float newHeight = (g_heightmap.verticesPos[index].y  + WALKING_HEIGHT);*/
+
+				float newHeight = ((g_heightmap.verticesPos[index].y + g_heightmap.verticesPos[index2].y)/2 + WALKING_HEIGHT);
 
 				//ställer pitch, yaw, ny höjd 
 				camera.SetCameraHeight(newHeight);
-
-				//camFrustum->calculateFrustum(FOV,W_WIDTH,W_HEIGHT);
-
-				//if(camFrustum->pointInFrustum({ 5.0f, 25.0f, 5.0f, 0.0f })!=0 )
-				//{
-				//	//LOOKING AT MARS REMOVES FISH
-				//	DontRender = 0;
-				//}
 			}
 
+			camFrustum->calculateFrustum(FOV, W_WIDTH, W_HEIGHT,2.5f);
+			
+			Vector4 temp = camera.GetCameraNormal()* (camFrustum->frustumFarDist - camFrustum->frustumNearDist);
+		
+			
+			//reset
+			objectsFromFrustum = 0;
+
+			objectsCulledFromQuad = 0;
+
+			int capacity = elementsAmount;
+
+			if (*culling==true)
+			{
+
+			//rough culling the quadtree
+				int testing = camFrustum->isQuadInside(&theObjectTree, objectsCulledFromQuad, elementsIndexQuadCulling, capacity);
+
+				//culling individuel objects
+
+				/*for (int i = 0; i < elementsAmount; i++)
+				{
+
+					if (true)
+					{
+
+
+						if (camFrustum->sphereInFrustum(Vector3 {copies[i].x,copies[i].y,copies[i].z},50.0f) > 0)
+						{
+							elementsIndexFrustumCulling[objectsFromFrustum] = copies[i].index;
+							objectsFromFrustum++;
+						}
+					}
+				}
+				*/
+				/*cullingfrustum =*/
+				//COMBINE
+				for (int i = 0; i < objectsCulledFromQuad; i++)
+				{
+
+					if (true)
+					{
+						if (camFrustum->sphereInFrustum(Vector3{ copies[elementsIndexQuadCulling[i]].x,
+							copies[elementsIndexQuadCulling[i]].y,copies[elementsIndexQuadCulling[i]].z }, 25.0f) > 0)
+						{
+							elementsIndexFrustumCulling[objectsFromFrustum] = copies[elementsIndexQuadCulling[i]].index;
+							objectsFromFrustum++;
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -637,6 +919,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
 	bool culling = renderOpt & RENDER_CULLING;
+	bool wireFrame = renderOpt & RENDER_WIREFRAME;
+	bool forceSingle = true;
+	bool showCullingObjects = false; 
+	bool onlyQuadCulling = false;
 
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance);
@@ -644,9 +930,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	Frustum camFrustum(&camera);
 
 	//Mouse and keyboard ini (ONLY MOUSE)
-	m_keyboard = std::make_unique<Keyboard>();
-	m_mouse = std::make_unique<Mouse>();
-	m_mouse->SetWindow(wndHandle);
+	keyboardInput = std::make_unique<Keyboard>();
+	mouseInput = std::make_unique<Mouse>();
+	mouseInput->SetWindow(wndHandle);
 
 	if (wndHandle)
 	{
@@ -668,6 +954,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		CreateObjects();
 
+		CreateCopies();
+
 		ShowWindow(wndHandle, nCmdShow);
 
 		while (WM_QUIT != msg.message) {
@@ -681,19 +969,54 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
-				updateKeyAndMouseInput(&freeFlight,&culling,&camFrustum, delta);
+				updateKeyAndMouseInput(&freeFlight,&culling, &showCullingObjects,&wireFrame,&forceSingle, &onlyQuadCulling,&camFrustum, delta);
 
-				if (renderOpt & RENDER_WIREFRAME) {
-					SetViewport(false);
+				/*if (wireFrame == true && forceSingle ==true)
+				{
+					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
+
+					
+					if (!forceSingle)
+					{
+						renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT | RENDER_WIREFRAME;
+					}
+				}
+				if (wireFrame == false && forceSingle == true)
+				{
+					renderOpt = RENDER_FREE_FLIGHT | RENDER_WIREFRAME;
+				}
+				if(wireFrame == false && forceSingle == false)
+				{
+					renderOpt = RENDER_FREE_FLIGHT | RENDER_DOUBLE_VIEWPORT;
+				}
+				if (wireFrame == true && forceSingle == false)
+				{
+					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
+				}*/
+
+				if (renderOpt & RENDER_WIREFRAME && wireFrame) {
+					SetViewport(forceSingle);
 
 					RenderWireframe();
 				} else {
 					RenderShadowMaps();
 
-					SetViewport(false);
+					SetViewport(forceSingle);
+					
+					if (onlyQuadCulling)
+					{
+						//SINGEL PASS QUAD TEST ONLY
+						RenderBuffers(elementsIndexQuadCulling, objectsCulledFromQuad, &showCullingObjects);
+					}
+					else
+					{
+						//DOBULE PASS QUAD AND FRUSTUM
+						RenderBuffers(elementsIndexFrustumCulling, objectsFromFrustum, &showCullingObjects);
+					}
+					//SINGEL PASS FRUSTUM ONLY
+					/*RenderBuffers(elementsIndexFrustumCulling,objectsFromFrustum);*/
 
-					RenderBuffers(0);
-
+					
 					SetViewport(true);
 
 					RenderLights();
@@ -703,6 +1026,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			}
 		}
 
+
+		//delete[] copies;
 		//destroy
 		DestroyShaders();
 		DestroyGlobals();
@@ -960,3 +1285,4 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 
 	return hr;
 }
+
