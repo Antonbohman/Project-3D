@@ -1,7 +1,8 @@
 #include "Global.h"
 
 // rendering options
-ULONG renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT ;
+ULONG renderOpt = RENDER_FREE_FLIGHT;
+UINT renderMode = R_DEFAULT;
 
 // viewport
 D3D11_VIEWPORT* vp = nullptr;
@@ -23,14 +24,8 @@ ID3D11SamplerState* gSampling = nullptr;
 //blend resource
 ID3D11BlendState* gBlendStateLight = nullptr;
 
-// a resource to store Vertices in the GPU
-//ID3D11Buffer* gVertexBufferMap = nullptr;
-//ID3D11Buffer* gVertexBufferObj = nullptr;
-//TriangleVertex* gMap = nullptr;
-//TriangleVertex* gObject = nullptr;
-int gnrOfVert[5];
-ID3D11Buffer *ppVertexBuffers[5];
-XMFLOAT3 ObjectReflection[5];
+int gnrOfVert[OBJECTS];
+ID3D11Buffer *ppVertexBuffers[OBJECTS];
 
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
@@ -52,6 +47,7 @@ ID3D11RenderTargetView* gRenderTargetViewArray[G_BUFFER];
 ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 
 // resources for depth buffer image
+ID3D11ShaderResourceView* gDepthShaderResourceView = nullptr;
 ID3D11DepthStencilView* gDepth = nullptr;
 
 // resources that represent shaders
@@ -66,6 +62,9 @@ ID3D11PixelShader* gBlendShader = nullptr;
 ID3D11ComputeShader* gComputeShader = nullptr;
 ID3D11VertexShader* gLightVertexShader = nullptr;
 ID3D11PixelShader* gLightPixelShader = nullptr;
+
+RenderOptions* gRenderingOptionsData = nullptr;
+ID3D11Buffer* gRenderingOptionsBuffer = nullptr;
 
 AmbientSpecular* gAmbientSpecularData = nullptr;
 ID3D11Buffer* gAmbientSpecularBuffer = nullptr;
@@ -112,6 +111,14 @@ int* elementsIndexFrustumCulling = new int [elementsAmount];
 
 //Frustum frustumCamera(&camera);
 
+WorldSpace worldObjects[5] = {
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }
+};
+
 //World/View/Projection
 XMMATRIX World;
 XMMATRIX View;
@@ -121,25 +128,35 @@ XMMATRIX Projection;
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
-int nrOfVertices = 0;
 Heightmap g_heightmap;
 TriangleVertex* g_map;
-
-int gnrOfVertices = 0;
 
 //clear pointers
 ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
 ID3D11Buffer* nullCB = nullptr;
 
-ID3D11ShaderResourceView* gTextureSRV[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+//Objects
+ID3D11ShaderResourceView* gTextureSRV[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //SRVs for each object
+ID3D11Resource* gTexture2D[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //Texture2Ds for each object
 
-ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
+ReflectionAmount* gReflection = new ReflectionAmount[OBJECTS]; //How much each material reflects of each colour and light
+ID3D11Buffer* reflectionBuffers[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 
-float rotationTest = 0;
+//Blendmapping
+ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr }; //SRVs for blendmapping
+ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr }; //Resources for each texture2Ds
+
+ID3D11UnorderedAccessView* nullUAV = nullptr; //null UAV for clearing
 
 
+//Blur
+ID3D11Texture2D* gBlurTextureDraw = nullptr;
+ID3D11Texture2D* gBlurTextureRead = nullptr;
+ID3D11ShaderResourceView* gBlurShaderResource = nullptr;
+bool blurFilter = false;
+ID3D11Texture2D* gBlurTextureEmpty;
+
+ID3D11UnorderedAccessView* blurUAV = nullptr;
 
 // terminate function for globals
 void DestroyGlobals() {
@@ -151,6 +168,9 @@ void DestroyGlobals() {
 	gDeferredQuadBuffer->Release();
 
 	gLightDataBuffer->Release();
+
+	_aligned_free(gRenderingOptionsData);
+	gRenderingOptionsBuffer->Release();
 
 	_aligned_free(gAmbientSpecularData);
 	gAmbientSpecularBuffer->Release();
@@ -165,6 +185,7 @@ void DestroyGlobals() {
 	gObjectMatrixBuffer->Release();
 
 	gDepth->Release();
+	gDepthShaderResourceView->Release();
 
 	for (int i = 0; i < G_BUFFER; i++) {
 		if (gRenderTargetViewArray[i]) {

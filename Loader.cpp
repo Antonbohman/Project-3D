@@ -395,7 +395,7 @@ void LoadObjectFile(char* filename, XMINT3 offset)
 	int nrOfNormals = 0;
 	int normArrSize = 0;
 
-	char materialPath[25] = "Objects/OBJs/";
+	char materialPath[50] = "Objects/OBJs/";
 
 	int nrOfFaces = 0;
 
@@ -567,18 +567,38 @@ void loadTexture(const char* filepath)
 		if (loopControl == EOF) {}
 		else
 		{
-			//if (strcmp(line, "Ka"))
-			//{
-			//	XMFLOAT3 vertex;
-			//	fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			//}
-			//else if (strcmp(line, "Kd")){}
-			/*else */
+			if (strcmp(line, "Ka") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				gReflection[nrOfVertexBuffers].a_r = vertex.x;
+				gReflection[nrOfVertexBuffers].a_g = vertex.y;
+				gReflection[nrOfVertexBuffers].a_b = vertex.z;
+
+			}
+			else if (strcmp(line, "Kd") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				gReflection[nrOfVertexBuffers].d_r = vertex.x;
+				gReflection[nrOfVertexBuffers].d_g = vertex.y;
+				gReflection[nrOfVertexBuffers].d_b = vertex.z;
+
+			}
+			
 			if (strcmp(line, "Ks") == 0)
 			{
 				XMFLOAT3 vertex;
 				fscanf(fileptr, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				ObjectReflection[nrOfVertexBuffers] = vertex;
+				gReflection[nrOfVertexBuffers].s_r = vertex.x;
+				gReflection[nrOfVertexBuffers].s_g = vertex.y;
+				gReflection[nrOfVertexBuffers].s_b = vertex.z;
+			}
+			if (strcmp(line, "Ns") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(fileptr, "%f\n", &vertex.x);
+				gReflection[nrOfVertexBuffers].s_p = vertex.x;
 			}
 			else if (strcmp(line, "map_Kd") == 0)
 			{

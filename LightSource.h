@@ -21,28 +21,37 @@ using namespace DirectX;
 class LightSource {
 private:
 	struct LightData {
-		int type;
-		int ambient;
+		UINT type;
+		UINT ambient;
+		float intensity;
+		float lightFocus;
 		XMVECTOR position;
 		XMVECTOR direction;
 		XMVECTOR colour;
-		float intensity;
-		float lightFocus;
+		XMMATRIX viewProjection;
+		XMMATRIX rotatedViewProjection[5];
 	};
 
 	LightData data;
+
+	D3D11_VIEWPORT vp;
+
+	XMMATRIX views[6];
+	XMMATRIX projection;
 
 	ID3D11Texture2D* shadowRenderTargetTexture;
 	ID3D11DepthStencilView* shadowDepthStencilView;
 	ID3D11ShaderResourceView* shadowShaderResourceView;
 
-	D3D11_VIEWPORT vp;
-
-	void createViewport();
+	void setViewport();
+	void setViews();
+	void setProjection();
+	void setViewProjection();
 
 public:
-	LightSource(const int type = 0, const int ambient = 0, const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
-				const XMVECTOR direction = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
+	LightSource(const int type = 0, const int ambient = 0,
+				const XMVECTOR position = XMVectorSet(0.0f,0.0f,0.0f,0.0f),
+				const XMVECTOR direction = XMVectorSet(1.0f, 1.0f, 1.0f, 0.0f),
 				const XMVECTOR colour = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
 				const float intensity = 0.0f, const float lightFocus = 0.0f);
 	LightSource(const LightSource& origObj);
@@ -52,14 +61,15 @@ public:
 	HRESULT createShadowBuffer(ID3D11Device* device);
 
 	void prepareShadowRender(ID3D11DeviceContext* deviceContext) const;
+
 	HRESULT loadShadowBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
 	HRESULT loadLightBuffers(ID3D11DeviceContext* deviceContext, ID3D11Buffer* pBuffer) const;
 
 	int getLightType() const;
 	XMVECTOR getOrigin() const;
+    XMMATRIX getViewProjection(int index) const;
 	ID3D11ShaderResourceView* getShadowMap() const;
 
-	XMMATRIX getView(int index) const;
-	XMMATRIX getProjection() const;
+	//void updateRenderPoint();
 };
 

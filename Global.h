@@ -37,13 +37,25 @@ using namespace DirectX;
 // define number of vertices used in rendering
 #define VERTICES 6
 
+#define OBJECTS 5
+
 // light types
 #define L_POINT			0
 #define L_SPOT			1
 #define L_DIRECTIONAL	2
 
+// render modes
+#define R_DEFAULT			0 //default output, everything on
+#define R_DIFFUSE			1 //only outputs diffuse albedo
+#define R_SPECULAR			2 //only outputs specular albedo
+#define R_NORMALS			3 //only outputs normals
+#define R_POSITIONS			4 //only outputs position
+#define R_DEPTH				5 //only outputs depth buffer
+#define R_NO_SHADOWS		6 //as default but without shadows
+#define R_NO_SPECULAR		7 //as defaults but without specular
+
 // define number of layers of g-buffer used in rendering
-#define G_BUFFER 4
+#define G_BUFFER 5
 
 
 
@@ -54,10 +66,11 @@ using namespace DirectX;
 // render types
 enum RenderFlags {
 	RENDER_DEFAULT = 0x00000000UL,
-	RENDER_DOUBLE_VIEWPORT = 0x00000001UL,
+	RENDER_MULTI_VIEWPORT = 0x00000001UL,
 	RENDER_WIREFRAME = 0x00000010UL,
 	RENDER_FREE_FLIGHT = 0x00000100UL,
 	RENDER_CULLING = 0x00001000UL,
+	RENDER_BLOOM = 0x00010000UL,
 };
 
 
@@ -65,6 +78,13 @@ enum RenderFlags {
 ///////////////////
 // Structs       //
 ///////////////////
+
+// resource storing camera source
+struct RenderOptions {
+	bool splitView;
+	UINT renderMode;
+	float padding1, padding2;
+};
 
 // heightmap
 struct Heightmap {
@@ -75,6 +95,8 @@ struct Heightmap {
 
 // resource storing ambient and specular
 struct AmbientSpecular {
+	XMVECTOR Ambient;
+	XMVECTOR Diffuse;
 	XMVECTOR Specular;
 };
 
@@ -120,11 +142,13 @@ struct PositionVertex {
 struct LightData {
 	int type;
 	int ambient;
+	float intensity;
+	float lightFocus;
 	XMVECTOR position;
 	XMVECTOR direction;
 	XMVECTOR colour;
-	float intensity;
-	float lightFocus;
+	XMMATRIX viewProjection;
+	XMMATRIX rotatedViewProjection[5];
 };
 
 struct WorldSpace {
@@ -139,6 +163,12 @@ struct WorldSpace {
 	float scale_z;
 };
 
+struct ReflectionAmount
+{
+	float a_r, a_g, a_b;
+	float d_r, d_g, d_b;
+	float s_r, s_g, s_b, s_p;
+};
 
 
 /////////////////////
@@ -147,6 +177,7 @@ struct WorldSpace {
 
 // rendering options
 extern ULONG renderOpt;
+extern UINT renderMode;
 
 // viewport
 extern D3D11_VIEWPORT* vp;
@@ -168,14 +199,12 @@ extern ID3D11SamplerState* gSampling;
 //blend resource
 extern ID3D11BlendState* gBlendStateLight;
 
-// a resource to store Vertices in the GPU
-extern int gnrOfVert[5];
-extern ID3D11Buffer*ppVertexBuffers[5];
-extern XMFLOAT3 ObjectReflection[5];
-extern ID3D11Buffer *heightmapBuffer;
-extern int nrOfHMVert;
-extern int nrOfVertexBuffers;
-//extern char* textureName;
+extern int gnrOfVert[OBJECTS]; //The number of vertices in each object
+extern ID3D11Buffer*ppVertexBuffers[OBJECTS]; //Buffers for storing the objects
+extern ID3D11Buffer *heightmapBuffer; //Buffer for storing the heightmap
+extern int nrOfHMVert; //The number of vertices in the heightmap
+extern int nrOfVertexBuffers; //A counter for how many vertexBuffers are being used at the moment
+
 
 extern ID3D11Buffer* gDeferredQuadBuffer;
 
@@ -191,6 +220,7 @@ extern ID3D11RenderTargetView* gRenderTargetViewArray[G_BUFFER];
 extern ID3D11ShaderResourceView* gShaderResourceViewArray[G_BUFFER];
 
 // resources for depth buffer image
+extern ID3D11ShaderResourceView* gDepthShaderResourceView;
 extern ID3D11DepthStencilView* gDepth;
 
 // resources that represent shaders
@@ -205,6 +235,9 @@ extern ID3D11PixelShader* gBlendShader;
 extern ID3D11ComputeShader* gComputeShader;
 extern ID3D11VertexShader* gLightVertexShader;
 extern ID3D11PixelShader* gLightPixelShader;
+
+extern RenderOptions* gRenderingOptionsData;
+extern ID3D11Buffer* gRenderingOptionsBuffer;
 
 extern AmbientSpecular* gAmbientSpecularData;
 extern ID3D11Buffer* gAmbientSpecularBuffer;
@@ -252,27 +285,39 @@ extern int* elementsIndexFrustumCulling;// FrustumOfCamera
 //extern Frustum frustumCamera;
 //extern Frustum frustumCamera;
 
+extern WorldSpace worldObjects[5];
+
 // keeping track of current rotation
 extern float rotation;
 
-extern int nrOfVertices;
-extern Heightmap g_heightmap;
-extern TriangleVertex* g_map;
 
-extern int gnrOfVertices;
+extern Heightmap g_heightmap; //Struct where the heightmap is stored
+extern TriangleVertex* g_map; //The heightmap is moved to an array with an exact size before
 
 //clear pointers
 extern ID3D11ShaderResourceView* nullSRV[1];
 extern ID3D11Buffer* nullCB;
 
-extern ID3D11ShaderResourceView* gTextureSRV[5];
-extern ID3D11Resource* gTexture2D[5];
+extern ID3D11ShaderResourceView* gTextureSRV[OBJECTS]; //SRVs for each object
+extern ID3D11Resource* gTexture2D[OBJECTS]; //Resources for each object
 
-extern ID3D11ShaderResourceView* gMapTexturesSRV[4];
-extern ID3D11Resource* gMapTextureResource[4];
+extern ReflectionAmount* gReflection;
+extern ID3D11Buffer* reflectionBuffers[OBJECTS];
 
-extern float rotationTest;
+extern ID3D11ShaderResourceView* gMapTexturesSRV[4]; //SRVs for blendmapping
+extern ID3D11Resource* gMapTextureResource[4]; //Resources for each object
 
+extern ID3D11UnorderedAccessView* nullUAV; //null UAV for clearing
+
+//Blur
+extern ID3D11Texture2D* gBlurTextureDraw; //Texture2D to draw blur to
+extern ID3D11Texture2D* gBlurTextureRead; //Texture2D to read from
+extern ID3D11ShaderResourceView* gBlurShaderResource; //SRV for blurring
+extern bool blurFilter; //Turn on and of the blurfilter with G and H
+extern ID3D11Texture2D* gBlurTextureEmpty; //null texture2D for clearing
+
+
+extern ID3D11UnorderedAccessView* blurUAV; //UAV for blurring
 
 
 ///////////////////////

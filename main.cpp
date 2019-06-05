@@ -111,12 +111,13 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 3;
+	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_SPOT, 5, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[1] = LightSource(L_SPOT, 5, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[2] = LightSource(L_SPOT, 5, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-13.2f, 42.0f, 33.7f, 0.0f), XMVectorSet(-12.5f, 41.3f, 34.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(-11.24f, 20.81f, -64.8f, 0.0f), XMVectorSet(-10.75f, 20.98f, -63.95f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[3] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, 0.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
@@ -181,9 +182,10 @@ void createViewport() {
 }
 
 void SetViewport(bool forceSingle) {
-	if (renderOpt & RENDER_DOUBLE_VIEWPORT && !forceSingle) {
+	if (renderOpt & RENDER_MULTI_VIEWPORT && !forceSingle) {
 		gDeviceContext->RSSetViewports(4, svp);
-	} else {
+	}
+	else {
 		gDeviceContext->RSSetViewports(1, vp);
 	}
 }
@@ -204,6 +206,26 @@ void CreateObjects() {
 
 
 	LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
+
+	LoadObjectFile("Objects/OBJs/RedHerring.obj", XMINT3(0, 50, 0));
+
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	bufferDesc.ByteWidth = sizeof(ReflectionAmount);
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+
+	//D3D11_SUBRESOURCE_DATA data;
+	//data.pSysMem = gReflection;
+
+	for (int i = 0; i < OBJECTS; i++)
+	{
+		D3D11_SUBRESOURCE_DATA data;
+		data.pSysMem = &gReflection[i];
+
+		gDevice->CreateBuffer(&bufferDesc, &data, &reflectionBuffers[i]);
+	}
 }
 
 void RenderWireframe() {
@@ -213,12 +235,13 @@ void RenderWireframe() {
 	setWireframeShaders();
 
 	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
-	
+
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
-	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
@@ -240,9 +263,10 @@ void RenderWireframe() {
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 	}
-	
+
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
 }
 
 void RenderShadowMaps() {
@@ -251,13 +275,13 @@ void RenderShadowMaps() {
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gObjectMatrixBuffer);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &gLightMatrixBuffer);
 
+	WorldSpace copy = { 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 10.0f, 1.0f, 1.0f, 1.0f };
+
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].prepareShadowRender(gDeviceContext);
 
-		setLightViewProjectionSpace(&Lights[i]);
-
 		//set world space for height map and update wvp
-		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 		updateObjectWorldSpace();
 		updateLightViewProjection(&Lights[i]);
 
@@ -267,13 +291,22 @@ void RenderShadowMaps() {
 
 		for (int i = 0; i < nrOfVertexBuffers; i++) {
 			//set world space for each object and update wvp
-			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f });
+			setWorldSpace(worldObjects[i]);
 			updateObjectWorldSpace();
 			updateLightViewProjection(&Lights[i]);
 
 			//Render objects
 			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
+
+			if (!i) {
+				//Set copy
+				setWorldSpace(copy);
+				updateCameraWorldViewProjection();
+
+				//Render objects
+				gDeviceContext->Draw(gnrOfVert[i], 0);
+			}
 		}
 	}
 
@@ -283,15 +316,20 @@ void RenderShadowMaps() {
 
 void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 	// clear the back buffer to a deep blue
-	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	//float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
 
 	// Clear the render target buffers.
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[i], clearColor);
 	}
+
+	float blurClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[4], blurClear);
 
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -301,99 +339,106 @@ void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 
 	//bind our constant buffers to coresponding shader
 	gDeviceContext->VSSetConstantBuffers(0, 1, &gWorldMatrixBuffer);
-	gDeviceContext->GSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
+	gDeviceContext->GSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &gAmbientSpecularBuffer);
 
 	//Set heightmap shader options
 	SetBlendShaders();
 
 	//load map textures
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
 	}
 
 	//set world space for height map and update wvp matrix
 	//set specular for height map
-
 	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 	updateCameraWorldViewProjection();
-	setSpecularValues(XMVectorSet(1, 1, 1, 1));
+	updateSpecularValues(XMVectorSet(1, 1, 1, 1), XMVectorSet(1, 1, 1, 0.01), XMVectorSet(0.1, 0.1, 0.1, 0.00000010f));
 
 	//Render heightmap
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(nrOfHMVert, 0);
 
 	//Release
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
 	//Set object shader options
 	SetDeferredShaders();
+
+	WorldSpace copy = { 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 10.0f, 3.0f, 3.0f, 3.0f };
+
 	//Render objects!
 	for (int i = 0; i < nrOfVertexBuffers; i++) {
-	
-		rotation+=0.01f;
+		//set object texture
+		gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
 
-		if (0 == i )
+		//set world space for object and update wvp matrix
+		//set specular for object
+		setWorldSpace(worldObjects[i]);
+		updateCameraWorldViewProjection();
+		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, gReflection[i].s_p * 100));
+
+		//Render objects
+		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+
+		gDeviceContext->Draw(gnrOfVert[i], 0);
+
+		if (!i)
 		{
-
-			//set object texture
-			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[1]);
-
-			//Render objects
-			setVertexBuffer(ppVertexBuffers[1], sizeof(TriangleVertex), 0);
-
-			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-			if (*drawAllCopies==false)
-			{
-				//DRAW COPIES THAT ARE CULLED BY FRUSTUM AND QUADTREE
-				for (int j = 0; j < amount; j++)
-				{
-					setWorldSpace({ 0.0f,0.0f,0.0f,copies[RenderCopies[j]].x,copies[RenderCopies[j]].y,copies[RenderCopies[j]].z,0.5f,0.5f,0.5f });
-					updateCameraWorldViewProjection();
-					gDeviceContext->Draw(gnrOfVert[1], 0);
-				}
-			}
-			else
-			{
-				for (int j = 0; j < elementsAmount; j++)
-				{
-					setWorldSpace({ 0.0f,0.0f,0.0f,copies[j].x,copies[j].y,copies[j].z,0.5f,0.5f,0.5f });
-					updateCameraWorldViewProjection();
-					gDeviceContext->Draw(gnrOfVert[1], 0);
-				}
-			}
-		}
-		else
-		{
-			//set world space for object and update wvp matrix
-			//set specular for object
-			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
+			//Set copy
+			setWorldSpace(copy);
 			updateCameraWorldViewProjection();
-			setSpecularValues(XMVectorSet(1, 1, 1, 1000));
-
-			//set object texture
-			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
 
 			//Render objects
-			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 			gDeviceContext->Draw(gnrOfVert[i], 0);
 		}
 	}
 
 	//Release
-	for (int i = 0; i < nrOfVertexBuffers; i++) {
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
-	}
+	//for (int i = 0; i < nrOfVertexBuffers; i++)
+	//{
+	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
+	//}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
+	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
+
+
+	//Compute Gaussian Filter
+
+	if (blurFilter == true)
+	{
+		SetComputeShaders();
+
+		gDeviceContext->CSSetShaderResources(0, 1, &gShaderResourceViewArray[4]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &blurUAV, 0);
+
+		gDeviceContext->Dispatch(45, 45, 1);
+
+		//Release
+
+		gDeviceContext->CSSetShaderResources(0, 1, &nullSRV[0]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, 0);
+
+		//Copy resources
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureDraw);
+	}
+	else
+	{
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureEmpty);
+	}
 }
 
 void RenderLights() {
+	ID3D11ShaderResourceView* pShadowMap = nullptr;
 	float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 	//set shaders for light calculation (final pass)
@@ -405,18 +450,25 @@ void RenderLights() {
 	setVertexBuffer(gDeferredQuadBuffer, sizeof(PositionVertex), 0);
 
 	//bind our constant buffers to shaders
-	gDeviceContext->PSSetConstantBuffers(0, 1, &gCameraMatrixBuffer);
-	gDeviceContext->PSSetConstantBuffers(1, 1, &gLightDataBuffer);
+	gDeviceContext->PSSetConstantBuffers(0, 1, &gRenderingOptionsBuffer);
+	gDeviceContext->PSSetConstantBuffers(1, 1, &gCameraMatrixBuffer);
+	gDeviceContext->PSSetConstantBuffers(2, 1, &gLightDataBuffer);
 
 	//bind our g-buffer textures to pixelshader
 	gDeviceContext->PSSetShaderResources(0, 1, &gShaderResourceViewArray[0]);
 	gDeviceContext->PSSetShaderResources(1, 1, &gShaderResourceViewArray[1]);
 	gDeviceContext->PSSetShaderResources(2, 1, &gShaderResourceViewArray[2]);
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
+	gDeviceContext->PSSetShaderResources(4, 1, &gBlurShaderResource);
+	gDeviceContext->PSSetShaderResources(5, 1, &gDepthShaderResourceView);
 
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
+
+		pShadowMap = Lights[i].getShadowMap();
+		gDeviceContext->PSSetShaderResources(8, 1, &pShadowMap);
+
 		gDeviceContext->Draw(6, 0);
 	}
 
@@ -425,9 +477,13 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(1, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(4, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(5, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(8, 1, &nullSRV[0]);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
+	gDeviceContext->PSSetConstantBuffers(2, 1, &nullCB);
 }
 
 void CreateCopies()
@@ -740,7 +796,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 
 			if (*freeFlight) {
 				moveInDepthCameraClass += camera.GetCameraNormal();
-			} else {
+			}
+			else {
 				moveInDepthCameraClass += camera.GetCamForward();
 			}
 
@@ -748,7 +805,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 		if (kb.S) { //BACK
 			if (*freeFlight) {
 				moveInDepthCameraClass -= camera.GetCameraNormal();
-			} else {
+			}
+			else {
 				moveInDepthCameraClass -= camera.GetCamForward();
 			}
 
@@ -802,12 +860,14 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 				//avrundar till närmsta heltal
 				if (nRoundedPos.x < 0) {
 					if (float(nRoundedPos.x) - 0.5f > CameraPos.x) nRoundedPos.x--;
-				} else {
+				}
+				else {
 					if (float(nRoundedPos.x) + 0.5f < CameraPos.x) nRoundedPos.x++;
 				}
 				if (nRoundedPos.y < 0) {
 					if (float(nRoundedPos.y) - 0.5f > CameraPos.z) nRoundedPos.y--;
-				} else {
+				}
+				else {
 					if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
 				}
 				if (n2RoundedPos.x < 0) {
@@ -924,6 +984,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	bool showCullingObjects = false; 
 	bool onlyQuadCulling = false;
 
+	bool renderOnce = true;
+
 	MSG msg = { 0 };
 	HWND wndHandle = InitWindow(hInstance);
 
@@ -993,13 +1055,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				{
 					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
 				}*/
+				updateKeyAndMouseInput(&freeFlight, &culling, &camFrustum, delta);
+
+				updateRenderingOptions();
 
 				if (renderOpt & RENDER_WIREFRAME && wireFrame) {
 					SetViewport(forceSingle);
 
 					RenderWireframe();
-				} else {
-					RenderShadowMaps();
+				}
+				else {
+					if (renderOnce) {
+						RenderShadowMaps();
+						renderOnce = false;
+					}
 
 					SetViewport(forceSingle);
 					
@@ -1022,12 +1091,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					RenderLights();
 				}
 
-				gSwapChain->Present(0, 0); //11. Växla front- och back-buffer
+				gSwapChain->Present(0, 0);
 			}
 		}
 
-
-		//delete[] copies;
 		//destroy
 		DestroyShaders();
 		DestroyGlobals();
@@ -1108,9 +1175,9 @@ HRESULT CreateDepthBuffer(ID3D11Texture2D** pDepthTexture) {
 	//describe how the texture should be handled
 	D3D11_TEXTURE2D_DESC depthDesc;
 	depthDesc.ArraySize = 1;
-	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	depthDesc.CPUAccessFlags = 0;
-	depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+	depthDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R32_TYPELESS;
 	depthDesc.Height = W_HEIGHT;
 	depthDesc.Width = W_WIDTH;
 	depthDesc.MipLevels = 1;
@@ -1121,7 +1188,24 @@ HRESULT CreateDepthBuffer(ID3D11Texture2D** pDepthTexture) {
 
 	//load texture data into the texture object, 
 	//for now it's a blank texture to be used later as depth buffer
-	return gDevice->CreateTexture2D(&depthDesc, NULL, pDepthTexture);
+	HRESULT hr = gDevice->CreateTexture2D(&depthDesc, NULL, pDepthTexture);
+	if (FAILED(hr)) {
+		return S_FALSE;
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
+	ZeroMemory(&ShaderResourceViewDesc, sizeof(ShaderResourceViewDesc));
+	ShaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	ShaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	ShaderResourceViewDesc.Texture2D.MipLevels = depthDesc.MipLevels;
+	ShaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+
+	hr = gDevice->CreateShaderResourceView(*pDepthTexture, &ShaderResourceViewDesc, &gDepthShaderResourceView);
+	if (FAILED(hr)) {
+		return S_FALSE;
+	}
+
+	return S_OK;
 }
 
 HRESULT CreateDepthStencilView(ID3D11Texture2D** pDepthTexture) {
@@ -1143,9 +1227,11 @@ HRESULT CreateRenderTargets() {
 
 	// use the back buffer address to create the render target
 	gDevice->CreateRenderTargetView(pBackBuffer, NULL, &gBackbufferRTV);
+
 	pBackBuffer->Release();
 
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		gRenderTargetTextureArray[i] = nullptr;
 		gRenderTargetViewArray[i] = nullptr;
 		gShaderResourceViewArray[i] = nullptr;
@@ -1171,7 +1257,8 @@ HRESULT CreateRenderTargets() {
 	textureDesc.MiscFlags = 0;
 
 	// Create the render target textures.
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		if (FAILED(gDevice->CreateTexture2D(&textureDesc, NULL, &gRenderTargetTextureArray[i]))) {
 			return S_FALSE;
 		}
@@ -1185,7 +1272,8 @@ HRESULT CreateRenderTargets() {
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
 
 	// Create the render target views.
-	for (int j = 0; j < G_BUFFER; j++) {
+	for (int j = 0; j < G_BUFFER; j++)
+	{
 		if (FAILED(gDevice->CreateRenderTargetView(gRenderTargetTextureArray[j], &renderTargetViewDesc, &gRenderTargetViewArray[j]))) {
 			return S_FALSE;
 		}
@@ -1200,16 +1288,51 @@ HRESULT CreateRenderTargets() {
 	shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
 	// Create the shader resource views.
-	for (int k = 0; k < G_BUFFER; k++) {
+	for (int k = 0; k < G_BUFFER; k++)
+	{
 		if (FAILED(gDevice->CreateShaderResourceView(gRenderTargetTextureArray[k], &shaderResourceViewDesc, &gShaderResourceViewArray[k]))) {
 			return S_FALSE;
 		}
 	}
 
+	//Blur
+
+	//Texture to draw on
+	textureDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	gDevice->CreateTexture2D(&textureDesc, NULL, &gBlurTextureDraw);
+
+	//Unordered access view to write on
+	D3D11_UNORDERED_ACCESS_VIEW_DESC blurUAVdesc;
+	blurUAVdesc.Texture2D.MipSlice = 0;
+	blurUAVdesc.Format = textureDesc.Format;
+	blurUAVdesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+
+	HRESULT error = gDevice->CreateUnorderedAccessView(gBlurTextureDraw, &blurUAVdesc, &blurUAV);
+	if (error != S_OK)
+	{
+		return DXGI_ERROR_ACCESS_DENIED;
+	}
+
+	//Texture to read from
+	textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	gDevice->CreateTexture2D(&textureDesc, 0, &gBlurTextureRead);
+
+	error = gDevice->CreateShaderResourceView(gBlurTextureRead, &shaderResourceViewDesc, &gBlurShaderResource);
+	if (error != S_OK)
+	{
+		return DXGI_ERROR_ACCESS_DENIED;
+	}
+
+	gDevice->CreateTexture2D(&textureDesc, NULL, &gBlurTextureEmpty);
+
 	return S_OK;
 }
 
-HRESULT CreateDirect3DContext(HWND wndHandle) {
+HRESULT CreateDirect3DContext(HWND wndHandle)
+{
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
 

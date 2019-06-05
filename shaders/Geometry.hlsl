@@ -17,7 +17,13 @@ struct PS_INOUT
     uint viewport : SV_ViewportArrayIndex;
 };
 
-cbuffer GS_CB_CAMERA : register(b0)
+cbuffer GS_CB_FLAGS : register(b0)
+{
+    bool SplitView;
+    uint RenderMode;
+};
+
+cbuffer GS_CB_CAMERA : register(b1)
 {
     float4 CameraOrigin;
     float4 CameraFocus;
@@ -53,23 +59,26 @@ void GS_main(
             OutputStream.Append(output);
         }
 
-        for (uint i = 0; i < 3; i++)
+        if (SplitView)
         {
-            OutputStream.RestartStrip();
-
-            for (uint j = 0; j < 3; j++)
+            for (uint i = 0; i < 3; i++)
             {
-                //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
-                output.Pos_W = input[j].Pos_W;
-                output.Pos_H = input[j].Pos_Rotated[i];
-                output.Color = input[j].Color;
-                output.UV = input[j].UV;
-                output.Norm = norm;
-                output.viewport = i+1;
+                OutputStream.RestartStrip();
+
+                for (uint j = 0; j < 3; j++)
+                {
+                    //set world postion, homogeneous position, colour(deprecated), uv and norm for outputed vertex
+                    output.Pos_W = input[j].Pos_W;
+                    output.Pos_H = input[j].Pos_Rotated[i];
+                    output.Color = input[j].Color;
+                    output.UV = input[j].UV;
+                    output.Norm = norm;
+                    output.viewport = i + 1;
 		
-                //add vertex to be computed in next pipeline stage
-                OutputStream.Append(output);
-            }   
+                    //add vertex to be computed in next pipeline stage
+                    OutputStream.Append(output);
+                }
+            }
         }
     }    
 }

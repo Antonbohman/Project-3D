@@ -17,8 +17,6 @@ void setWorldSpace(WorldSpace world);
 
 void setCameraViewProjectionSpace();
 
-void setLightViewProjectionSpace(LightSource* light);
-
 void updateCameraWorldViewProjection();
 
 void updateObjectWorldSpace();
@@ -27,4 +25,6 @@ void updateLightViewProjection(LightSource* light);
 
 void updateCameraValues();
 
-void setSpecularValues(XMVECTOR specular);
+void updateSpecularValues(XMVECTOR ambient, XMVECTOR diffuse, XMVECTOR specular);
+
+void updateRenderingOptions();
