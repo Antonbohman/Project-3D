@@ -229,7 +229,7 @@ void loadMultiTextureMap(char* filename)
 	heightmap.y = bitmapInfoHeader.biHeight;
 
 	//get size of image in bytes
-	int padding = heightmap.x * 3 % 4; //Ta det sen
+	int padding = heightmap.x * 3 % 4; //The BMP file has padding on the end of each row. This is a short function for calculating it.
 	if (padding > 0)
 	{
 		padding = 4 - padding;
@@ -243,13 +243,13 @@ void loadMultiTextureMap(char* filename)
 	//Find start of image data
 	fseek(fileptr, bitmapFileHeader.bfOffBits, SEEK_SET);
 
-	//read data into bitmapimage
+	//Read data into bitmapimage
 	fread(bitmapImage, 1, imageSize, fileptr);
 
 	//close file
 	fclose(fileptr);
 
-	int counter = 0; //Eftersom bilden är i gråskala så är alla värden RGB samma värde, därför läser vi bara R
+	int counter = 0; //Since the picture is in black and white we only have to read the red-value, as the green and blue value would be the same.
 
 	XMFLOAT3* RGB = new XMFLOAT3[heightmap.x * heightmap.y];
 
@@ -585,7 +585,7 @@ void loadTexture(const char* filepath)
 				gReflection[nrOfVertexBuffers].d_b = vertex.z;
 
 			}
-			
+
 			if (strcmp(line, "Ks") == 0)
 			{
 				XMFLOAT3 vertex;
