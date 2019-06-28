@@ -4,7 +4,8 @@
 Frustum::Frustum()
 {
 	this->frustumNearDist = PROJECTION_NEAR_Z;
-	this->frustumFarDist = PROJECTION_FAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z ;
+	this->scaleFactor = 1.5f;
 	
 	cameraReference = nullptr;
 }
@@ -17,13 +18,16 @@ Frustum::~Frustum()
 Frustum::Frustum(Camera * camera)
 {
 	this->frustumNearDist = PROJECTION_NEAR_Z;
-	this->frustumFarDist = PROJECTION_FAR_Z;
+	this->frustumFarDist = PROJECTION_FAR_Z ;
+	this->scaleFactor = 1.5f;
 	cameraReference = camera;
 }
 
 Frustum::Frustum(const Frustum & original)
 {
+
 	cameraReference = original.cameraReference;
+	this->scaleFactor = original.scaleFactor;
 
 	frustumNearDist = original.frustumNearDist;
 	frustumFarDist = original.frustumFarDist;
@@ -63,6 +67,7 @@ Frustum &Frustum::operator=(const Frustum & originalObj)
 	if (this != &originalObj)
 	{
 		cameraReference = originalObj.cameraReference;
+		this->scaleFactor = originalObj.scaleFactor;
 
 		frustumNearDist = originalObj.frustumNearDist;
 		frustumFarDist = originalObj.frustumFarDist;
@@ -104,24 +109,34 @@ void Frustum::GiveCameraReference(Camera * theCamera)
 	cameraReference = theCamera;
 }
 
-void Frustum::calculateFrustum(float fov, float windowsWidth, float windowHeight)
+void Frustum::calculateFrustum(float fov, float windowWidth, float windowHeight)
 {
+	float scale = this->scaleFactor;
 	//NEAR H / W
-	float ratio = (windowsWidth / windowHeight);
-	this->frustumHightNear = 2 * tan(fov / 2)* frustumNearDist;
-	this->frustumWidthNear = frustumHightNear * /*ratioWindow*/ ratio;
+	float ratio = (windowWidth/ windowHeight );
+	//ratio = 16.0f / 9.0f;
+	this->frustumHightNear = tan(((fov ) * XM_PI)/2)* frustumNearDist;
+	this->frustumWidthNear = frustumHightNear *ratio;
 	//FAR H / W
-	this->frustumHightFar = 2 * tan(fov/ 2)* frustumFarDist;
+	this->frustumHightFar = tan(((fov ) * XM_PI)/2)* frustumFarDist;
 	this->frustumWidthFar = frustumHightFar * ratio;
 
 	Vector4 tempUp = cameraReference->GetCamUp();
 	Vector4 tempRight = cameraReference->GetCamRight();
-	Vector4 verticalEdgeFar = (tempUp*(frustumHightFar / 2));
-	Vector4 horizontalEdgeFar = ((tempRight *(frustumWidthFar / 2)));
-	Vector4 verticalEdgeNear = (tempUp* (frustumHightNear / 2));
-	Vector4 horizontalEdgeNear = (tempRight *(frustumWidthNear / 2));
 
-	this->frustumFarCenter = cameraReference->GetCamPos() + cameraReference->GetCameraNormal() * frustumFarDist;
+	Vector4 verticalEdgeFar = scale*(tempUp*(frustumHightFar / 2 ));
+
+	Vector4 horizontalEdgeFar = scale * ((tempRight*(frustumWidthFar / 2 )));
+
+	Vector4 verticalEdgeNear = scale * (tempUp* (frustumHightNear / 2));
+
+	Vector4 horizontalEdgeNear = scale * (tempRight *(frustumWidthNear / 2));
+
+	this->frustumFarCenter = cameraReference->GetCamPos() + cameraReference->GetCameraNormal() * (frustumFarDist);
+
+	this->frustMiddle = cameraReference->GetCamPos() + cameraReference->GetCameraNormal() * (frustumFarDist) /2;
+
+	this->cameraPos = cameraReference->GetCamPos();
 
 	this->frustFtl = frustumFarCenter + verticalEdgeFar - horizontalEdgeFar;
 	this->frustFtr = frustumFarCenter + verticalEdgeFar + horizontalEdgeFar;
@@ -130,7 +145,7 @@ void Frustum::calculateFrustum(float fov, float windowsWidth, float windowHeight
 
 	//can be optimsed further.
 
-	this->frustumNearCenter = cameraReference->GetCamPos()+ cameraReference->GetCameraNormal() * frustumNearDist;
+	this->frustumNearCenter = cameraReference->GetCamPos()+ cameraReference->GetCameraNormal() * frustumNearDist;;
 
 	this->frustNtl = frustumNearCenter + verticalEdgeNear - horizontalEdgeNear;
 	this->frustNtr = frustumNearCenter + verticalEdgeNear + horizontalEdgeNear;
@@ -139,66 +154,237 @@ void Frustum::calculateFrustum(float fov, float windowsWidth, float windowHeight
 
 	//PLANE DEFFINITION
 
-	this->planes[NEARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbl, frustNtl, frustNbr));
+//	this->planes[NEARPLANE].normal = XMVector3Normalize(XMVector3Cross((frustNtl-frustNbl),(frustNbr - frustNbl)));
+
+	this->planes[NEARPLANE].normal = XMVector3Normalize(this->cameraReference->GetCamForward())/*XMVector3Normalize(XMVector3Cross((frustNbr - frustNbl), (frustNtl - frustNbl)))*/;
 	this->planes[NEARPLANE].pointInPlane = &this->frustumNearCenter;
 
-	this->planes[FARPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbr, frustFtr, frustFbl));
+
+	this->planes[FARPLANE].normal = XMVector3Normalize(XMVector3Cross((frustFbl - frustFbr),(frustFtr - frustFbr) ));
 	this->planes[FARPLANE].pointInPlane = &this->frustumFarCenter;
 
-	this->planes[RIGHTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustNtr, frustFbr));
-	this->planes[RIGHTPLANE].pointInPlane = &this->frustNbr;
+	
+	this->planes[RIGHTPLANE].normal = XMVector3Normalize(XMVector3Cross((frustNbr - frustNtr), (frustFtr - frustNtr)));
+	this->planes[RIGHTPLANE].pointInPlane = &this->frustNtr;
 
-	this->planes[TOPPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFtr, frustNtr, frustFtl));
+	
+	this->planes[TOPPLANE].normal = XMVector3Normalize(XMVector3Cross((frustFtr - frustNtr), (frustNtl - frustNtr)));
 	this->planes[TOPPLANE].pointInPlane = &this->frustFtr;
 
-	this->planes[LEFTPLANE].normal = XMVector4Normalize(XMVector4Cross(frustFbl, frustFtl, frustNbl));
-	this->planes[LEFTPLANE].pointInPlane = &this->frustFbl;
+	this->planes[LEFTPLANE].normal = XMVector3Normalize(XMVector3Cross((frustFbl - frustFtl), (frustNtl - frustFtl)));
+	this->planes[LEFTPLANE].pointInPlane = &this->frustNtl;
 
-	this->planes[BOTTOMPLANE].normal = XMVector4Normalize(XMVector4Cross(frustNbr, frustFbr, frustNbl));
+	
+	this->planes[BOTTOMPLANE].normal = XMVector3Normalize(XMVector3Cross((frustNbl - frustNbr), (frustFbr - frustNbr)));
 	this->planes[BOTTOMPLANE].pointInPlane = &this->frustNbr;
-
 }
 
+void Frustum::calculateFrustum(float fov, float windowWidth, float windowHeight, float scaleFactor)
+{
+	this->scaleFactor = scaleFactor;
+	this->calculateFrustum(fov, windowWidth, windowHeight);
+}
 
-int Frustum::pointInFrustum(Vector4 point)
+int Frustum::pointInFrustum(Vector3 point)
 {
 	int result = INSIDE;
 
 	for (int i = 0; i < 6; i++)
 	{
 		if (this->planes[i].distance(point) < 0)
+		{
 			result = OUTSIDE;
-		i = 6;
+			i = 6;
+		}
 	}
 	return result;
 }
 
-int Frustum::sphereInFrustum(Vector4 & point, float radius)
+int Frustum::pointInFrustum(Vector3 point, float extraRange)
 {
+	/*enum PlaneNames {
+		NEARPLANE,//removed
+		FARPLANE,
+		RIGHTPLANE,
+		TOPPLANE,
+		LEFTPLANE,
+		BOTTOMPLANE
+	};*/
 	float distance;
 	int result = INSIDE;
 
 	for (int i = 0; i < 6; i++)
 	{
-		distance = planes[i].distance(point);
-		if (distance < -radius)
+		if(i==RIGHTPLANE || i==LEFTPLANE )
 		{
-			result = OUTSIDE;
-			i = 6;
+			distance = this->planes[i].distance(point);
+
+			if (distance < 0)
+			{
+				if (distance + extraRange < 0)
+				{
+					result = OUTSIDE;
+					i = 6;
+				}
+			}
 		}
-			
-		else if (distance < radius)
-			result = INTERSECT;
+	}
+	return result;
+}
+
+bool Frustum::insideChild(Quadtree * theTree, float extraDiscrepancy)
+{
+	bool inside = false;
+	Vector3 testPoint = { theTree->boundary.xCenterPos,frustMiddle.y,theTree->boundary.zCenterPos };
+	//frustum within simple checking 2 sides LEFT AND RIGHT
+
+		//CAMERAPOS WITHIN QUAD
+	if (theTree->intersect(Point(this->cameraPos.x, this->frustMiddle.y, this->cameraPos.z)))inside=true;
+
+
+		//CENTER OF QUAD
+	if (inside == 0)
+	{
+		if (pointInFrustum(testPoint, extraDiscrepancy) > 0)
+		{
+			inside = true;
+		}
+	}
+	if (inside == 0)
+	{
+		//NE
+		testPoint.x = { theTree->boundary.xCenterPos + theTree->boundary.width };
+		testPoint.z = { theTree->boundary.zCenterPos + theTree->boundary.height };
+		if (pointInFrustum(testPoint, extraDiscrepancy) > 0)
+		{
+			inside = true;
+		}
+
+	}
+	if (inside == 0)
+	{
+		//NW
+
+		testPoint.x = { theTree->boundary.xCenterPos - theTree->boundary.width };
+		testPoint.z = { theTree->boundary.zCenterPos + theTree->boundary.height };
+		if (pointInFrustum(testPoint, extraDiscrepancy) > 0)
+		{
+			inside = true;
+		}
+	}
+	
+
+	if (inside == 0)
+	{
+		//SE
+		testPoint.x = { theTree->boundary.xCenterPos - theTree->boundary.width };
+		testPoint.z = { theTree->boundary.zCenterPos - theTree->boundary.height };
+		if (pointInFrustum(testPoint, extraDiscrepancy) > 0)
+		{
+			inside = true;
+		}
+	}
+	if (inside == 0)
+	{
+		//SW
+		testPoint.x = { theTree->boundary.xCenterPos + theTree->boundary.width };
+		testPoint.z = { theTree->boundary.zCenterPos - theTree->boundary.height };
+
+		if (pointInFrustum(testPoint, extraDiscrepancy) > 0)
+		{
+			inside = true;
+		}
+	}
+
+	return inside;
+}
+
+int Frustum::isQuadInside(Quadtree* theTree, int & output, int * elementsOutputArray, int & capacity)
+{
+	
+	int test = 0;
+
+	float extraDiscrepancy = theTree->boundary.height / 2; 
+	//extra quarter range
+	
+
+	if (theTree->divided == true)
+	{
+		if (insideChild(theTree->northEast, extraDiscrepancy))
+		{
+			this->isQuadInside(theTree->northEast, output, elementsOutputArray, capacity);
+		}
+
+		if (insideChild(theTree->northWest, extraDiscrepancy))
+		{
+			this->isQuadInside(theTree->northWest, output, elementsOutputArray, capacity);
+		}
+
+		if (insideChild(theTree->southWest, extraDiscrepancy))
+		{
+			this->isQuadInside(theTree->southWest, output, elementsOutputArray, capacity);
+		}
+
+		if (insideChild(theTree->southEast, extraDiscrepancy))
+		{
+			this->isQuadInside(theTree->southEast, output, elementsOutputArray, capacity);
+		}
+
+	}
+	else if (theTree->nrOfElements > 0)
+	{
+		for (int i = 0; i < theTree->nrOfElements; i++)
+		{
+			elementsOutputArray[output] = theTree->Points[i]->index;
+			output++;
+		}
+
+	}
+
+	return test;
+}
+
+int Frustum::sphereInFrustum(Vector3 point, float radius)
+{
+	float distance;
+	int result = INSIDE;
+
+	/*enum PlaneNames {
+		NEARPLANE,//removed
+		FARPLANE,
+		RIGHTPLANE,
+		TOPPLANE,
+		LEFTPLANE,
+		BOTTOMPLANE
+	};*/
+
+	for (int i = 0; i < 6; i++)
+	{
+		if (i == NEARPLANE || i == FARPLANE || i == RIGHTPLANE || i == LEFTPLANE || i == TOPPLANE || i == BOTTOMPLANE)
+		{ 
+			distance = this->planes[i].distance(point);
+
+			if (distance < 0)
+			{
+				if (distance + radius < 0)
+				{
+					result = OUTSIDE;
+					i = 6;
+				}
+			}
+		}
+		
 	}
 
 	return result;
 }
 
-int Frustum::FrustumPlanes::distance(Vector4 objectPoint)
+int Frustum::FrustumPlanes::distance(Vector3 objectPoint)
 {
-	Vector4 vectorToPoint = objectPoint - *pointInPlane;
+	Vector3 vectorToPoint = objectPoint - (Vector3{ this->pointInPlane->x,this->pointInPlane->y,this->pointInPlane->z });
+	Vector3 tempNormal = { this->normal.x,this->normal.y,this->normal.z };
 
-	Vector4 output = DirectX::XMVector4Dot(normal, vectorToPoint);
+	Vector3 output = DirectX::XMVector3Dot(tempNormal,vectorToPoint);
 
 	return output.x;
 

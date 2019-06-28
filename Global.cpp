@@ -87,8 +87,27 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ 0.0f,20.0f,-10.0f, 0.0f }, { 0.0f, 20.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
+
+Quadtree theObjectTree(1100, 1100, 0.0f, 0.0f);
+//Quadtree theObjectTree(float(g_heightmap.imageWidth), float(g_heightmap.imageHeight), 0.0f, 0.0f);
+
+//int* elementsIndex = new int (1024);
+
+int elementsAmount =2048;
+
+Point* copies= new Point[elementsAmount];
+
+int objectsFromFrustum = 0;
+
+int objectsCulledFromQuad = 0;
+
+int* elementsIndexQuadCulling = new int[elementsAmount];
+
+int* elementsIndexFrustumCulling = new int [elementsAmount];
+
+
 
 //Frustum frustumCamera(&camera);
 
@@ -186,3 +205,4 @@ void DestroyGlobals() {
 	gDevice->Release();
 	gDeviceContext->Release();
 }
+

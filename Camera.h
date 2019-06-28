@@ -73,6 +73,8 @@ public:
 
 	XMVECTOR GetCameraNormal() const;
 
+	XMMATRIX GetCamRotationMatrix()const;
+
 	float GetYaw()const;
 	float GetPitch()const;
 	void UpdateCameraNormal();
