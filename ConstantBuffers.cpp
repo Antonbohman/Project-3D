@@ -172,13 +172,15 @@ void CreateConstantBuffer() {
 
 void setWorldSpace(WorldSpace world) {
 	XMMATRIX rotationX = XMMatrixRotationX(world.rotation_x);
-	XMMATRIX rotationY = XMMatrixRotationX(world.rotation_y);
-	XMMATRIX rotationZ = XMMatrixRotationX(world.rotation_z);
+	XMMATRIX rotationY = XMMatrixRotationY(world.rotation_y);
+	XMMATRIX rotationZ = XMMatrixRotationZ(world.rotation_z);
 
 	XMMATRIX offset = XMMatrixTranslation(world.offset_x, world.offset_y, world.offset_z);
 
 	XMMATRIX scale = XMMatrixScaling(world.scale_x, world.scale_y, world.scale_z);
 	
+	//XMMATRIX rotate = XMMatrixMultiply(rotationX, XMMatrixMultiply(rotationY, rotationZ));
+
 	XMMATRIX rotate = XMMatrixMultiply(rotationX, XMMatrixMultiply(rotationY, rotationZ));
 
 	World = XMMatrixMultiply(scale, rotate);
@@ -202,7 +204,7 @@ void setCameraViewProjectionSpace() {
 		
 		ViewRotated[1] = XMMatrixLookAtLH(
 			camera.GetCamPos(),
-			camera.GetCamPos() - camera.GetCamForward(),
+			camera.GetCamPos() - camera.GetCameraNormal(),
 			camera.GetCamUp()
 		);
 
@@ -290,7 +292,9 @@ void updateCameraValues() {
 	gDeviceContext->Unmap(gCameraMatrixBuffer, 0);
 };
 
-void updateSpecularValues(XMVECTOR specular) {
+void updateSpecularValues(XMVECTOR ambient, XMVECTOR diffuse, XMVECTOR specular) {
+	gAmbientSpecularData->Ambient = ambient;
+	gAmbientSpecularData->Diffuse = diffuse;
 	gAmbientSpecularData->Specular = specular;
 
 	//create a subresource to hold our data while we copy between cpu and gpu memory

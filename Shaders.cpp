@@ -587,6 +587,23 @@ void SetDeferredShaders() {
 	gDeviceContext->IASetInputLayout(gVertexLayout);
 }
 
+void SetComputeShaders() {
+	gDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+
+	gDeviceContext->VSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->HSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->PSSetShader(nullptr, nullptr, 0);
+	gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+
+	// specify the topology to use when drawing
+	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// specify the IA Layout (how is data passed)
+	gDeviceContext->IASetInputLayout(gVertexLayout);
+}
+
 void SetBlendShaders() {
 	gDeviceContext->OMSetRenderTargets(G_BUFFER, gRenderTargetViewArray, gDepth);
 	gDeviceContext->OMSetBlendState(nullptr, 0, 0xffffffff);
@@ -614,7 +631,7 @@ void SetLightShaders() {
 	gDeviceContext->DSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	gDeviceContext->PSSetShader(gLightPixelShader, nullptr, 0);
-	gDeviceContext->CSSetShader(gComputeShader, nullptr, 0);
+	gDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	// specify the topology to use when drawing
 	gDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

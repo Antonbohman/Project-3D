@@ -22,7 +22,8 @@ Texture2D NormalTexture : register(t0);
 Texture2D DiffuseTexture : register(t1);
 Texture2D SpecularTexture : register(t2);
 Texture2D PositionTexture : register(t3);
-Texture2D DepthTexture : register(t4);
+Texture2D GlowTexture : register(t4);
+Texture2D DepthTexture : register(t5);
 
 Texture2DArray ShadowMaps : register(t6);
 
@@ -109,6 +110,7 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float3 position = PositionTexture.Load(texPos).xyz;
     float3 diffuseAlbedo = DiffuseTexture.Load(texPos).xyz;
     float4 specularData = SpecularTexture.Load(texPos);
+    float4 glowEffect = GlowTexture.Load(texPos);
     float depth = DepthTexture.Load(texPos).x;
     
     float3 specularAlbedo = specularData.xyz;
@@ -145,10 +147,10 @@ float4 PS_light(PS_IN input) : SV_TARGET
 
     if (LightType.x == TYPE_POINT || LightType.x == TYPE_SPOT)
     {
-        lightVector = LightPos.xyz - position.xyz;
+        lightVector = LightPos.xyz - position.xyz; //pointing from objectposition to the light
 
         float ligthDist = length(lightVector);
-        attenuation = clamp(1.0f - (ligthDist / LightIntensity), 0, 1.0f);
+        attenuation = clamp(1.0f - (ligthDist / LightIntensity), 0.0f, 1.0f);
         
         if (LightType.x == TYPE_SPOT)
         {
@@ -161,22 +163,27 @@ float4 PS_light(PS_IN input) : SV_TARGET
     }
 
     //calculate angle between light source direction and normal 
-    float lightFactor = clamp(dot(normal, normalize(lightVector)), 0.0f, 1.0f);
-
-    //calculate vector for reflected light
-    float3 lightReflectionVector = 2 * lightFactor * normal - normalize(LightPos.xyz - position.xyz);
+    float lightFactor = clamp(dot(normalize(normal), normalize(lightVector)), -1.0f, 1.0f);
 
     //get ambient colour
     float4 ambientColour = float4(diffuseAlbedo * AmbientPower * 0.01f, 1.0f);
-
+    float4 diffuseColour = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 specularColour = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    if (lightFactor > 0.0f)
+    {
     //calculate diffuse lightning (no ligth/distance loss calculated here)
-    float4 diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
-    
-    //clamp so only positive dot product is acceptable
-    float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
-    //change diffuse albedo to specular albedo when added!
-    float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
+        diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
 
+    //calculate vector for reflected light
+        float3 lightReflectionVector = 2 * lightFactor * normalize(normal) - normalize(lightVector);
+    //clamp so only positive dot product is acceptable
+        float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
+    //change diffuse albedo to specular albedo when added!
+        specularColour = float4(specularAlbedo.rgb * LightColour.rgb * pow(max(dotProduct, 0), specularPower), 1.0f);
+    }
+    float4 finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
+
+    /*
     bool isShadow = true;
 
     float3 sMapTex = float3(input.ScreenPos.x / 800.0f, input.ScreenPos.y / 600.0f, 0);
@@ -186,7 +193,12 @@ float4 PS_light(PS_IN input) : SV_TARGET
     if (!shadow(position))
         //return float4(0,0,1,1);
         isShadow = false;
-    
+    */
+
+    if (shadow(position))
+    {
+        finalColour = ambientColour; //return ambientColour;
+    }
     if (LightType.x == TYPE_POINT)
     {
         /*if (!shadow(position, RotatedLightViewProjection[0], 5))
@@ -212,5 +224,8 @@ float4 PS_light(PS_IN input) : SV_TARGET
     }
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries
-    return clamp(ambientColour + ((diffuseColour /*+ specularColour*/) * attenuation), 0.0f, 1.0f);
+    finalColour = clamp((finalColour + glowEffect), 0.0f, 1.0f);
+    return finalColour;
+    //return glowEffect;
+    //return clamp(ambientColour + ((diffuseColour /*+ specularColour*/) * attenuation) /*+ glowEffect*/, 0.0f, 1.0f);
 }

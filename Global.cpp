@@ -24,14 +24,8 @@ ID3D11SamplerState* gSampling = nullptr;
 //blend resource
 ID3D11BlendState* gBlendStateLight = nullptr;
 
-// a resource to store Vertices in the GPU
-//ID3D11Buffer* gVertexBufferMap = nullptr;
-//ID3D11Buffer* gVertexBufferObj = nullptr;
-//TriangleVertex* gMap = nullptr;
-//TriangleVertex* gObject = nullptr;
-int gnrOfVert[5];
-ID3D11Buffer *ppVertexBuffers[5];
-XMFLOAT3 ObjectReflection[5];
+int gnrOfVert[OBJECTS];
+ID3D11Buffer *ppVertexBuffers[OBJECTS];
 
 ID3D11Buffer *heightmapBuffer;
 int nrOfHMVert;
@@ -93,15 +87,35 @@ LightSource* Lights = nullptr;
 int nrOfLights = 0;
 
 // CAMERAVIEW
-Camera camera({ 0.0f,20.0f,0.0f, 0.0f }, { 30.0f, 0.0f, 0.0f, 0.0f });
+Camera camera({ 0.0f,20.0f,-10.0f, 0.0f }, { 0.0f, 20.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
+
+Quadtree theObjectTree(1100, 1100, 0.0f, 0.0f);
+//Quadtree theObjectTree(float(g_heightmap.imageWidth), float(g_heightmap.imageHeight), 0.0f, 0.0f);
+
+//int* elementsIndex = new int (1024);
+
+int elementsAmount =2048;
+
+Point* copies= new Point[elementsAmount];
+
+int objectsFromFrustum = 0;
+
+int objectsCulledFromQuad = 0;
+
+int* elementsIndexQuadCulling = new int[elementsAmount];
+
+int* elementsIndexFrustumCulling = new int [elementsAmount];
+
+
 
 //Frustum frustumCamera(&camera);
 
-WorldSpace worldObjects[4] = {
+WorldSpace worldObjects[5] = {
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -40.0f, 1.0f, 1.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f },
 	{ 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f }
 };
 
@@ -118,28 +132,35 @@ bool key_cd = false;
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 
-int nrOfVertices = 0;
 Heightmap g_heightmap;
 TriangleVertex* g_map;
-
-int gnrOfVertices = 0;
 
 //clear pointers
 ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
 ID3D11Buffer* nullCB = nullptr;
 
-ID3D11ShaderResourceView* gTextureSRV[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gTexture2D[5] = { nullptr, nullptr, nullptr, nullptr, nullptr };
+//Objects
+ID3D11ShaderResourceView* gTextureSRV[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //SRVs for each object
+ID3D11Resource* gTexture2D[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr }; //Texture2Ds for each object
 
-ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr };
-ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr };
+ReflectionAmount* gReflection = new ReflectionAmount[OBJECTS]; //How much each material reflects of each colour and light
+ID3D11Buffer* reflectionBuffers[OBJECTS] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 
-ID3D11Texture2D* gBlurTexture = nullptr;
+//Blendmapping
+ID3D11ShaderResourceView* gMapTexturesSRV[4] = { nullptr, nullptr, nullptr, nullptr }; //SRVs for blendmapping
+ID3D11Resource* gMapTextureResource[4] = { nullptr, nullptr, nullptr, nullptr }; //Resources for each texture2Ds
+
+ID3D11UnorderedAccessView* nullUAV = nullptr; //null UAV for clearing
+
+
+//Blur
+ID3D11Texture2D* gBlurTextureDraw = nullptr;
+ID3D11Texture2D* gBlurTextureRead = nullptr;
 ID3D11ShaderResourceView* gBlurShaderResource = nullptr;
+bool blurFilter = false;
+ID3D11Texture2D* gBlurTextureEmpty;
 
-float rotationTest = 0;
-
-
+ID3D11UnorderedAccessView* blurUAV = nullptr;
 
 // terminate function for globals
 void DestroyGlobals() {
@@ -188,3 +209,4 @@ void DestroyGlobals() {
 	gDevice->Release();
 	gDeviceContext->Release();
 }
+

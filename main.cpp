@@ -45,13 +45,16 @@ using namespace DirectX;
 using namespace SimpleMath;
 using namespace std::chrono;
 
-std::unique_ptr<DirectX::Mouse>m_mouse;
-std::unique_ptr<DirectX::Keyboard>m_keyboard;
+std::unique_ptr<DirectX::Mouse>mouseInput;
+std::unique_ptr<DirectX::Keyboard>keyboardInput;
 
 HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
+
+bool keyReleased = true;
+
 
 void CreateDeferredQuad() {
 	PositionVertex triangleVertices[6] =
@@ -182,7 +185,8 @@ void createViewport() {
 void SetViewport(bool forceSingle) {
 	if (renderOpt & RENDER_MULTI_VIEWPORT && !forceSingle) {
 		gDeviceContext->RSSetViewports(4, svp);
-	} else {
+	}
+	else {
 		gDeviceContext->RSSetViewports(1, vp);
 	}
 }
@@ -203,6 +207,26 @@ void CreateObjects() {
 
 
 	LoadObjectFile("Objects/OBJs/trex.obj", XMINT3(460, -240, 95));
+
+	LoadObjectFile("Objects/OBJs/RedHerring.obj", XMINT3(0, 50, 0));
+
+	D3D11_BUFFER_DESC bufferDesc;
+	memset(&bufferDesc, 0, sizeof(bufferDesc));
+	bufferDesc.ByteWidth = sizeof(ReflectionAmount);
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+
+	//D3D11_SUBRESOURCE_DATA data;
+	//data.pSysMem = gReflection;
+
+	for (int i = 0; i < OBJECTS; i++)
+	{
+		D3D11_SUBRESOURCE_DATA data;
+		data.pSysMem = &gReflection[i];
+
+		gDevice->CreateBuffer(&bufferDesc, &data, &reflectionBuffers[i]);
+	}
 }
 
 void RenderWireframe() {
@@ -212,7 +236,7 @@ void RenderWireframe() {
 	setWireframeShaders();
 
 	gDeviceContext->ClearRenderTargetView(gBackbufferRTV, clearColor);
-	
+
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
@@ -240,7 +264,7 @@ void RenderWireframe() {
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 	}
-	
+
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
@@ -291,17 +315,22 @@ void RenderShadowMaps() {
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 }
 
-void RenderBuffers(float notToRender) {
+void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 	// clear the back buffer to a deep blue
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
+	//float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
 
 	updateCameraValues();
 	setCameraViewProjectionSpace();
 
 	// Clear the render target buffers.
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[i], clearColor);
 	}
+
+	float blurClear[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	gDeviceContext->ClearRenderTargetView(gRenderTargetViewArray[4], blurClear);
 
 	// make sure our depth buffer is cleared to black each time we render
 	gDeviceContext->ClearDepthStencilView(gDepth, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -319,7 +348,8 @@ void RenderBuffers(float notToRender) {
 	SetBlendShaders();
 
 	//load map textures
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		gDeviceContext->PSSetShaderResources(i, 1, &gMapTexturesSRV[i]);
 	}
 
@@ -327,14 +357,15 @@ void RenderBuffers(float notToRender) {
 	//set specular for height map
 	setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 	updateCameraWorldViewProjection();
-	updateSpecularValues(XMVectorSet(1, 1, 1, 1));
+	updateSpecularValues(XMVectorSet(1, 1, 1, 1), XMVectorSet(1, 1, 1, 0.01), XMVectorSet(0.1, 0.1, 0.1, 0.00000010f));
 
 	//Render heightmap
 	setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
 	gDeviceContext->Draw(nrOfHMVert, 0);
 
 	//Release
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
 	}
 
@@ -352,14 +383,16 @@ void RenderBuffers(float notToRender) {
 		//set specular for object
 		setWorldSpace(worldObjects[i]);
 		updateCameraWorldViewProjection();
-		updateSpecularValues(XMVectorSet(1, 1, 1, 1000));
+		updateSpecularValues(XMVectorSet(gReflection[i].a_r, gReflection[i].a_g, gReflection[i].a_b, 1), XMVectorSet(gReflection[i].d_r, gReflection[i].d_g, gReflection[i].d_b, 1), XMVectorSet(gReflection[i].s_r, gReflection[i].s_g, gReflection[i].s_b, gReflection[i].s_p * 100));
 
 		//Render objects
 		setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 
 		if (!i)
 		{
+
 			//Set copy
 			setWorldSpace(copy);
 			updateCameraWorldViewProjection();
@@ -370,14 +403,40 @@ void RenderBuffers(float notToRender) {
 	}
 
 	//Release
-	for (int i = 0; i < nrOfVertexBuffers; i++) {
-		gDeviceContext->PSSetShaderResources(i, 1, &nullSRV[0]);
-	}
+	//for (int i = 0; i < nrOfVertexBuffers; i++)
+	//{
+	gDeviceContext->PSSetShaderResources(0, 1, &nullSRV[0]);
+	//}
 
 	gDeviceContext->VSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->GSSetConstantBuffers(1, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
+
+
+	//Compute Gaussian Filter
+
+	if (blurFilter == true)
+	{
+		SetComputeShaders();
+
+		gDeviceContext->CSSetShaderResources(0, 1, &gShaderResourceViewArray[4]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &blurUAV, 0);
+
+		gDeviceContext->Dispatch(45, 45, 1);
+
+		//Release
+
+		gDeviceContext->CSSetShaderResources(0, 1, &nullSRV[0]);
+		gDeviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, 0);
+
+		//Copy resources
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureDraw);
+	}
+	else
+	{
+		gDeviceContext->CopyResource(gBlurTextureRead, gBlurTextureEmpty);
+	}
 }
 
 void RenderLights() {
@@ -402,8 +461,9 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(1, 1, &gShaderResourceViewArray[1]);
 	gDeviceContext->PSSetShaderResources(2, 1, &gShaderResourceViewArray[2]);
 	gDeviceContext->PSSetShaderResources(3, 1, &gShaderResourceViewArray[3]);
-	gDeviceContext->PSSetShaderResources(4, 1, &gDepthShaderResourceView);
-	
+	gDeviceContext->PSSetShaderResources(4, 1, &gBlurShaderResource);
+	gDeviceContext->PSSetShaderResources(5, 1, &gDepthShaderResourceView);
+
 	// render each light source
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
@@ -420,53 +480,132 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(4, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(5, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(6, 1, &nullSRV[0]);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(2, 1, &nullCB);
-
-	//gDeviceContext->CopyResource(gBlurShaderResource);
-
-	//pBackBuffer
-
-	gDeviceContext->CSSetShaderResources(0, 1, &gBlurShaderResource);
-	gDeviceContext->Dispatch(45, 45, 1);
 }
 
-void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+void CreateCopies()
+{
+	srand(time(NULL));
+
+	//Point *copies = new Point[256];
+
+	//8 point TEST 
+	if (0) 
+	{
+		Vector3 temp = { 0,10,20 };
+		copies[0] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[0]);
+		temp = { -20,10,20 };
+		copies[1] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[1]);
+		temp = { 20,10,20 };
+		copies[2] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[2]);
+
+		temp = { -20,10,0 };
+		copies[3] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[3]);
+		temp = { 20,10,0 };
+		copies[4] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[4]);
+
+
+		temp = { -20,10,-20 };
+		copies[5] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[5]);
+		temp = { 0,10,-20 };
+		copies[6] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[6]);
+		temp = { 20,10,-20 };
+		copies[7] = Point(temp.x, temp.y, temp.z);
+		theObjectTree.insert(copies[7]);
+	}
+	else
+	{
+		//Vector3 temp = { 0,20,0 };
+		int x = -500;
+		int z = -500;
+		int y = 20;
+		int randx=0;
+		int randz=0;
+
+		srand(time(NULL));
+		
+		/*Point* objects = new Point[elementsAmount];*/
+		for(int i=0;i<elementsAmount;i++)
+		{
+			randx = x + rand() % 1001;
+			randz = z + rand() % 1001;
+			if (i % 50 == 0)
+			{
+				y += 10;
+			}
+
+			copies[i] = Point(randx, y, randz, i);
+		
+			theObjectTree.insert(copies[i]);			
+		}
+	}
+	
+
+}
+
+void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObjects,bool * wireframe, bool *forceSingle,bool *onlyQuadCulling, Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
 
 	//float DontRender[6] = {-1};
-	float DontRender = -1;
+	//float DontRender = -1;
 	//FREE FLIGHT WITH O key
 	//HORIZONTAL movement with P 
 
 	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-	{//IN FREEFLIGHT				O key
+	{//<<<<IN FREEFLIGHT<<<< 	O key // TOGGLE
 	 //INTO CAMERA FORWARD		W
-	 //INTO CAMERA BACKWARDS		S
+	 //INTO CAMERA BACKWARDS	S
 	 //CAMERA RIGHT				D
 	 //CAMERA LEFT				A
-	 //CAMERA UP					Q
+	 //CAMERA UP				Q
 	 //CAMERA DOWN				E
 
-	 //IN HORIZONTAL				P key
+
+	 //<<<<IN HORIZONTAL<<<<	O key // TOGGLE
 	 //CAMERA FORWARD			W
 	 //CAMERA BACKWARDS			S
 	 //CAMERA RIGHT				D
 	 //CAMERA LEFT				A
 
-	 //OTHER
-	 //NV corner				F1				
-	 //NE corner				F2
-	 //SE corner				F3
-	 //SV corner				F4
+	 //<<<<OTHER<<<<
+	 
+	 //SPRINT					LSHIFT
+	 //ROTATE					R
+
 	}
 	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
 
+	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
+	{
+		//CAMERA POSITION
+		//STARTING POS				ESC
+		//NV corner					F1				
+		//NE corner					F2
+		//SE corner					F3
+		//SV corner					F4
+
+		//TOGGLES
+		//CullingDisplay			P
+		//Show all culling objects	U
+		//CAMERA VIEWS				Y
+		//WIREFRAME					H
+	}
+	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
+
 	//KEYBOARD 
 	{
-		auto kb = m_keyboard->GetState();
+		auto kb = keyboardInput->GetState();
 		//SHORT COMMANDS
 		{
 			if (kb.Escape) {
@@ -488,7 +627,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 0.5;
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) +0.5f;
 				//angel = 0.0f;
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
@@ -497,7 +636,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				float hyp = sqrt((pow(g_heightmap.imageWidth / 2, 2) + pow(g_heightmap.imageHeight / 2, 2)));
 
-				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0;
+				float angel = ((g_heightmap.imageWidth / 2) / hyp) + 1.0f;
 
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
@@ -510,14 +649,138 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 				camera.SetYawAndPitch(XM_PI*angel, 0);
 			}
-			if (kb.O) {
-				*freeFlight = true;
+
+			//TOGGLE KEYS
+			if (!keyReleased)
+			{
+				if (kb.O)
+				{
+
+				}
+				else if (kb.R)
+				{
+
+				}
+				else if (kb.P)
+				{
+
+				}
+				else if (kb.U)
+				{
+
+				}
+				else if (kb.Y)
+				{
+
+				}
+				else if (kb.H)
+				{
+
+				}
+				else  if (kb.J)
+				{
+
+				}
+				else
+				{
+					keyReleased = true;
+				}
+
 			}
-			if (kb.P) {
-				*freeFlight = false;
+			if (keyReleased)
+			{
+				if (kb.O) {
+					if(*freeFlight == true)
+					*freeFlight = false;
+					else
+					*freeFlight = true;
+
+					keyReleased = false;
+				}
+				if (kb.R) {
+					camera.AddYaw(XM_PI*0.1f);
+					keyReleased = false;
+				}
+				if (kb.P)
+				{
+					if (*culling == true)
+					{
+						*culling = false;
+						*showCullingObjects = false;
+						*onlyQuadCulling = false;
+					}
+					else
+						*culling = true;
+					keyReleased = false;
+				}
+				if (kb.U)
+				{
+					if (*culling ==true)
+					{ 
+					if (*showCullingObjects == true)
+						* showCullingObjects = false;
+
+					else
+						* showCullingObjects = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.Y)
+				{
+					if (*forceSingle == true)
+					{ 
+						* forceSingle = false;
+					}
+					else
+					{ 
+						* forceSingle = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.H)
+				{
+					if (*wireframe == true)
+					{
+						*wireframe = false;
+					}
+					else
+					{
+						*wireframe = true;
+					}
+					keyReleased = false;
+				}
+				if (kb.J)
+				{
+					if (*culling == true)
+					{
+						if (*onlyQuadCulling == true)
+						{
+							*onlyQuadCulling = false;
+						}
+						else
+						{
+							*onlyQuadCulling = true;
+						}
+					}
+					keyReleased = false;
+				}
+
+				//WIRE FRAME CHECK ?
+
 			}
-			//BUTTON FOR CULLING
 		}
+
+		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
+		auto mouse = mouseInput->GetState();
+
+		if (mouse.positionMode == Mouse::MODE_RELATIVE) {
+			//MOUSE RELATIVE CONTROL
+			float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
+
+			camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
+		}
+
+		mouseInput->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 		Vector3 moveInDepthCameraClass = Vector3::Zero;
 		Vector3 deltaChange = Vector3::Zero;
@@ -534,7 +797,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 			if (*freeFlight) {
 				moveInDepthCameraClass += camera.GetCameraNormal();
-			} else {
+			}
+			else {
 				moveInDepthCameraClass += camera.GetCamForward();
 			}
 
@@ -542,7 +806,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 		if (kb.S) { //BACK
 			if (*freeFlight) {
 				moveInDepthCameraClass -= camera.GetCameraNormal();
-			} else {
+			}
+			else {
 				moveInDepthCameraClass -= camera.GetCamForward();
 			}
 
@@ -585,18 +850,6 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 
 			key_down = true;
 		}
-		
-		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
-		auto mouse = m_mouse->GetState();
-
-		if (mouse.positionMode == Mouse::MODE_RELATIVE) {
-			//MOUSE RELATIVE CONTROL
-			float deltaPos[3] = { float(-mouse.x)* ROTATION_GAIN, float(mouse.y)* ROTATION_GAIN, 0.0f };
-
-			camera.UpdateYawAndPitch(deltaPos[0], deltaPos[1]);
-		}
-
-		m_mouse->SetMode(mouse.leftButton ? Mouse::MODE_RELATIVE : Mouse::MODE_ABSOLUTE);
 
 
 		//UPDATE CAMERA
@@ -612,51 +865,129 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 			//Walking on terrain
 			if (!*freeFlight) {
 				Vector4 CameraPos = camera.GetCamPos();
+				Vector4 CameraForward = camera.GetCamForward();
 
 				//TEST byte ordningen så det liknar en graf.
+
+				//2 mätpunkter 1 på cameran samt en framför
 
 				XMINT2 nRoundedPos;
 				nRoundedPos.x = CameraPos.x;
 				nRoundedPos.y = CameraPos.z;
 
+				XMINT2 n2RoundedPos;
+				n2RoundedPos.x = CameraPos.x+CameraForward.x;
+				n2RoundedPos.y = CameraPos.z+CameraForward.z;
+
 				//avrundar till närmsta heltal
 				if (nRoundedPos.x < 0) {
 					if (float(nRoundedPos.x) - 0.5f > CameraPos.x) nRoundedPos.x--;
-				} else {
+				}
+				else {
 					if (float(nRoundedPos.x) + 0.5f < CameraPos.x) nRoundedPos.x++;
 				}
 				if (nRoundedPos.y < 0) {
 					if (float(nRoundedPos.y) - 0.5f > CameraPos.z) nRoundedPos.y--;
-				} else {
+				}
+				else {
 					if (float(nRoundedPos.y) + 0.5f < CameraPos.z) nRoundedPos.y++;
+				}
+				if (n2RoundedPos.x < 0) {
+					if (float(n2RoundedPos.x) - 0.5f > CameraPos.x) n2RoundedPos.x--;
+				}
+				else {
+					if (float(n2RoundedPos.x) + 0.5f < CameraPos.x) n2RoundedPos.x++;
+				}
+				if (n2RoundedPos.y < 0) {
+					if (float(n2RoundedPos.y) - 0.5f > CameraPos.z) n2RoundedPos.y--;
+				}
+				else {
+					if (float(n2RoundedPos.y) + 0.5f < CameraPos.z) n2RoundedPos.y++;
 				}
 
 				nRoundedPos.x += g_heightmap.imageWidth / 2;
 				nRoundedPos.y += g_heightmap.imageHeight / 2;
 
+				n2RoundedPos.x += g_heightmap.imageWidth / 2;
+				n2RoundedPos.y += g_heightmap.imageHeight / 2;
+
 				//Avrundar så ingen ogiltig arrayplats nåss
 				if (nRoundedPos.x < 0) nRoundedPos.x = 0;
 				if (nRoundedPos.x >= g_heightmap.imageWidth) nRoundedPos.x = g_heightmap.imageWidth - 1;
 
+				if (n2RoundedPos.x < 0) n2RoundedPos.x = 0;
+				if (n2RoundedPos.x >= g_heightmap.imageWidth) n2RoundedPos.x = g_heightmap.imageWidth - 1;
+
 				if (nRoundedPos.y < 0) nRoundedPos.y = 0;
 				if (nRoundedPos.y >= g_heightmap.imageHeight) nRoundedPos.y = g_heightmap.imageHeight - 1;
 
+				if (n2RoundedPos.y < 0) n2RoundedPos.y = 0;
+				if (n2RoundedPos.y >= g_heightmap.imageHeight) n2RoundedPos.y = g_heightmap.imageHeight - 1;
+
 
 				int index = (nRoundedPos.y * g_heightmap.imageWidth) + nRoundedPos.x;
-				float newHeight = (g_heightmap.verticesPos[index].y + WALKING_HEIGHT);
+
+				int index2 = (n2RoundedPos.y * g_heightmap.imageWidth) + n2RoundedPos.x;
+
+				/*float newHeight = (g_heightmap.verticesPos[index].y  + WALKING_HEIGHT);*/
+
+				float newHeight = ((g_heightmap.verticesPos[index].y + g_heightmap.verticesPos[index2].y)/2 + WALKING_HEIGHT);
 
 				//ställer pitch, yaw, ny höjd 
 				camera.SetCameraHeight(newHeight);
-
-				//camFrustum->calculateFrustum(FOV,W_WIDTH,W_HEIGHT);
-
-				//if(camFrustum->pointInFrustum({ 5.0f, 25.0f, 5.0f, 0.0f })!=0 )
-				//{
-				//	//LOOKING AT MARS REMOVES FISH
-				//	DontRender = 0;
-				//}
 			}
 
+			camFrustum->calculateFrustum(FOV, W_WIDTH, W_HEIGHT,2.5f);
+			
+			Vector4 temp = camera.GetCameraNormal()* (camFrustum->frustumFarDist - camFrustum->frustumNearDist);
+		
+			
+			//reset
+			objectsFromFrustum = 0;
+
+			objectsCulledFromQuad = 0;
+
+			int capacity = elementsAmount;
+
+			if (*culling==true)
+			{
+
+			//rough culling the quadtree
+				int testing = camFrustum->isQuadInside(&theObjectTree, objectsCulledFromQuad, elementsIndexQuadCulling, capacity);
+
+				//culling individuel objects
+
+				/*for (int i = 0; i < elementsAmount; i++)
+				{
+
+					if (true)
+					{
+
+
+						if (camFrustum->sphereInFrustum(Vector3 {copies[i].x,copies[i].y,copies[i].z},50.0f) > 0)
+						{
+							elementsIndexFrustumCulling[objectsFromFrustum] = copies[i].index;
+							objectsFromFrustum++;
+						}
+					}
+				}
+				*/
+				/*cullingfrustum =*/
+				//COMBINE
+				for (int i = 0; i < objectsCulledFromQuad; i++)
+				{
+
+					if (true)
+					{
+						if (camFrustum->sphereInFrustum(Vector3{ copies[elementsIndexQuadCulling[i]].x,
+							copies[elementsIndexQuadCulling[i]].y,copies[elementsIndexQuadCulling[i]].z }, 25.0f) > 0)
+						{
+							elementsIndexFrustumCulling[objectsFromFrustum] = copies[elementsIndexQuadCulling[i]].index;
+							objectsFromFrustum++;
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -674,6 +1005,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
 	bool culling = renderOpt & RENDER_CULLING;
+	bool wireFrame = renderOpt & RENDER_WIREFRAME;
+	bool forceSingle = true;
+	bool showCullingObjects = false; 
+	bool onlyQuadCulling = false;
 
 	bool renderOnce = true;
 
@@ -683,9 +1018,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	Frustum camFrustum(&camera);
 
 	//Mouse and keyboard ini (ONLY MOUSE)
-	m_keyboard = std::make_unique<Keyboard>();
-	m_mouse = std::make_unique<Mouse>();
-	m_mouse->SetWindow(wndHandle);
+	keyboardInput = std::make_unique<Keyboard>();
+	mouseInput = std::make_unique<Mouse>();
+	mouseInput->SetWindow(wndHandle);
 
 	if (wndHandle)
 	{
@@ -706,6 +1041,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		CreateLigths();
 
 		CreateObjects();
+
+		CreateCopies();
 
 		ShowWindow(wndHandle, nCmdShow);
 
@@ -734,12 +1071,36 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 				}
 
-				updateKeyAndMouseInput(&freeFlight,&culling,&camFrustum, delta);
+				updateKeyAndMouseInput(&freeFlight, &culling, &showCullingObjects, &wireFrame, &forceSingle, &onlyQuadCulling, &camFrustum, delta);
+
+				/*if (wireFrame == true && forceSingle ==true)
+				{
+					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
+
+					
+					if (!forceSingle)
+					{
+						renderOpt = RENDER_DOUBLE_VIEWPORT | RENDER_FREE_FLIGHT | RENDER_WIREFRAME;
+					}
+				}
+				if (wireFrame == false && forceSingle == true)
+				{
+					renderOpt = RENDER_FREE_FLIGHT | RENDER_WIREFRAME;
+				}
+				if(wireFrame == false && forceSingle == false)
+				{
+					renderOpt = RENDER_FREE_FLIGHT | RENDER_DOUBLE_VIEWPORT;
+				}
+				if (wireFrame == true && forceSingle == false)
+				{
+					renderOpt = RENDER_WIREFRAME | RENDER_FREE_FLIGHT;
+				}*/
+				//updateKeyAndMouseInput(&freeFlight, &culling, &camFrustum, delta);
 
 				updateRenderingOptions();
 
-				if (renderOpt & RENDER_WIREFRAME) {
-					SetViewport(false);
+				if (renderOpt & RENDER_WIREFRAME && wireFrame) {
+					SetViewport(forceSingle);
 
 					RenderWireframe();
 				} else {
@@ -747,11 +1108,23 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 						RenderShadowMaps();
 						renderOnce = false;
 					//}
-						
-					SetViewport(false);
 
-					RenderBuffers(0);
+					SetViewport(forceSingle);
+					
+					if (onlyQuadCulling)
+					{
+						//SINGEL PASS QUAD TEST ONLY
+						RenderBuffers(elementsIndexQuadCulling, objectsCulledFromQuad, &showCullingObjects);
+					}
+					else
+					{
+						//DOBULE PASS QUAD AND FRUSTUM
+						RenderBuffers(elementsIndexFrustumCulling, objectsFromFrustum, &showCullingObjects);
+					}
+					//SINGEL PASS FRUSTUM ONLY
+					/*RenderBuffers(elementsIndexFrustumCulling,objectsFromFrustum);*/
 
+					
 					SetViewport(true);
 
 					RenderLights();
@@ -893,10 +1266,11 @@ HRESULT CreateRenderTargets() {
 
 	// use the back buffer address to create the render target
 	gDevice->CreateRenderTargetView(pBackBuffer, NULL, &gBackbufferRTV);
-	//gDevice->CreateShaderResourceView(pBackBuffer,,&gBlurShaderResource) // Nevermind this!
+
 	pBackBuffer->Release();
 
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		gRenderTargetTextureArray[i] = nullptr;
 		gRenderTargetViewArray[i] = nullptr;
 		gShaderResourceViewArray[i] = nullptr;
@@ -922,7 +1296,8 @@ HRESULT CreateRenderTargets() {
 	textureDesc.MiscFlags = 0;
 
 	// Create the render target textures.
-	for (int i = 0; i < G_BUFFER; i++) {
+	for (int i = 0; i < G_BUFFER; i++)
+	{
 		if (FAILED(gDevice->CreateTexture2D(&textureDesc, NULL, &gRenderTargetTextureArray[i]))) {
 			return S_FALSE;
 		}
@@ -936,7 +1311,8 @@ HRESULT CreateRenderTargets() {
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
 
 	// Create the render target views.
-	for (int j = 0; j < G_BUFFER; j++) {
+	for (int j = 0; j < G_BUFFER; j++)
+	{
 		if (FAILED(gDevice->CreateRenderTargetView(gRenderTargetTextureArray[j], &renderTargetViewDesc, &gRenderTargetViewArray[j]))) {
 			return S_FALSE;
 		}
@@ -951,16 +1327,51 @@ HRESULT CreateRenderTargets() {
 	shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
 	// Create the shader resource views.
-	for (int k = 0; k < G_BUFFER; k++) {
+	for (int k = 0; k < G_BUFFER; k++)
+	{
 		if (FAILED(gDevice->CreateShaderResourceView(gRenderTargetTextureArray[k], &shaderResourceViewDesc, &gShaderResourceViewArray[k]))) {
 			return S_FALSE;
 		}
 	}
 
+	//Blur
+
+	//Texture to draw on
+	textureDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	gDevice->CreateTexture2D(&textureDesc, NULL, &gBlurTextureDraw);
+
+	//Unordered access view to write on
+	D3D11_UNORDERED_ACCESS_VIEW_DESC blurUAVdesc;
+	blurUAVdesc.Texture2D.MipSlice = 0;
+	blurUAVdesc.Format = textureDesc.Format;
+	blurUAVdesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+
+	HRESULT error = gDevice->CreateUnorderedAccessView(gBlurTextureDraw, &blurUAVdesc, &blurUAV);
+	if (error != S_OK)
+	{
+		return DXGI_ERROR_ACCESS_DENIED;
+	}
+
+	//Texture to read from
+	textureDesc.Usage = D3D11_USAGE_DYNAMIC;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	gDevice->CreateTexture2D(&textureDesc, 0, &gBlurTextureRead);
+
+	error = gDevice->CreateShaderResourceView(gBlurTextureRead, &shaderResourceViewDesc, &gBlurShaderResource);
+	if (error != S_OK)
+	{
+		return DXGI_ERROR_ACCESS_DENIED;
+	}
+
+	gDevice->CreateTexture2D(&textureDesc, NULL, &gBlurTextureEmpty);
+
 	return S_OK;
 }
 
-HRESULT CreateDirect3DContext(HWND wndHandle) {
+HRESULT CreateDirect3DContext(HWND wndHandle)
+{
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
 
@@ -1036,3 +1447,4 @@ HRESULT CreateDirect3DContext(HWND wndHandle) {
 
 	return hr;
 }
+
