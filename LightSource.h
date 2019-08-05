@@ -10,8 +10,12 @@
 using namespace DirectX;
 
 //shadow map render size
-#define S_WIDTH 640.0f/2
-#define S_HEIGHT 480.0f/2
+#define MUL 24
+#define S_WIDTH (640.0f*MUL)
+#define S_HEIGHT (480.0f*MUL)
+#define S_DIR_WIDTH (30000.0*MUL)
+#define S_DIR_HEIGHT (30000.0f*MUL)
+
 
 // light types
 #define L_POINT 0

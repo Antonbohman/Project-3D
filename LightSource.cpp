@@ -72,8 +72,14 @@ LightSource::~LightSource() {
 }
 
 void LightSource::setViewport() {
-	vp.Width = (float)S_WIDTH;
-	vp.Height = (float)S_HEIGHT;
+	if (data.type == L_DIRECTIONAL) {
+		vp.Width = (float)S_DIR_WIDTH;
+		vp.Height = (float)S_DIR_HEIGHT;
+	} else {
+		vp.Width = (float)S_WIDTH;
+		vp.Height = (float)S_HEIGHT;
+	}
+
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
@@ -81,11 +87,14 @@ void LightSource::setViewport() {
 }
 
 void LightSource::setViews() {
+	XMVECTOR lookUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMVECTOR lookDown = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+
 	if (data.type == L_SPOT) {
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			lookUp
 		);
 		views[1] = views[0];
 		views[2] = views[0];
@@ -93,11 +102,10 @@ void LightSource::setViews() {
 		views[4] = views[0];
 		views[5] = views[0];
 	} else if (data.type == L_DIRECTIONAL) {
-		//fix position for L_DIRECTIONAL to place itself in front of camera always instead
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			lookUp
 		);
 		views[1] = views[0];
 		views[2] = views[0];
@@ -110,33 +118,33 @@ void LightSource::setViews() {
 
 		views[0] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x + 1, direction->y, direction->z, 0.0f),
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			XMVectorSet(direction->x + 100, direction->y, direction->z, 0.0f),
+			lookUp
 		);
 		views[1] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x - 1, direction->y, direction->z, 0.0f),
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			XMVectorSet(direction->x - 100, direction->y, direction->z, 0.0f),
+			lookUp
 		);
 		views[2] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x, direction->y + 1, direction->z, 0.0f),
-			XMVectorSet(0.0f, 0.0f, -1.0f, 0.0f)
+			XMVectorSet(direction->x, direction->y, direction->z + 100, 0.0f),
+			lookUp
 		);
 		views[3] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x, direction->y - 1, direction->z, 0.0f),
-			XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f)
+			XMVectorSet(direction->x, direction->y, direction->z - 100, 0.0f),
+			lookUp
 		);
 		views[4] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x, direction->y, direction->z + 1, 0.0f),
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			XMVectorSet(direction->x, direction->y + 100, direction->z, 0.0f),
+			lookUp
 		);
 		views[5] = XMMatrixLookAtLH(
 			data.position,
-			XMVectorSet(direction->x, direction->y, direction->z - 1, 0.0f),
-			XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
+			XMVectorSet(direction->x, direction->y - 100, direction->z, 0.0f),
+			lookUp
 		);
 	}
 
@@ -157,8 +165,8 @@ void LightSource::setProjection() {
 		break;
 	case L_DIRECTIONAL:
 		projection = XMMatrixOrthographicLH(
-			(float)S_WIDTH,
-			(float)S_HEIGHT,
+			(float)S_DIR_WIDTH,
+			(float)S_DIR_HEIGHT,
 			0.1f,
 			max(data.intensity * 1.1f, 1.0f)
 		);

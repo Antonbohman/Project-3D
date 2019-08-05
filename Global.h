@@ -267,6 +267,10 @@ extern Camera camera;
 
 extern WorldSpace worldObjects[4];
 
+//lock button presses
+extern bool key_down;
+extern bool key_cd;
+
 // keeping track of current rotation
 extern float rotation;
 

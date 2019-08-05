@@ -42,12 +42,12 @@ void GS_shadow(
             OutputStream.Append(output);
         }
 
+        OutputStream.RestartStrip();
+
         if (LightType == TYPE_POINT)
         {
             for (uint i = 0; i < 5; i++)
             {
-                OutputStream.RestartStrip();
-
                 //output our rotated maps
                 for (uint j = 0; j < 3; j++)
                 {
@@ -57,6 +57,8 @@ void GS_shadow(
                     //add vertex to be computed in next pipeline stage
                     OutputStream.Append(output);
                 }
+
+                OutputStream.RestartStrip();
             }
         }
     }

@@ -111,6 +111,10 @@ XMMATRIX View;
 XMMATRIX ViewRotated[5];
 XMMATRIX Projection;
 
+//lock button presses
+bool key_down = false;
+bool key_cd = false;
+
 // keeping track of current rotation
 float rotation = 1.5f*XM_PI;
 

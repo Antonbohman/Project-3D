@@ -24,7 +24,7 @@ Texture2D SpecularTexture : register(t2);
 Texture2D PositionTexture : register(t3);
 Texture2D DepthTexture : register(t4);
 
-Texture2DArray ShadowMaps : register(t8);
+Texture2DArray ShadowMaps : register(t6);
 
 SamplerState Sampling : register(s0);
 
@@ -62,8 +62,8 @@ bool shadow(float3 position)
     float2 sMapTex = float2(0.5f * lsp.x + 0.5, -0.5f * lsp.y + 0.5f);
         
     if (lsp.x < -1.0f || lsp.x > 1.0f ||
-            lsp.y < -1.0f || lsp.y > 1.0f ||
-            lsp.z < 0.0f || lsp.z > 1.0f)
+        lsp.y < -1.0f || lsp.y > 1.0f ||
+        lsp.z < 0.0f || lsp.z > 1.0f)
         return true;
     
     lsp.z -= 0.0005f;
@@ -76,22 +76,22 @@ bool shadow(float3 position)
     return false;
 }
 
-bool shadow(float3 position, int index)
+bool shadow(float3 position, float4x4 ViewProjection, int index)
 {
-    float4 lsp = mul(float4(position, 1.0f), RotatedLightViewProjection[index]);
+    float4 lsp = mul(float4(position, 1.0f), ViewProjection);
 
     lsp.xyz /= lsp.w;
 
     float2 sMapTex = float2(0.5f * lsp.x + 0.5, -0.5f * lsp.y + 0.5f);
         
     if (lsp.x < -1.0f || lsp.x > 1.0f ||
-            lsp.y < -1.0f || lsp.y > 1.0f ||
-            lsp.z < 0.0f || lsp.z > 1.0f)
+        lsp.y < -1.0f || lsp.y > 1.0f ||
+        lsp.z < 0.0f || lsp.z > 1.0f)
         return true;
     
     lsp.z -= 0.0005f;
 
-    float shadowMapDepth = ShadowMaps.Sample(Sampling, float3(sMapTex, index+1)).r;
+    float shadowMapDepth = ShadowMaps.Sample(Sampling, float3(sMapTex, index)).r;
 
     if (shadowMapDepth < lsp.z)
         return true;
@@ -177,21 +177,38 @@ float4 PS_light(PS_IN input) : SV_TARGET
     //change diffuse albedo to specular albedo when added!
     float4 specularColour = float4(diffuseAlbedo.rgb * LightColour.rgb * pow(dotProduct, specularPower), 1);
 
-    if (shadow(position))
-    {
-        return ambientColour;
-    }
-        
+    bool isShadow = true;
 
+    float3 sMapTex = float3(input.ScreenPos.x / 800.0f, input.ScreenPos.y / 600.0f, 0);
+
+    //return ShadowMaps.Sample(Sampling, sMapTex);
+
+    if (!shadow(position))
+        //return float4(0,0,1,1);
+        isShadow = false;
+    
     if (LightType.x == TYPE_POINT)
     {
-        /*for (int i = 0; i < 5; i++)
-        {
-            if (shadow(position, i))
-            {
-                return ambientColour;
-            }
-        }*/
+        /*if (!shadow(position, RotatedLightViewProjection[0], 5))
+            return float4(0, 1, 0, 1);*/
+            //isShadow = false;
+        /*if (!shadow(position, RotatedLightViewProjection[1], 2))
+            return float4(1, 0, 0, 1);
+            //isShadow = false;
+        if (!shadow(position, RotatedLightViewProjection[2], 3))
+            return float4(0, 1, 1, 1);
+            //isShadow = false;
+        if (!shadow(position, RotatedLightViewProjection[3], 4))
+            return float4(1, 0, 1, 1);
+            //isShadow = false;
+        if (!shadow(position, RotatedLightViewProjection[4], 5))
+            return float4(0.5, 0.5, 0.5, 1);
+            //isShadow = false;*/
+    }
+    
+    if (isShadow)
+    {
+        return ambientColour;
     }
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries

@@ -111,10 +111,11 @@ void CreateLigths() {
 	nrOfLights = 1;
 	Lights = new LightSource[nrOfLights];
 
-	Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 20.0f, 1.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[3] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(0.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, 0.0f);
+	Lights[0] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(100.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 100000.0f, 0.0f);
 
 	for (int i = 0; i < nrOfLights; i++) {
 		Lights[i].createShadowBuffer(gDevice);
@@ -408,7 +409,7 @@ void RenderLights() {
 		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
 
 		pShadowMap = Lights[i].getShadowMap();
-		gDeviceContext->PSSetShaderResources(8, 1, &pShadowMap);
+		gDeviceContext->PSSetShaderResources(6, 1, &pShadowMap);
 
 		gDeviceContext->Draw(6, 0);
 	}
@@ -419,6 +420,7 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(2, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(3, 1, &nullSRV[0]);
 	gDeviceContext->PSSetShaderResources(4, 1, &nullSRV[0]);
+	gDeviceContext->PSSetShaderResources(6, 1, &nullSRV[0]);
 
 	gDeviceContext->PSSetConstantBuffers(0, 1, &nullCB);
 	gDeviceContext->PSSetConstantBuffers(1, 1, &nullCB);
@@ -433,7 +435,6 @@ void RenderLights() {
 }
 
 void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
-
 
 	//float DontRender[6] = {-1};
 	float DontRender = -1;
@@ -515,7 +516,6 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 			if (kb.P) {
 				*freeFlight = false;
 			}
-
 			//BUTTON FOR CULLING
 		}
 
@@ -549,7 +549,6 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 		}
 		if (kb.D) { //RIGHT
 			deltaChange.x += 1.0f;
-
 		}
 		if (kb.A) { //LEFT
 			deltaChange.x -= 1.0f;
@@ -563,6 +562,30 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,Frustum* camFrustum, 
 				deltaChange.y -= 1.0f;
 		}
 
+		if (kb.F9 && !key_down) {
+			renderMode++;
+			renderMode %= 8;
+			key_down = true;
+		}
+
+		if (kb.F10 && !key_down) {
+			if (renderOpt & RENDER_WIREFRAME)
+				renderOpt &= ~RENDER_WIREFRAME;
+			else
+				renderOpt |= RENDER_WIREFRAME;
+
+			key_down = true;
+		}
+
+		if (kb.F11 && !key_down) {
+			if (renderOpt & RENDER_MULTI_VIEWPORT)
+				renderOpt &= ~RENDER_MULTI_VIEWPORT;
+			else
+				renderOpt |= RENDER_MULTI_VIEWPORT;
+
+			key_down = true;
+		}
+		
 		//MOUSE INPUT PRESS LEFTCLICK TO ANGEL
 		auto mouse = m_mouse->GetState();
 
@@ -645,6 +668,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	time_point<high_resolution_clock>end = high_resolution_clock::now();
 	duration<double, std::ratio<1, 15>> delta;
 
+	time_point<high_resolution_clock>key_start = high_resolution_clock::now();
+	time_point<high_resolution_clock>key_end = high_resolution_clock::now();
+	duration<double, std::ratio<1, 2>> key_delta;
+
 	bool freeFlight = renderOpt & RENDER_FREE_FLIGHT;
 	bool culling = renderOpt & RENDER_CULLING;
 
@@ -693,6 +720,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 				delta = end - start;
 				start = high_resolution_clock::now();
 
+				if (key_down && !key_cd) {
+					key_cd = true;
+					key_start = high_resolution_clock::now();
+				}
+
+				if (key_cd) {
+					key_end = high_resolution_clock::now();
+					key_delta = key_end - key_start;
+					if (key_delta.count() >= 1) {
+						key_cd = false;
+						key_down = false;
+					}
+				}
+
 				updateKeyAndMouseInput(&freeFlight,&culling,&camFrustum, delta);
 
 				updateRenderingOptions();
@@ -702,10 +743,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					RenderWireframe();
 				} else {
-					if (renderOnce) {
+					//if (renderOnce) {
 						RenderShadowMaps();
 						renderOnce = false;
-					}
+					//}
 						
 					SetViewport(false);
 
