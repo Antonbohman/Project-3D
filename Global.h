@@ -256,8 +256,11 @@ extern ID3D11Buffer* gLightMatrixBuffer;
 
 extern ID3D11Buffer* gLightDataBuffer;
 
-extern LightSource* Lights;
-extern int nrOfLights;
+extern int currentLight;
+extern LightSource* SpotLights;
+extern LightSource* PointLights;
+extern LightSource* DirectionalLights;
+extern int nrOfLights[3];
 
 //World/View/Projection
 extern XMMATRIX World;

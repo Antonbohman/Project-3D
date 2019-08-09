@@ -171,56 +171,44 @@ float4 PS_light(PS_IN input) : SV_TARGET
     float4 specularColour = float4(0.0f, 0.0f, 0.0f, 0.0f);
     if (lightFactor > 0.0f)
     {
-    //calculate diffuse lightning (no ligth/distance loss calculated here)
+        //calculate diffuse lightning (no ligth/distance loss calculated here)
         diffuseColour = float4(diffuseAlbedo * LightColour.rgb * lightFactor, 1.0f);
 
-    //calculate vector for reflected light
+        //calculate vector for reflected light
         float3 lightReflectionVector = 2 * lightFactor * normalize(normal) - normalize(lightVector);
-    //clamp so only positive dot product is acceptable
+        //clamp so only positive dot product is acceptable
         float dotProduct = clamp(dot(normalize(CameraOrigin.xyz - position.xyz), normalize(lightReflectionVector)), 0.0f, 1.0f);
-    //change diffuse albedo to specular albedo when added!
+        //change diffuse albedo to specular albedo when added!
         specularColour = float4(specularAlbedo.rgb * LightColour.rgb * pow(max(dotProduct, 0), specularPower), 1.0f);
     }
-    float4 finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
 
-    /*
-    bool isShadow = true;
+    float4 finalColour;
 
-    float3 sMapTex = float3(input.ScreenPos.x / 800.0f, input.ScreenPos.y / 600.0f, 0);
-
-    //return ShadowMaps.Sample(Sampling, sMapTex);
-
-    if (!shadow(position))
-        //return float4(0,0,1,1);
-        isShadow = false;
-    */
-
-    if (shadow(position))
-    {
-        finalColour = ambientColour; //return ambientColour;
+    if (RenderMode == RENDER_NO_SPECULAR) {
+        finalColour = clamp(ambientColour + (diffuseColour * attenuation), 0.0f, 1.0f);
+    } else {
+        finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
     }
-    if (LightType.x == TYPE_POINT)
+
+    if (RenderMode != RENDER_NO_SHADOWS)
     {
-        /*if (!shadow(position, RotatedLightViewProjection[0], 5))
-            return float4(0, 1, 0, 1);*/
-            //isShadow = false;
-        /*if (!shadow(position, RotatedLightViewProjection[1], 2))
-            return float4(1, 0, 0, 1);
-            //isShadow = false;
-        if (!shadow(position, RotatedLightViewProjection[2], 3))
-            return float4(0, 1, 1, 1);
-            //isShadow = false;
-        if (!shadow(position, RotatedLightViewProjection[3], 4))
-            return float4(1, 0, 1, 1);
-            //isShadow = false;
-        if (!shadow(position, RotatedLightViewProjection[4], 5))
-            return float4(0.5, 0.5, 0.5, 1);
-            //isShadow = false;*/
-    }
-    
-    if (isShadow)
-    {
-        return ambientColour;
+        if (LightType.x == TYPE_SPOT) {
+            if (shadow(position))
+                finalColour = ambientColour; //return ambientColour;
+        } else if (LightType.x == TYPE_POINT) {
+            if (shadow(position))
+                finalColour = ambientColour; //return ambientColour;
+            else if (shadow(position, RotatedLightViewProjection[0], 1))
+                finalColour = ambientColour; //return ambientColour;
+            else if (shadow(position, RotatedLightViewProjection[1], 2))
+                finalColour = ambientColour; //return ambientColour;
+            else if (shadow(position, RotatedLightViewProjection[2], 3))
+                finalColour = ambientColour; //return ambientColour;
+            else if (shadow(position, RotatedLightViewProjection[3], 4))
+                finalColour = ambientColour; //return ambientColour;
+            else if (shadow(position, RotatedLightViewProjection[4], 5))
+                finalColour = ambientColour; //return ambientColour;
+        }
     }
     
     //add all lightning effects for a final pixel colour and make sure it stays inside reasonable boundries

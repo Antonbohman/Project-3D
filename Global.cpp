@@ -83,11 +83,14 @@ ID3D11Buffer* gLightMatrixBuffer = nullptr;
 
 ID3D11Buffer* gLightDataBuffer = nullptr;
 
-LightSource* Lights = nullptr;
-int nrOfLights = 0;
+int currentLight = 0;
+LightSource* SpotLights = nullptr;
+LightSource* PointLights = nullptr;
+LightSource* DirectionalLights = nullptr;
+int nrOfLights[3] = { 0 };
 
 // CAMERAVIEW
-Camera camera({ 0.0f,20.0f,-10.0f, 0.0f }, { 0.0f, 20.0f, 0.0f, 0.0f });
+Camera camera({ -40.0f,20.0f,-10.0f, 0.0f }, { 0.0f, 20.0f, 0.0f, 0.0f });
 //+481.0f,20.0f,330.0f, 0.0f 
 
 Quadtree theObjectTree(1100, 1100, 0.0f, 0.0f);
@@ -106,7 +109,6 @@ int objectsCulledFromQuad = 0;
 int* elementsIndexQuadCulling = new int[elementsAmount];
 
 int* elementsIndexFrustumCulling = new int [elementsAmount];
-
 
 
 //Frustum frustumCamera(&camera);
@@ -166,7 +168,9 @@ ID3D11UnorderedAccessView* blurUAV = nullptr;
 void DestroyGlobals() {
 	delete vp;
 
-	delete[] Lights;
+	delete[] SpotLights;
+	delete[] PointLights;
+	delete[] DirectionalLights;
 
 	//gVertexBuffer->Release();
 	gDeferredQuadBuffer->Release();

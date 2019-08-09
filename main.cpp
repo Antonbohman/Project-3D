@@ -52,9 +52,9 @@ HWND InitWindow(HINSTANCE hInstance);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 HRESULT CreateDirect3DContext(HWND wndHandle);
+HRESULT SetRasterizerState();
 
 bool keyReleased = true;
-
 
 void CreateDeferredQuad() {
 	PositionVertex triangleVertices[6] =
@@ -111,18 +111,37 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights = 1;
-	Lights = new LightSource[nrOfLights];
+	nrOfLights[0] = 1;
+	SpotLights = new LightSource[nrOfLights[0]];
 
-	//Lights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 20.0f, 1.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	SpotLights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	//SpotLights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 20.0f, 1.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+
+	for (int i = 0; i < nrOfLights[0]; i++) {
+		SpotLights[i].createShadowBuffer(gDevice);
+	}
+
+	nrOfLights[1] = 1;
+	PointLights = new LightSource[nrOfLights[1]];
+
+	PointLights[0] = LightSource(L_POINT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	
+	for (int i = 0; i < nrOfLights[1]; i++) {
+		PointLights[i].createShadowBuffer(gDevice);
+	}
+
+	nrOfLights[2] = 1;
+	DirectionalLights = new LightSource[nrOfLights[2]];
+
+	DirectionalLights[0] = LightSource(L_DIRECTIONAL, 20, XMVectorSet(100.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 100000.0f, 100.0f);
+
+	for (int i = 0; i < nrOfLights[2]; i++) {
+		DirectionalLights[i].createShadowBuffer(gDevice);
+	}
+
 	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	Lights[0] = LightSource(L_DIRECTIONAL, 1, XMVectorSet(100.0f, 100.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 100000.0f, 0.0f);
 
-	for (int i = 0; i < nrOfLights; i++) {
-		Lights[i].createShadowBuffer(gDevice);
-	}
 }
 
 void createBlendState() {
@@ -185,8 +204,7 @@ void createViewport() {
 void SetViewport(bool forceSingle) {
 	if (renderOpt & RENDER_MULTI_VIEWPORT && !forceSingle) {
 		gDeviceContext->RSSetViewports(4, svp);
-	}
-	else {
+	} else {
 		gDeviceContext->RSSetViewports(1, vp);
 	}
 }
@@ -278,13 +296,27 @@ void RenderShadowMaps() {
 
 	WorldSpace copy = { 0.0f, 0.0f, 0.0f, 0.0f, 40.0f, 10.0f, 1.0f, 1.0f, 1.0f };
 
-	for (int i = 0; i < nrOfLights; i++) {
-		Lights[i].prepareShadowRender(gDeviceContext);
+	for (int i = 0; i < nrOfLights[currentLight]; i++) {
+		LightSource* light;
+
+		switch (currentLight) {
+			case 0:
+				light = &SpotLights[i];
+				break;
+			case 1:
+				light = &PointLights[i];
+				break;
+			case 2:
+				light = &DirectionalLights[i];
+				break;
+		}
+
+		light->prepareShadowRender(gDeviceContext);
 
 		//set world space for height map and update wvp
 		setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
 		updateObjectWorldSpace();
-		updateLightViewProjection(&Lights[i]);
+		updateLightViewProjection(light);
 
 		//Render heightmap
 		setVertexBuffer(heightmapBuffer, sizeof(TriangleVertex), 0);
@@ -294,7 +326,7 @@ void RenderShadowMaps() {
 			//set world space for each object and update wvp
 			setWorldSpace(worldObjects[i]);
 			updateObjectWorldSpace();
-			updateLightViewProjection(&Lights[i]);
+			updateLightViewProjection(light);
 
 			//Render objects
 			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
@@ -392,7 +424,6 @@ void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 
 		if (!i)
 		{
-
 			//Set copy
 			setWorldSpace(copy);
 			updateCameraWorldViewProjection();
@@ -465,10 +496,24 @@ void RenderLights() {
 	gDeviceContext->PSSetShaderResources(5, 1, &gDepthShaderResourceView);
 
 	// render each light source
-	for (int i = 0; i < nrOfLights; i++) {
-		Lights[i].loadLightBuffers(gDeviceContext, gLightDataBuffer);
+	for (int i = 0; i < nrOfLights[currentLight]; i++) {
+		LightSource* light;
 
-		pShadowMap = Lights[i].getShadowMap();
+		switch (currentLight) {
+		case 0:
+			light = &SpotLights[i];
+			break;
+		case 1:
+			light = &PointLights[i];
+			break;
+		case 2:
+			light = &DirectionalLights[i];
+			break;
+		}
+
+		light->loadLightBuffers(gDeviceContext, gLightDataBuffer);
+
+		pShadowMap = light->getShadowMap();
 		gDeviceContext->PSSetShaderResources(6, 1, &pShadowMap);
 
 		gDeviceContext->Draw(6, 0);
@@ -514,7 +559,6 @@ void CreateCopies()
 		copies[4] = Point(temp.x, temp.y, temp.z);
 		theObjectTree.insert(copies[4]);
 
-
 		temp = { -20,10,-20 };
 		copies[5] = Point(temp.x, temp.y, temp.z);
 		theObjectTree.insert(copies[5]);
@@ -555,7 +599,8 @@ void CreateCopies()
 
 }
 
-void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObjects,bool * wireframe, bool *forceSingle,bool *onlyQuadCulling, Frustum* camFrustum, duration<double, std::ratio<1, 15>> delta) {
+void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObjects,bool * wireframe, bool *forceSingle,bool *onlyQuadCulling, Frustum* camFrustum, bool *renderOnce, duration<double, std::ratio<1, 15>> delta)
+{
 
 	//float DontRender[6] = {-1};
 	//float DontRender = -1;
@@ -600,6 +645,14 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 		//Show all culling objects	U
 		//CAMERA VIEWS				Y
 		//WIREFRAME					H
+
+		/*
+			Rendering options:
+			F7: loops trough the 8 draw modes
+			F8: loops trough 3 different stages of light presets
+			F9: turns wireframe on/off
+			F10: turns multiview on/off
+		*/
 	}
 	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
 
@@ -827,22 +880,37 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 				deltaChange.y -= 1.0f;
 		}
 
-		if (kb.F9 && !key_down) {
+		/*
+			Keys for different rendering options
+		*/
+
+		if (kb.F7 && !key_down) {
 			renderMode++;
 			renderMode %= 8;
 			key_down = true;
 		}
 
-		if (kb.F10 && !key_down) {
+		if (kb.F8 && !key_down) {
+			currentLight++;
+			currentLight %= 3;
+
+			*renderOnce = true;
+
+			key_down = true;
+		}
+
+		if (kb.F9 && !key_down) {
 			if (renderOpt & RENDER_WIREFRAME)
 				renderOpt &= ~RENDER_WIREFRAME;
 			else
 				renderOpt |= RENDER_WIREFRAME;
 
+			SetRasterizerState();
+
 			key_down = true;
 		}
 
-		if (kb.F11 && !key_down) {
+		if (kb.F10 && !key_down) {
 			if (renderOpt & RENDER_MULTI_VIEWPORT)
 				renderOpt &= ~RENDER_MULTI_VIEWPORT;
 			else
@@ -1071,7 +1139,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					}
 				}
 
-				updateKeyAndMouseInput(&freeFlight, &culling, &showCullingObjects, &wireFrame, &forceSingle, &onlyQuadCulling, &camFrustum, delta);
+				updateKeyAndMouseInput(&freeFlight, &culling, &showCullingObjects, &wireFrame, &forceSingle, &onlyQuadCulling, &camFrustum, &renderOnce, delta);
 
 				/*if (wireFrame == true && forceSingle ==true)
 				{
@@ -1099,17 +1167,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 				updateRenderingOptions();
 
-				if (renderOpt & RENDER_WIREFRAME && wireFrame) {
+				if (renderOpt & RENDER_WIREFRAME) {
 					SetViewport(forceSingle);
 
 					RenderWireframe();
 				} else {
-					//if (renderOnce) {
+					if (renderOnce) {
 						RenderShadowMaps();
 						renderOnce = false;
-					//}
+					}
 
-					SetViewport(forceSingle);
+					SetViewport(false);
+					//SetViewport(forceSingle); //this make it crash on setting multiview rendering
 					
 					if (onlyQuadCulling)
 					{
@@ -1124,7 +1193,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 					//SINGEL PASS FRUSTUM ONLY
 					/*RenderBuffers(elementsIndexFrustumCulling,objectsFromFrustum);*/
 
-					
 					SetViewport(true);
 
 					RenderLights();
@@ -1418,33 +1486,62 @@ HRESULT CreateDirect3DContext(HWND wndHandle)
 
 		pDepthTexture->Release();
 
-		if (renderOpt & RENDER_WIREFRAME) {
-			D3D11_RASTERIZER_DESC rastDesc;
-			ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
-
-			rastDesc.FillMode = D3D11_FILL_WIREFRAME;
-			rastDesc.CullMode = D3D11_CULL_BACK;
-			rastDesc.FrontCounterClockwise = false;
-			rastDesc.DepthBias = 0;
-			rastDesc.DepthBiasClamp = 0.0f;
-			rastDesc.SlopeScaledDepthBias = 0.0f;
-			rastDesc.DepthClipEnable = true;
-			rastDesc.ScissorEnable = false;
-			rastDesc.MultisampleEnable = false;
-			rastDesc.AntialiasedLineEnable = false;
-
-			ID3D11RasterizerState* gRasterizerState;
-
-			hr = gDevice->CreateRasterizerState(
-				&rastDesc,
-				&gRasterizerState
-			);
-
-			gDeviceContext->RSSetState(gRasterizerState);
-		}
-
+		hr = SetRasterizerState();
 	}
 
 	return hr;
 }
 
+HRESULT SetRasterizerState() {
+	HRESULT hr;
+
+	if (renderOpt & RENDER_WIREFRAME) {
+		D3D11_RASTERIZER_DESC rastDesc;
+		ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+		rastDesc.FillMode = D3D11_FILL_WIREFRAME;
+		rastDesc.CullMode = D3D11_CULL_BACK;
+		rastDesc.FrontCounterClockwise = false;
+		rastDesc.DepthBias = 0;
+		rastDesc.DepthBiasClamp = 0.0f;
+		rastDesc.SlopeScaledDepthBias = 0.0f;
+		rastDesc.DepthClipEnable = true;
+		rastDesc.ScissorEnable = false;
+		rastDesc.MultisampleEnable = false;
+		rastDesc.AntialiasedLineEnable = false;
+
+		ID3D11RasterizerState* gRasterizerState;
+
+		hr = gDevice->CreateRasterizerState(
+			&rastDesc,
+			&gRasterizerState
+		);
+
+		gDeviceContext->RSSetState(gRasterizerState);
+	} else {
+		D3D11_RASTERIZER_DESC rastDesc;
+		ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+		rastDesc.FillMode = D3D11_FILL_SOLID;
+		rastDesc.CullMode = D3D11_CULL_BACK;
+		rastDesc.FrontCounterClockwise = false;
+		rastDesc.DepthBias = 0;
+		rastDesc.DepthBiasClamp = 0.0f;
+		rastDesc.SlopeScaledDepthBias = 0.0f;
+		rastDesc.DepthClipEnable = true;
+		rastDesc.ScissorEnable = false;
+		rastDesc.MultisampleEnable = false;
+		rastDesc.AntialiasedLineEnable = false;
+
+		ID3D11RasterizerState* gRasterizerState;
+
+		hr = gDevice->CreateRasterizerState(
+			&rastDesc,
+			&gRasterizerState
+		);
+
+		gDeviceContext->RSSetState(gRasterizerState);
+	}
+
+	return hr;
+}

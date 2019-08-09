@@ -1,8 +1,8 @@
 #include "LightSource.h"
 
 LightSource::LightSource(const int type, const int ambient, const XMVECTOR position,
-						 const XMVECTOR direction, const XMVECTOR colour,
-						 const float intensity, const float lightFocus) {
+	const XMVECTOR direction, const XMVECTOR colour,
+	const float intensity, const float lightFocus) {
 	data.type = type;
 	data.ambient = ambient;
 	data.position = position;
@@ -72,12 +72,19 @@ LightSource::~LightSource() {
 }
 
 void LightSource::setViewport() {
-	if (data.type == L_DIRECTIONAL) {
-		vp.Width = (float)S_DIR_WIDTH;
-		vp.Height = (float)S_DIR_HEIGHT;
-	} else {
+	switch (data.type) {
+	case L_SPOT:
 		vp.Width = (float)S_WIDTH;
 		vp.Height = (float)S_HEIGHT;
+		break;
+	case L_POINT:
+		vp.Width = (float)S_C_WIDTH;
+		vp.Height = (float)S_C_HEIGHT;
+		break;
+	case L_DIRECTIONAL:
+		vp.Width = (float)S_DIR_WIDTH;
+		vp.Height = (float)S_DIR_HEIGHT;
+		break;
 	}
 
 	vp.MinDepth = 0.0f;
@@ -90,7 +97,8 @@ void LightSource::setViews() {
 	XMVECTOR lookUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	XMVECTOR lookDown = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
 
-	if (data.type == L_SPOT) {
+	switch (data.type) {
+	case L_SPOT:
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
@@ -101,7 +109,8 @@ void LightSource::setViews() {
 		views[3] = views[0];
 		views[4] = views[0];
 		views[5] = views[0];
-	} else if (data.type == L_DIRECTIONAL) {
+		break;
+	case L_POINT:
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
@@ -112,8 +121,9 @@ void LightSource::setViews() {
 		views[3] = views[0];
 		views[4] = views[0];
 		views[5] = views[0];
-	} else {
-		XMFLOAT3* direction = new XMFLOAT3;
+		break;
+	case L_DIRECTIONAL:
+		XMFLOAT3 * direction = new XMFLOAT3;
 		XMStoreFloat3(direction, data.position);
 
 		views[0] = XMMatrixLookAtLH(
@@ -146,6 +156,7 @@ void LightSource::setViews() {
 			XMVectorSet(direction->x, direction->y - 100, direction->z, 0.0f),
 			lookUp
 		);
+		break;
 	}
 
 	for (int i = 0; i < 6; i++) {
@@ -163,18 +174,18 @@ void LightSource::setProjection() {
 			max(data.intensity * 1.1f, 1.0f)
 		);
 		break;
-	case L_DIRECTIONAL:
-		projection = XMMatrixOrthographicLH(
-			(float)S_DIR_WIDTH,
-			(float)S_DIR_HEIGHT,
+	case L_POINT:
+		projection = XMMatrixPerspectiveFovLH(
+			(float)XM_PI * 0.5,
+			(float)S_C_WIDTH * 2 / (float)S_C_HEIGHT * 2,
 			0.1f,
 			max(data.intensity * 1.1f, 1.0f)
 		);
 		break;
-	case L_POINT:
-		projection = XMMatrixPerspectiveFovLH(
-			(float)XM_PI * 0.5,
-			(float)S_WIDTH * 2 / (float)S_HEIGHT * 2,
+	case L_DIRECTIONAL:
+		projection = XMMatrixOrthographicLH(
+			(float)S_DIR_WIDTH,
+			(float)S_DIR_HEIGHT,
 			0.1f,
 			max(data.intensity * 1.1f, 1.0f)
 		);
@@ -207,23 +218,8 @@ HRESULT LightSource::createShadowBuffer(ID3D11Device* device) {
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_SHADER_RESOURCE_VIEW_DESC ShaderResourceViewDesc;
 
-	if (data.type == L_POINT) {
-		// Initialize the render target texture description.
-		ZeroMemory(&textureDesc, sizeof(textureDesc));
-
-		// Setup the render target texture description.
-		textureDesc.Width = S_WIDTH;
-		textureDesc.Height = S_HEIGHT;
-		textureDesc.MipLevels = 1;
-		textureDesc.ArraySize = 6;
-		textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = 0;
-	} else {
+	switch (data.type) {
+	case L_SPOT:
 		// Initialize the render target texture description.
 		ZeroMemory(&textureDesc, sizeof(textureDesc));
 
@@ -239,6 +235,41 @@ HRESULT LightSource::createShadowBuffer(ID3D11Device* device) {
 		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 		textureDesc.CPUAccessFlags = 0;
 		textureDesc.MiscFlags = 0;
+		break;
+	case L_POINT:
+		// Initialize the render target texture description.
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		// Setup the render target texture description.
+		textureDesc.Width = S_C_WIDTH;
+		textureDesc.Height = S_C_HEIGHT;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 6;
+		textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+		break;
+	case L_DIRECTIONAL:
+		// Initialize the render target texture description.
+		ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+		// Setup the render target texture description.
+		textureDesc.Width = S_DIR_WIDTH;
+		textureDesc.Height = S_DIR_HEIGHT;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D10_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+		break;
 	}
 
 	result = device->CreateTexture2D(&textureDesc, NULL, &shadowRenderTargetTexture);
@@ -332,7 +363,7 @@ XMMATRIX LightSource::getViewProjection(int index) const {
 	if (index > 5)
 		index = 0;
 
-	if(index == 0)
+	if (index == 0)
 		return data.viewProjection;
 	else
 		return data.rotatedViewProjection[index];
