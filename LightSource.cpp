@@ -94,15 +94,16 @@ void LightSource::setViewport() {
 }
 
 void LightSource::setViews() {
-	XMVECTOR lookUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMVECTOR lookDown = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
+	XMVECTOR lookY = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMVECTOR lookZ = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	XMFLOAT3 * direction = new XMFLOAT3;
 
 	switch (data.type) {
 	case L_SPOT:
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
-			lookUp
+			lookY
 		);
 		views[1] = views[0];
 		views[2] = views[0];
@@ -111,51 +112,50 @@ void LightSource::setViews() {
 		views[5] = views[0];
 		break;
 	case L_POINT:
+		XMStoreFloat3(direction, data.position);
+
+		views[0] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x + 10, direction->y, direction->z, 1.0f),
+			lookY
+		);
+		views[1] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x - 10, direction->y, direction->z, 1.0f),
+			lookY
+		);
+		views[2] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y, direction->z + 10, 1.0f),
+			lookY
+		);
+		views[3] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y, direction->z - 10, 1.0f),
+			lookY
+		);
+		views[4] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y + 10, direction->z, 1.0f),
+			lookZ
+		);
+		views[5] = XMMatrixLookAtLH(
+			data.position,
+			XMVectorSet(direction->x, direction->y - 10, direction->z, 1.0f),
+			lookZ
+		);
+		break;
+	case L_DIRECTIONAL:
 		views[0] = XMMatrixLookAtLH(
 			data.position,
 			data.direction,
-			lookUp
+			lookY
 		);
 		views[1] = views[0];
 		views[2] = views[0];
 		views[3] = views[0];
 		views[4] = views[0];
 		views[5] = views[0];
-		break;
-	case L_DIRECTIONAL:
-		XMFLOAT3 * direction = new XMFLOAT3;
-		XMStoreFloat3(direction, data.position);
-
-		views[0] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x + 100, direction->y, direction->z, 0.0f),
-			lookUp
-		);
-		views[1] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x - 100, direction->y, direction->z, 0.0f),
-			lookUp
-		);
-		views[2] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x, direction->y, direction->z + 100, 0.0f),
-			lookUp
-		);
-		views[3] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x, direction->y, direction->z - 100, 0.0f),
-			lookUp
-		);
-		views[4] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x, direction->y + 100, direction->z, 0.0f),
-			lookUp
-		);
-		views[5] = XMMatrixLookAtLH(
-			data.position,
-			XMVectorSet(direction->x, direction->y - 100, direction->z, 0.0f),
-			lookUp
-		);
 		break;
 	}
 
@@ -360,11 +360,11 @@ ID3D11ShaderResourceView* LightSource::getShadowMap() const {
 }
 
 XMMATRIX LightSource::getViewProjection(int index) const {
-	if (index > 5)
+	if (index > 5 || index < 0)
 		index = 0;
 
 	if (index == 0)
 		return data.viewProjection;
 	else
-		return data.rotatedViewProjection[index];
+		return data.rotatedViewProjection[index-1];
 }

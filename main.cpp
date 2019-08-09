@@ -124,7 +124,7 @@ void CreateLigths() {
 	nrOfLights[1] = 1;
 	PointLights = new LightSource[nrOfLights[1]];
 
-	PointLights[0] = LightSource(L_POINT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	PointLights[0] = LightSource(L_POINT, 60, XMVectorSet(-20.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 	
 	for (int i = 0; i < nrOfLights[1]; i++) {
 		PointLights[i].createShadowBuffer(gDevice);
@@ -1172,10 +1172,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					RenderWireframe();
 				} else {
-					if (renderOnce) {
+					//if (renderOnce) {
 						RenderShadowMaps();
 						renderOnce = false;
-					}
+					//}
 
 					SetViewport(false);
 					//SetViewport(forceSingle); //this make it crash on setting multiview rendering

@@ -168,6 +168,7 @@ struct ReflectionAmount
 	float a_r, a_g, a_b;
 	float d_r, d_g, d_b;
 	float s_r, s_g, s_b, s_p;
+	float padding1, padding2; //Needed for Graphical Debuging, need to be x16byteWidth
 };
 
 

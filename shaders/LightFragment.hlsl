@@ -65,7 +65,7 @@ bool shadow(float3 position)
     if (lsp.x < -1.0f || lsp.x > 1.0f ||
         lsp.y < -1.0f || lsp.y > 1.0f ||
         lsp.z < 0.0f || lsp.z > 1.0f)
-        return true;
+        return false;
     
     lsp.z -= 0.0005f;
 
@@ -88,7 +88,7 @@ bool shadow(float3 position, float4x4 ViewProjection, int index)
     if (lsp.x < -1.0f || lsp.x > 1.0f ||
         lsp.y < -1.0f || lsp.y > 1.0f ||
         lsp.z < 0.0f || lsp.z > 1.0f)
-        return true;
+        return false;
     
     lsp.z -= 0.0005f;
 
@@ -190,24 +190,23 @@ float4 PS_light(PS_IN input) : SV_TARGET
         finalColour = clamp(ambientColour + ((diffuseColour + specularColour) * attenuation), 0.0f, 1.0f);
     }
 
-    if (RenderMode != RENDER_NO_SHADOWS)
-    {
-        if (LightType.x == TYPE_SPOT) {
+    if (RenderMode != RENDER_NO_SHADOWS) {
+        if (LightType.x == TYPE_SPOT || LightType.x == TYPE_DIRECTIONAL) {
             if (shadow(position))
                 finalColour = ambientColour; //return ambientColour;
         } else if (LightType.x == TYPE_POINT) {
             if (shadow(position))
                 finalColour = ambientColour; //return ambientColour;
-            else if (shadow(position, RotatedLightViewProjection[0], 1))
+            /*else if (shadow(position, RotatedLightViewProjection[0], 2))
                 finalColour = ambientColour; //return ambientColour;
-            else if (shadow(position, RotatedLightViewProjection[1], 2))
-                finalColour = ambientColour; //return ambientColour;
-            else if (shadow(position, RotatedLightViewProjection[2], 3))
-                finalColour = ambientColour; //return ambientColour;
-            else if (shadow(position, RotatedLightViewProjection[3], 4))
-                finalColour = ambientColour; //return ambientColour;
-            else if (shadow(position, RotatedLightViewProjection[4], 5))
-                finalColour = ambientColour; //return ambientColour;
+            /*else if (shadow(position, RotatedLightViewProjection[1], 2))
+                finalColour = ambientColour; //return ambientColour;*/
+            /*else if (shadow(position, RotatedLightViewProjection[2], 3))
+                finalColour = ambientColour; //return ambientColour;*/
+            /*else if (shadow(position, RotatedLightViewProjection[3], 1))
+                finalColour = ambientColour; //return ambientColour;*/
+            /*else if (shadow(position, RotatedLightViewProjection[1], 5))
+                finalColour = ambientColour; //return ambientColour;*/
         }
     }
     
