@@ -111,11 +111,12 @@ HRESULT CreateSampling() {
 }
 
 void CreateLigths() {
-	nrOfLights[0] = 1;
+	nrOfLights[0] = 3;
 	SpotLights = new LightSource[nrOfLights[0]];
 
-	SpotLights[0] = LightSource(L_SPOT, 60, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//SpotLights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 20.0f, 1.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	SpotLights[0] = LightSource(L_SPOT, 40, XMVectorSet(-20.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(0.0f, 20.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	SpotLights[1] = LightSource(L_SPOT, 20, XMVectorSet(-30.0f, 60.0f, 45.0f, 0.0f), XMVectorSet(0.0f, 30.0f, 45.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
+	SpotLights[2] = LightSource(L_SPOT, 20, XMVectorSet(-30.0f, 60.0f, 55.0f, 0.0f), XMVectorSet(0.0f, 30.0f, 45.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
 
 	for (int i = 0; i < nrOfLights[0]; i++) {
 		SpotLights[i].createShadowBuffer(gDevice);
@@ -138,10 +139,6 @@ void CreateLigths() {
 	for (int i = 0; i < nrOfLights[2]; i++) {
 		DirectionalLights[i].createShadowBuffer(gDevice);
 	}
-
-	//Lights[1] = LightSource(L_SPOT, 60, XMVectorSet(-50.0f, 50.0f, 0.0f, 0.0f), XMVectorSet(-50.0f, 0.0f, 0.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-	//Lights[2] = LightSource(L_SPOT, 60, XMVectorSet(230.0f, 11.0f, 238.0f, 0.0f), XMVectorSet(247.0f, 60.0f, 240.0f, 0.0f), XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f), 200.0f, 100.0f);
-
 }
 
 void createBlendState() {
@@ -349,6 +346,7 @@ void RenderShadowMaps() {
 
 void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 	// clear the back buffer to a deep blue
+	//float clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	float clearColor[] = { 0.45f, 0.95f, 1.0f, 1.0f };
 	//float clearColor[] = { 0.3f, 0.3f, 0.3f, 0.0f };
 
@@ -608,7 +606,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 	//HORIZONTAL movement with P 
 
 	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>MOVEMENT<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
-	{//<<<<IN FREEFLIGHT<<<< 	O key // TOGGLE
+	{
+     //<<<<IN FREEFLIGHT<<<< 	O key // TOGGLE
 	 //INTO CAMERA FORWARD		W
 	 //INTO CAMERA BACKWARDS	S
 	 //CAMERA RIGHT				D
@@ -647,11 +646,12 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 		//WIREFRAME					H
 
 		/*
-			Rendering options:
-			F7: loops trough the 8 draw modes
-			F8: loops trough 3 different stages of light presets
-			F9: turns wireframe on/off
-			F10: turns multiview on/off
+		Rendering options:
+		F6: Turns glow effects on/off
+		F7: loops trough the 8 draw modes
+		F8: loops trough 3 different stages of light presets
+		F9: turns wireframe on/off
+		F10: turns multiview on/off
 		*/
 	}
 	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
@@ -883,6 +883,11 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 		/*
 			Keys for different rendering options
 		*/
+
+		if (kb.F6 && !key_down) {
+			blurFilter = !blurFilter;
+			key_down = true;
+		}
 
 		if (kb.F7 && !key_down) {
 			renderMode++;
@@ -1172,10 +1177,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 					RenderWireframe();
 				} else {
-					//if (renderOnce) {
+					if (renderOnce) {
 						RenderShadowMaps();
 						renderOnce = false;
-					//}
+					}
 
 					SetViewport(false);
 					//SetViewport(forceSingle); //this make it crash on setting multiview rendering
@@ -1500,7 +1505,7 @@ HRESULT SetRasterizerState() {
 		ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
 
 		rastDesc.FillMode = D3D11_FILL_WIREFRAME;
-		rastDesc.CullMode = D3D11_CULL_BACK;
+		rastDesc.CullMode = D3D11_CULL_NONE;
 		rastDesc.FrontCounterClockwise = false;
 		rastDesc.DepthBias = 0;
 		rastDesc.DepthBiasClamp = 0.0f;
@@ -1523,7 +1528,7 @@ HRESULT SetRasterizerState() {
 		ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
 
 		rastDesc.FillMode = D3D11_FILL_SOLID;
-		rastDesc.CullMode = D3D11_CULL_BACK;
+		rastDesc.CullMode = D3D11_CULL_NONE;
 		rastDesc.FrontCounterClockwise = false;
 		rastDesc.DepthBias = 0;
 		rastDesc.DepthBiasClamp = 0.0f;

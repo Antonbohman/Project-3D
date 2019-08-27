@@ -10,7 +10,7 @@
 using namespace DirectX;
 
 //shadow map render size
-#define MUL 24
+#define MUL 20
 #define S_WIDTH (640.0f*MUL)
 #define S_HEIGHT (480.0f*MUL)
 
