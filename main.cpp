@@ -420,6 +420,50 @@ void RenderBuffers(int *RenderCopies,int amount,bool *drawAllCopies) {
 
 		gDeviceContext->Draw(gnrOfVert[i], 0);
 
+		//FRUSTUM CULLING PART
+		if (i == 1)
+		{
+			//setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+			if (*drawAllCopies == false)
+			{
+				//DRAW COPIES THAT ARE CULLED BY FRUSTUM AND QUADTREE
+				for (int j = 0; j < amount; j++)
+				{
+
+					setWorldSpace({ 0.0f,0.0f,0.0f,copies[RenderCopies[j]].x,copies[RenderCopies[j]].y,copies[RenderCopies[j]].z,0.5f,0.5f,0.5f });
+					updateCameraWorldViewProjection();
+					gDeviceContext->Draw(gnrOfVert[1], 0);
+				}
+			}
+			else
+			{
+				for (int j = 0; j < elementsAmount; j++)
+				{
+					setWorldSpace({ 0.0f,0.0f,0.0f,copies[j].x,copies[j].y,copies[j].z,0.5f,0.5f,0.5f });
+					updateCameraWorldViewProjection();
+					gDeviceContext->Draw(gnrOfVert[1], 0);
+				}
+			}
+		}
+		else
+		{
+			//set world space for object and update wvp matrix
+			//set specular for object
+			setWorldSpace({ 0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f });
+			updateCameraWorldViewProjection();
+			//setSpecularValues(XMVectorSet(1, 1, 1, 1000));
+
+			//set object texture
+			gDeviceContext->PSSetShaderResources(0, 1, &gTextureSRV[i]);
+
+			//Render objects
+			setVertexBuffer(ppVertexBuffers[i], sizeof(TriangleVertex), 0);
+			gDeviceContext->Draw(gnrOfVert[i], 0);
+		}
+
+		//FRUSTUM CULLING PART
+
 		if (!i)
 		{
 			//Set copy
@@ -652,6 +696,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 		F8: loops trough 3 different stages of light presets
 		F9: turns wireframe on/off
 		F10: turns multiview on/off
+		F11: showculling on/off
 		*/
 	}
 	/*------------------------>>>QUICK COMMANDS<<<-------------------------*/
@@ -754,7 +799,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 					camera.AddYaw(XM_PI*0.1f);
 					keyReleased = false;
 				}
-				if (kb.P)
+				/*if (kb.P)
 				{
 					if (*culling == true)
 					{
@@ -765,7 +810,7 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 					else
 						*culling = true;
 					keyReleased = false;
-				}
+				}*/
 				if (kb.U)
 				{
 					if (*culling ==true)
@@ -924,6 +969,19 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 			key_down = true;
 		}
 
+		if (kb.F11 && !key_down)
+		{
+			if (*culling == true)
+			{
+				*culling = false;
+				*showCullingObjects = false;
+				*onlyQuadCulling = false;
+			}
+			else
+				*culling = true;
+			key_down = true;
+		}
+
 
 		//UPDATE CAMERA
 		{
@@ -1010,7 +1068,8 @@ void updateKeyAndMouseInput(bool *freeFlight,bool *culling,bool *showCullingObje
 				camera.SetCameraHeight(newHeight);
 			}
 
-			camFrustum->calculateFrustum(FOV, W_WIDTH, W_HEIGHT,2.5f);
+			camFrustum->calculateFrustum(FOV, W_WIDTH, W_HEIGHT,1.2f);
+			//Upscaled frustum for better coverage
 			
 			Vector4 temp = camera.GetCameraNormal()* (camFrustum->frustumFarDist - camFrustum->frustumNearDist);
 		

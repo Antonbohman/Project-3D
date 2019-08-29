@@ -5,7 +5,7 @@ Frustum::Frustum()
 {
 	this->frustumNearDist = PROJECTION_NEAR_Z;
 	this->frustumFarDist = PROJECTION_FAR_Z ;
-	this->scaleFactor = 1.5f;
+	this->scaleFactor = 1.0f;
 	
 	cameraReference = nullptr;
 }
@@ -19,7 +19,7 @@ Frustum::Frustum(Camera * camera)
 {
 	this->frustumNearDist = PROJECTION_NEAR_Z;
 	this->frustumFarDist = PROJECTION_FAR_Z ;
-	this->scaleFactor = 1.5f;
+	this->scaleFactor = 1.0f;
 	cameraReference = camera;
 }
 
@@ -112,13 +112,14 @@ void Frustum::GiveCameraReference(Camera * theCamera)
 void Frustum::calculateFrustum(float fov, float windowWidth, float windowHeight)
 {
 	float scale = this->scaleFactor;
+	//float scale = 1;
 	//NEAR H / W
 	float ratio = (windowWidth/ windowHeight );
 	//ratio = 16.0f / 9.0f;
-	this->frustumHightNear = tan(((fov ) * XM_PI)/2)* frustumNearDist;
+	this->frustumHightNear = tan(((fov) * XM_PI)/1.5)* frustumNearDist;
 	this->frustumWidthNear = frustumHightNear *ratio;
 	//FAR H / W
-	this->frustumHightFar = tan(((fov ) * XM_PI)/2)* frustumFarDist;
+	this->frustumHightFar = tan(((fov ) * XM_PI)/1.5)* frustumFarDist;
 	this->frustumWidthFar = frustumHightFar * ratio;
 
 	Vector4 tempUp = cameraReference->GetCamUp();
